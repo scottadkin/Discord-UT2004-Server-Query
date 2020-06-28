@@ -23,6 +23,8 @@ class Bot{
         this.createClient();
         this.query = new UT2004Query();
 
+        this.pendingMessages = [];
+
         this.addListeners();
         
     }
@@ -110,6 +112,35 @@ class Bot{
 
     }
 
+    getPendingMessage(ip, port, type){
+
+        let p = 0;
+
+        for(let i = 0; i < this.pendingMessages.length; i++){
+
+            p = this.pendingMessages[i];
+
+            if(p.ip === ip && p.port === port && p.type === type){
+                return p;
+            }
+        }
+
+        return null;
+    }
+
+    deletePendingMessage(ip, port, type){
+
+        let p = 0;
+
+        for(let i = 0; i < this.pendingMessages.length; i++){
+
+            p = this.pendingMessages[i];
+
+            if(p.ip === ip && p.port === port && p.type === type){
+                this.pendingMessages.splice(i, 1);
+            }
+        }
+    }
 
     addListeners(){
         
@@ -123,13 +154,31 @@ class Bot{
             this.updateServerDetails(data);
 
             if(this.channel != undefined){
+
+                const test = this.getPendingMessage(data.ip, data.port, "basic");
+
+                if(test != null){
+
+                    test.channel.send(`
+                        ${data.name}
+                        ${data.ip}:${data.port}
+                        Players: ${data.currentPlayers}/${data.maxPlayers}
+                        Gametype: ${data.gametype}
+                        Map: ${data.map}
+                    `);
+
+                    this.deletePendingMessage(data.ip, data.port, "basic");
+                    
+                }
+
+                /*
                 this.channel.send(`
                     ${data.name}
                     ${data.ip}:${data.port}
                     Players: ${data.currentPlayers}/${data.maxPlayers}
                     Gametype: ${data.gametype}
                     Map: ${data.map}
-                `);
+                `);*/
             }
 
             
@@ -155,6 +204,16 @@ class Bot{
 
             if(message.content == "test"){
                 
+                this.pendingMessages.push(
+                    {
+                        "timeStamp": Date.now(),
+                        "type": "basic",
+                        "ip": '80.4.151.145',
+                        "port": 7777,
+                        "channel": message.channel
+                    }
+                );
+
                 this.query.pingServerBasic('80.4.151.145', 7777);
 
                 
