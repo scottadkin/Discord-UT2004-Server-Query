@@ -20,7 +20,7 @@ class UT2004Query{
         //81.30.148.29:32100
         //	80.4.151.145:5777
 
-        this.pingServerBasic('80.4.151.145', 7777);
+        //this.pingServerBasic('80.4.151.145', 7777);
         
         /*
         //mia server
@@ -53,30 +53,50 @@ class UT2004Query{
 
     pingServerBasic(ip, port){
 
-        port = port + 1;
+        try{
 
-        this.client.send(this.createQueryPacket(0), port, ip, (err) =>{
+            port = port + 1;
 
-            if(err) console.trace(err);
-        });
+            this.client.send(this.createQueryPacket(0), port, ip, (err) =>{
+
+                if(err) throw new Error(err);
+            });
+
+        }catch(err){
+            console.trace(err);
+        }
     }
 
     pingServerGameInfo(ip, port){
 
-        port = port + 1;
+        try{
 
-        this.client.send(this.createQueryPacket(1), port, ip, (err) =>{
-            if(err) console.trace(err);
-        });
+            port = port + 1;
+
+            this.client.send(this.createQueryPacket(1), port, ip, (err) =>{
+
+                if(err) throw new Error(err);
+            });
+
+        }catch(err){
+            console.trace(err);
+        }
     }
 
     pingServerPlayerInfo(ip, port){
 
-        port = port + 1;
+        try{
 
-        this.client.send(this.createQueryPacket(2), port, ip, (err) =>{
-            if(err) console.trace(err);
-        });
+            port = port + 2;
+
+            this.client.send(this.createQueryPacket(0), port, ip, (err) =>{
+
+                if(err) throw new Error(err);
+            });
+
+        }catch(err){
+            console.trace(err);
+        }
     }
 
     createQueries(){
@@ -547,6 +567,8 @@ class UT2004Query{
 
         //team score ids are always 0 and name Red Team or Blue Team
         console.table(players);
+
+        this.em.emit('playersPing', players);
 
         players.sort((a, b) =>{
 

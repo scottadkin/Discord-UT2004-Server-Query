@@ -1,9 +1,10 @@
 const sqlite3 = require('sqlite3').verbose();
 const Discord = require('discord.js');
 const UT2004Query = require('./ut2004query');
+const config = require('./config');
 
 
-const db = new sqlite3.Database('./db/data.db', sqlite3.OPEN_READWRITE, (err) =>{
+const db = new sqlite3.Database(config.dbFile, sqlite3.OPEN_READWRITE, (err) =>{
 
     if(err){
         console.trace(err);
@@ -24,6 +25,8 @@ class Bot{
         this.query = new UT2004Query();
 
         this.pendingMessages = [];
+
+        this.currentServerInfo = [];
 
         this.addListeners();
         
@@ -148,7 +151,7 @@ class Bot{
         this.query.em.on('basicPing', (data) =>{
 
             console.log(`Got basic server information for ${data.ip}:${data.port}`);
-            console.log("test");
+            //console.log("test");
 
 
             this.updateServerDetails(data);
@@ -158,6 +161,8 @@ class Bot{
                 const test = this.getPendingMessage(data.ip, data.port, "basic");
 
                 if(test != null){
+
+                    this.currentServerInfo = data;
 
                     test.channel.send(`
                         ${data.name}
@@ -170,19 +175,71 @@ class Bot{
                     this.deletePendingMessage(data.ip, data.port, "basic");
                     
                 }
-
-                /*
-                this.channel.send(`
-                    ${data.name}
-                    ${data.ip}:${data.port}
-                    Players: ${data.currentPlayers}/${data.maxPlayers}
-                    Gametype: ${data.gametype}
-                    Map: ${data.map}
-                `);*/
             }
+
+
+            this.query.em.on('players', (data) =>{
+
+                console.log(data);
+            });
 
             
         });
+    }
+
+    customQueryServer(message){
+
+        const reg = new RegExp(`^${config.commandPrefix}q (.+?)(:{0,1})(\\d{0,5})$`,"i");
+        //const reg = /^.q (.+?)(:{0,1})(\d{0,5})$/i
+        const result = reg.exec(message.content);
+
+        if(result != null){
+
+            if(result[2] == '' && result[3] == ''){
+                message.channel.send(`Error: Wrong syntax for server query, correct is \`${config.commandPrefix}q <server ip>:<port>\` port being optional for default port.`);
+                return;
+            }
+
+            let ip = result[1];
+
+            let port = 7777;
+
+            if(result[3] != ''){
+                port = parseInt(result[3]);
+            }
+
+            if(result[2] == ''){
+                ip += result[3];
+                port = 7777;
+            }
+
+            console.log(result);
+
+            if(port < 0 || port > 65536){
+                message.channel.send(`Error: Server port must be in range of 0 - 65536`);
+                return;
+            }
+
+            console.log(`${ip}:${port}`);
+
+            this.pendingMessages.push(
+                {
+                    "timeStamp": Date.now(),
+                    "type": "basic",
+                    "ip": ip,
+                    "port": port,
+                    "channel": message.channel
+                }
+            );
+
+            this.query.pingServerBasic(ip, port);
+
+            return;
+        }
+        
+
+        //console.log(result);
+
     }
 
     createClient(){
@@ -214,9 +271,12 @@ class Bot{
                     }
                 );
 
-                this.query.pingServerBasic('80.4.151.145', 7777);
+                this.currentServerInfo = [];
+                this.query.pingServerBasic('80.4.151.145', 7777);     
 
-                
+            }else if(message.content.startsWith(config.commandPrefix)){
+                this.currentServerInfo = [];
+                this.customQueryServer(message);
             }
         });
 
