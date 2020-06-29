@@ -28,6 +28,7 @@ class Bot{
 
         this.currentServerInfo = [];
         this.currentPlayers = [];
+        this.totalPlayerPackets = 0;
 
         this.addListeners();
         
@@ -142,6 +143,7 @@ class Bot{
 
             if(p.ip === ip && p.port === port && p.type === type){
                 this.pendingMessages.splice(i, 1);
+                return;
             }
         }
     }
@@ -152,11 +154,76 @@ class Bot{
         let title = "";
 
         switch(team){
-            case -1: {   string = "**Spectators:** "; } break;
-            case 0: {   title = `Red Team ${teamScore}\n`; } break;
-            case 1: {   title = `Blue Team ${teamScore}\n`; } break;
-
+            case -1: {   string = ":eye: **Spectators:** "; } break;
+            case 0: {   title = `:red_square: Red Team ${teamScore}\n`; } break;
+            case 1: {   title = `:blue_square: Blue Team ${teamScore}\n`; } break;
         }
+
+        const flagReg = /^.+\(([A-Z]{2})\)$/i;
+
+        let p = 0;
+
+        let flagResult = "";
+
+        let bDisplayedFlag = false;
+
+        for(let i = 0; i < players.length; i++){
+
+            //console.log(i);
+
+            p = players[i];
+
+           // console.log(flagReg.exec(p.name));
+
+            if(p.team == team || team === 'all'){
+                //data.push(players[i]);
+                //console.log(team);
+                if(p.id === 0) continue;
+
+                flagResult = flagReg.exec(p.name);
+
+                if(flagResult != null){
+
+                    bDisplayedFlag = true;
+
+                    if(flagResult[1] == "UK"){
+                        flagResult[1] = "gb";
+                    }
+
+                    string += `:flag_${flagResult[1].toLowerCase()}: `;
+
+                    if(flagResult[1] == "gb"){
+                        flagResult[1] = "UK";
+                    }
+
+                    p.name = p.name.replace(`(${flagResult[1]})`,'');
+                }else{
+
+                   // if(bDisplayedFlag){
+                        string += `:pirate_flag:`;
+                    //}
+                }
+
+                if(p.team != -1 || team === 'all'){
+                    string += `${p.name}    **${p.score}**\n`;
+                }else{
+                    string += `${p.name} `;
+                }
+            }
+        }
+
+        if(string == "**Spectators:** "){
+            string += "There are currently no spectators.";
+        }
+
+        if(string == ""){
+            string = ":zzz: None";
+        }
+
+        return {"string": string, "title": title};
+    }
+
+    getScore(players, name){ 
 
         let p = 0;
 
@@ -164,19 +231,14 @@ class Bot{
 
             p = players[i];
 
-            if(p.team == team){
-                //data.push(players[i]);
-
-                if(p.id === 0) continue;
-                if(p.team != -1){
-                    string += `${p.name}    ${p.score}\n`;
-                }else{
-                    string += `${p.name} `;
+            if(p.name === name){
+                if(p.id === 0 && p.team === -1){
+                    return p.score;
                 }
             }
         }
 
-        return {"string": string, "title": title};
+        return null;
     }
 
     getTeamScore(players, team){
@@ -194,20 +256,45 @@ class Bot{
             case 1: { targetName = "Blue Team"; } break;
         }
 
-        let p = 0;
 
-        for(let i = 0; i < players.length; i++){
+        let result = this.getScore(players, targetName);
 
-            p = players[i];
+        if(result != null){
+            return result
+        }
 
-            if(p.name === targetName){
-                if(p.id === 0 && p.team === -1){
-                    return p.score;
-                }
-            }
+        switch(team){
+
+            case 0: { targetName = "West Side"; } break;
+            case 1: { targetName = "East Side"; } break;
+        }
+
+        result = this.getScore(players, targetName);
+
+        if(result != null){
+            return result;
         }
 
         return '';
+    }
+
+    bDM(players){
+
+        const teams = [];
+
+        for(let i = 0; i < players.length; i++){
+
+            if(teams.indexOf(players[i].team) == -1){
+                teams.push(players[i].team);
+            }
+        }
+
+        if(teams.length >= 2){
+            return false;
+        }
+
+        return true;
+
     }
 
     addListeners(){
@@ -228,6 +315,17 @@ class Bot{
 
                     this.currentServerInfo = data;
                     this.deletePendingMessage(data.ip, data.port, "basic");
+
+                    this.pendingMessages.push(
+                        {
+                            "timeStamp": Date.now(),
+                            "type": "players",
+                            "ip": data.ip,
+                            "port": data.port,
+                            "channel": test.channel
+                        }
+                    );
+                    this.query.pingServerPlayerInfo(data.ip, data.port);
                     
                 }
             }
@@ -238,7 +336,13 @@ class Bot{
                 //console.log('playersPing');
                // console.log(data);
 
+                
+
                 const test = this.getPendingMessage(ip, port, "players");
+
+                console.log("Looking for "+ip+":"+port+" players");
+                console.table(this.pendingMessages);
+                console.log("test = "+test);
 
                 //console.log(test);
                // console.log(this.currentServerInfo);
@@ -247,83 +351,139 @@ class Bot{
 
                 if(test != null){
 
-                    
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
+                    console.log("TEST NOT NULL");
 
                     if(this.currentServerInfo.name != undefined){
 
-                        //test.channel.send("Players stufff");
+                        this.totalPlayerPackets++;
                         const si = this.currentServerInfo;
+
+                        console.log("######################################");
+                        console.table(data);
+                        console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+                        console.table(this.currentPlayers);
 
                         if(data.length < si.currentPlayers){
 
-                            console.log("Player length not enoguh");
-
-                            this.currentPlayers = this.currentPlayers.concat(data);
-
-                            if(this.currentPlayers.length < si.currentPlayers){        
-                                console.log("Not enough player data yet waiting for second packet");
+                            if(this.totalPlayerPackets < 2){
+                                this.currentPlayers = data;
                                 return;
+                            }else{
+                                data = this.currentPlayers.concat(data);
                             }
-                        }else{
-                            this.currentPlayers = data;
                         }
- 
-
-                        let string = `${si.name} (${ip}:${port})
-Playing ${si.gametype} on ${si.map}
-Players ${si.currentPlayers}/${si.maxPlayers}`;
 
 
-                        let playersString = "";
+                        let fields = [];
 
-                        let d = 0;
+                        //data = this.currentPlayers;
 
                         //data = this.currentPlayers;
 
                        // data = this.currentPlayers.concat(data);
 
-                        const redTeamScore = this.getTeamScore(data, 0);
-                        const blueTeamScore = this.getTeamScore(data, 1);
+                        if(!this.bDM(data)){
 
-                        const redTeamString = this.createTeamString(data, 0, redTeamScore);
-                        const blueTeamString = this.createTeamString(data, 1, blueTeamScore);
-                        const spectatorsString = this.createTeamString(data, -1);
+                            const redTeamScore = this.getTeamScore(data, 0);
+                            const blueTeamScore = this.getTeamScore(data, 1);
 
-                        console.log(redTeamString.string);
-                        console.log(blueTeamString.string);
-                        console.log(spectatorsString.string);
+                            const redTeamString = this.createTeamString(data, 0, redTeamScore);
+                            const blueTeamString = this.createTeamString(data, 1, blueTeamScore);
+                            const spectatorsString = this.createTeamString(data, -1);
 
-                        string += '\n`'+playersString+'`'
+                            fields = [
+                                {"name": redTeamString.title, "value": redTeamString.string, "inline": true},
+                                {"name": blueTeamString.title, "value": blueTeamString.string, "inline": true},
+                                {"name": '\u200B', "value": spectatorsString.string, "inline": false}
+                            ];
+
+                         //   console.log(redTeamString.string);
+                         //   console.log(blueTeamString.string);
+                          //  console.log(spectatorsString.string);
+
+               
+                        }else{
+
+                            const dmPlayers = this.createTeamString(data, 'all','');
+                            //console.log("DM PLAYERS");
+                           // console.log(dmPlayers);
+
+                            fields = [
+                                {"name": "Players", "value": dmPlayers.string, "inline": true}
+                            ];
+                        }
+
+                        
+                       // string += '\n`'+playersString+'`'
                         //test.channel.send(string);
 
+                        /*this.deletePendingMessage(ip, port, "players");
+                        this.currentServerInfo = [];
+                        this.currentPlayers = [];
+                        this.totalPlayerPackets = 0;*/
+                        //this.pendingMessages = [];
 
                         const embed = new Discord.MessageEmbed()
                         .setColor("#000000")
                         .setTitle(`${si.name}`)
                         .setDescription(`**Players ${si.currentPlayers}/${si.maxPlayers}**\n**${si.gametype}**\n**${si.map}**`)
-                        .addField(redTeamString.title, redTeamString.string, true)
-                        .addField(blueTeamString.title, blueTeamString.string, true)
-                        .addField('\u200B', spectatorsString.string, false)
+                        .addFields(fields)
                         .setFooter(`ut2004://${ip}:${port}`);
 
-                        test.channel.send(embed);
+                        test.channel.send(embed).then(() =>{
+                            
+          
+                            console.log("Deleted pening message");
+                        }).catch((err) =>{
+                            console.log(err);
+                        });
 
-                     
-                        this.deletePendingMessage(ip, port, "players");
-                        this.currentServerInfo = [];
-                        this.currentPlayers = [];
+                    }else{
 
-                        //const embed = new Discord.embed();
-
-                        
-
-
-                        
+                        console.log("CURRENT SERVER NAME IS NULLL");
+                        console.log("CURRENT SERVER NAME IS NULLL");
+                        console.log("CURRENT SERVER NAME IS NULLL");
+                        console.log("CURRENT SERVER NAME IS NULLL");
+                        console.log("CURRENT SERVER NAME IS NULLL");
+                        console.log("CURRENT SERVER NAME IS NULLL");
+                        console.log("CURRENT SERVER NAME IS NULLL");
                     }
+
+                }else{
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
+                    console.log("NULLLLLLLLLLLLLLL");
                 }
+                this.deletePendingMessage(ip, port, "players");
+                this.currentServerInfo = [];
+                this.currentPlayers = [];
+                this.totalPlayerPackets = 0;
+                
             });
 
             
+      
         });
     }
 
@@ -372,18 +532,10 @@ Players ${si.currentPlayers}/${si.maxPlayers}`;
                 }
             );
 
-            this.pendingMessages.push(
-                {
-                    "timeStamp": Date.now(),
-                    "type": "players",
-                    "ip": ip,
-                    "port": port,
-                    "channel": message.channel
-                }
-            );
+            this.totalPlayerPackets = 0;
 
             this.query.pingServerBasic(ip, port);
-            this.query.pingServerPlayerInfo(ip, port);
+            
 
             return;
         }
@@ -412,19 +564,7 @@ Players ${si.currentPlayers}/${si.maxPlayers}`;
 
             if(message.content == "test"){
                 
-                this.pendingMessages.push(
-                    {
-                        "timeStamp": Date.now(),
-                        "type": "basic",
-                        "ip": '80.4.151.145',
-                        "port": 7777,
-                        "channel": message.channel
-                    }
-                );
 
-                this.currentServerInfo = [];
-                this.currentPlayers = [];
-                this.query.pingServerBasic('80.4.151.145', 7777);     
 
             }else if(message.content.startsWith(config.commandPrefix)){
                 this.currentServerInfo = [];
