@@ -59,7 +59,7 @@ class UT2004Query{
 
             this.client.send(this.createQueryPacket(0), port, ip, (err) =>{
 
-                if(err) throw new Error(err);
+              //  if(err) throw new Error(err);
             });
 
         }catch(err){
@@ -75,7 +75,7 @@ class UT2004Query{
 
             this.client.send(this.createQueryPacket(1), port, ip, (err) =>{
 
-                if(err) throw new Error(err);
+                //if(err) throw new Error(err);
             });
 
         }catch(err){
@@ -87,11 +87,13 @@ class UT2004Query{
 
         try{
 
-            port = port + 2;
+            port = port + 1;
 
-            this.client.send(this.createQueryPacket(0), port, ip, (err) =>{
+            //console.log("PING PLAYERS");
 
-                if(err) throw new Error(err);
+            this.client.send(this.createQueryPacket(2), port, ip, (err) =>{
+
+                //if(err) throw new Error(err);
             });
 
         }catch(err){
@@ -137,7 +139,7 @@ class UT2004Query{
             //console.log(rinfo);
             //console.log(`${message}`);
 
-            this.parseData(message, rinfo.address);
+            this.parseData(message, rinfo.address, rinfo.port);
 
            // console.log(this.parseServerInfo(message, rinfo.address));
 
@@ -265,7 +267,7 @@ class UT2004Query{
     }
 
 
-    parseData(data, ip){
+    parseData(data, ip, port){
 
         data = JSON.stringify(data);
 
@@ -292,7 +294,7 @@ class UT2004Query{
             
             console.log("player info packet");
 
-            this.parsePlayerInfoPacket(data);
+            this.parsePlayerInfoPacket(data, ip, port);
 
         }else{
             console.log("Unknown server packet");
@@ -549,7 +551,7 @@ class UT2004Query{
         return player;
     }
 
-    parsePlayerInfoPacket(data){
+    parsePlayerInfoPacket(data, ip, port){
 
         //remove first 4 bytes
         data.splice(0,4);
@@ -568,7 +570,6 @@ class UT2004Query{
         //team score ids are always 0 and name Red Team or Blue Team
         console.table(players);
 
-        this.em.emit('playersPing', players);
 
         players.sort((a, b) =>{
 
@@ -583,6 +584,8 @@ class UT2004Query{
 
             return 0;
         });
+
+        this.em.emit('playersPing', players, ip, port -1);
        // console.table(players);
   
     }

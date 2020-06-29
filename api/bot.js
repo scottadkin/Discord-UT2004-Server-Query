@@ -27,6 +27,7 @@ class Bot{
         this.pendingMessages = [];
 
         this.currentServerInfo = [];
+        this.currentPlayers = [];
 
         this.addListeners();
         
@@ -145,9 +146,72 @@ class Bot{
         }
     }
 
+    createTeamString(players, team, teamScore){
+
+        let string = "";
+        let title = "";
+
+        switch(team){
+            case -1: {   string = "**Spectators:** "; } break;
+            case 0: {   title = `Red Team ${teamScore}\n`; } break;
+            case 1: {   title = `Blue Team ${teamScore}\n`; } break;
+
+        }
+
+        let p = 0;
+
+        for(let i = 0; i < players.length; i++){
+
+            p = players[i];
+
+            if(p.team == team){
+                //data.push(players[i]);
+
+                if(p.id === 0) continue;
+                if(p.team != -1){
+                    string += `${p.name}    ${p.score}\n`;
+                }else{
+                    string += `${p.name} `;
+                }
+            }
+        }
+
+        return {"string": string, "title": title};
+    }
+
+    getTeamScore(players, team){
+
+
+        if(team !== 0 && team !== 1){
+            return '';
+        }
+
+        let targetName = "";
+
+        switch(team){
+
+            case 0: { targetName = "Red Team"; } break;
+            case 1: { targetName = "Blue Team"; } break;
+        }
+
+        let p = 0;
+
+        for(let i = 0; i < players.length; i++){
+
+            p = players[i];
+
+            if(p.name === targetName){
+                if(p.id === 0 && p.team === -1){
+                    return p.score;
+                }
+            }
+        }
+
+        return '';
+    }
+
     addListeners(){
         
-
         this.query.em.on('basicPing', (data) =>{
 
             console.log(`Got basic server information for ${data.ip}:${data.port}`);
@@ -163,24 +227,100 @@ class Bot{
                 if(test != null){
 
                     this.currentServerInfo = data;
-
-                    test.channel.send(`
-                        ${data.name}
-                        ${data.ip}:${data.port}
-                        Players: ${data.currentPlayers}/${data.maxPlayers}
-                        Gametype: ${data.gametype}
-                        Map: ${data.map}
-                    `);
-
                     this.deletePendingMessage(data.ip, data.port, "basic");
                     
                 }
             }
 
 
-            this.query.em.on('players', (data) =>{
+            this.query.em.on('playersPing', (data, ip, port) =>{
 
-                console.log(data);
+                //console.log('playersPing');
+               // console.log(data);
+
+                const test = this.getPendingMessage(ip, port, "players");
+
+                //console.log(test);
+               // console.log(this.currentServerInfo);
+
+                //console.table(this.pendingMessages);
+
+                if(test != null){
+
+                    
+
+                    if(this.currentServerInfo.name != undefined){
+
+                        //test.channel.send("Players stufff");
+                        const si = this.currentServerInfo;
+
+                        if(data.length < si.currentPlayers){
+
+                            console.log("Player length not enoguh");
+
+                            this.currentPlayers = this.currentPlayers.concat(data);
+
+                            if(this.currentPlayers.length < si.currentPlayers){        
+                                console.log("Not enough player data yet waiting for second packet");
+                                return;
+                            }
+                        }else{
+                            this.currentPlayers = data;
+                        }
+ 
+
+                        let string = `${si.name} (${ip}:${port})
+Playing ${si.gametype} on ${si.map}
+Players ${si.currentPlayers}/${si.maxPlayers}`;
+
+
+                        let playersString = "";
+
+                        let d = 0;
+
+                        //data = this.currentPlayers;
+
+                       // data = this.currentPlayers.concat(data);
+
+                        const redTeamScore = this.getTeamScore(data, 0);
+                        const blueTeamScore = this.getTeamScore(data, 1);
+
+                        const redTeamString = this.createTeamString(data, 0, redTeamScore);
+                        const blueTeamString = this.createTeamString(data, 1, blueTeamScore);
+                        const spectatorsString = this.createTeamString(data, -1);
+
+                        console.log(redTeamString.string);
+                        console.log(blueTeamString.string);
+                        console.log(spectatorsString.string);
+
+                        string += '\n`'+playersString+'`'
+                        //test.channel.send(string);
+
+
+                        const embed = new Discord.MessageEmbed()
+                        .setColor("#000000")
+                        .setTitle(`${si.name}`)
+                        .setDescription(`**Players ${si.currentPlayers}/${si.maxPlayers}**\n**${si.gametype}**\n**${si.map}**`)
+                        .addField(redTeamString.title, redTeamString.string, true)
+                        .addField(blueTeamString.title, blueTeamString.string, true)
+                        .addField('\u200B', spectatorsString.string, false)
+                        .setFooter(`ut2004://${ip}:${port}`);
+
+                        test.channel.send(embed);
+
+                     
+                        this.deletePendingMessage(ip, port, "players");
+                        this.currentServerInfo = [];
+                        this.currentPlayers = [];
+
+                        //const embed = new Discord.embed();
+
+                        
+
+
+                        
+                    }
+                }
             });
 
             
@@ -213,7 +353,7 @@ class Bot{
                 port = 7777;
             }
 
-            console.log(result);
+           // console.log(result);
 
             if(port < 0 || port > 65536){
                 message.channel.send(`Error: Server port must be in range of 0 - 65536`);
@@ -232,7 +372,18 @@ class Bot{
                 }
             );
 
+            this.pendingMessages.push(
+                {
+                    "timeStamp": Date.now(),
+                    "type": "players",
+                    "ip": ip,
+                    "port": port,
+                    "channel": message.channel
+                }
+            );
+
             this.query.pingServerBasic(ip, port);
+            this.query.pingServerPlayerInfo(ip, port);
 
             return;
         }
@@ -272,10 +423,12 @@ class Bot{
                 );
 
                 this.currentServerInfo = [];
+                this.currentPlayers = [];
                 this.query.pingServerBasic('80.4.151.145', 7777);     
 
             }else if(message.content.startsWith(config.commandPrefix)){
                 this.currentServerInfo = [];
+                this.currentPlayers = [];
                 this.customQueryServer(message);
             }
         });
