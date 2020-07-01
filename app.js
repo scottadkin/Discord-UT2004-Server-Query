@@ -1,7 +1,8 @@
-//const UT2k4Query = require('./api/ut2004query');
-//const sqlite3 = require('sqlite3').verbose();
+const UT2004Q = require("./api/ut2004q");
+
+const UT2004Query = require('./api/ut2004q');
+const Promise = require('promise');
 const Bot = require('./api/bot');
 
-//const test = new UT2k4Query();
 
-const QueryBot = new Bot();
+const test = new Bot();

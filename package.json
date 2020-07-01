@@ -1,25 +1,25 @@
 {
-  "name": "ut2k4query",
+  "name": "ut2k4discordbot",
   "version": "1.0.0",
-  "description": "Discord bot for querying Unreal Tournament 2004 servers",
+  "description": "Discord bot for querying UT 2004 servers and displaying the results",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "ut",
+    "ut2004",
     "ut2k4",
     "unreal",
     "tournament",
-    "server",
-    "query",
     "discord",
-    "bot"
+    "bot",
+    "query"
   ],
   "author": "Scott Adkin",
   "license": "ISC",
   "dependencies": {
     "discord.js": "^12.2.0",
-    "sqlite3": "^4.2.0"
+    "geoip-lite": "^1.4.2",
+    "promise": "^8.1.0"
   }
 }
