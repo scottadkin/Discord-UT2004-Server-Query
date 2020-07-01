@@ -7,7 +7,9 @@ const geoip = require('geoip-lite');
 
 class UT2004Q{
 
-    constructor(){
+    constructor(database){
+
+        this.database = database;
 
         this.createClient();
 
@@ -39,9 +41,14 @@ class UT2004Q{
 
         //console.log(geoip.lookup(ip));
 
-        const geo = geoip.lookup(ip);
+        let geo = geoip.lookup(ip);
 
-        console.log(geo);
+        if(geo == null){
+
+            geo = {"country": "xx", "city": ""};
+        }
+
+       // console.log(geo);
 
         this.pendingData.push({
             "ip": ip,
@@ -123,6 +130,9 @@ class UT2004Q{
 
             //console.log(`${message}`);
             console.log(rinfo);
+            if(rinfo === null || message === null){
+                return;
+            }
 
             let data = JSON.stringify(message);
             data = JSON.parse(data).data;
@@ -229,17 +239,17 @@ class UT2004Q{
 
 
     /**
-     * First byte is the string length, this however seems to now be accurate
+     * First byte is the string length, this however seems to not be accurate
      * Last byte is always NULL(0x00)
      * Server name string always has a byte 0x02(Start of text byte) at the start so we delete it first
      */
 
     parseString(data, bServerName){
         
-        if(bServerName != undefined){
-            //remove start of string byte (02) only happens with server name
-            data.splice(0,1);
-        }
+
+        //remove string length byte
+        data.splice(0,1);
+        
 
         const nameBytes = this.removeColorData(data, -1);
 
@@ -310,6 +320,7 @@ class UT2004Q{
         data.splice(0,4);
         
         serverInfo.name = this.parseString(data, true);
+
 
         serverInfo.map = this.parseString(data);
         serverInfo.gametype = this.parseString(data);
@@ -481,6 +492,24 @@ class UT2004Q{
         return player;
     }
 
+
+    sortPlayersByScore(players){
+
+        players.sort((a, b) =>{
+
+            a = a.score;
+            b = b.score;
+
+            if(a > b){
+                return -1;
+            }else if(a < b){
+                return 1;
+            }
+
+            return 0;
+        });
+        //return players;
+    }
     parsePlayerInfo(data, ip, port){
         
         //remove game byte
@@ -497,19 +526,7 @@ class UT2004Q{
             players.push(this.parsePlayer(data));
         }
 
-        players.sort((a, b) =>{
-
-            a = a.score;
-            b = b.score;
-
-            if(a > b){
-                return -1;
-            }else if(a < b){
-                return 1;
-            }
-
-            return 0;
-        });
+        this.sortPlayersByScore(players);
 
         //console.table(players);
 
@@ -523,7 +540,9 @@ class UT2004Q{
 
             pendingMessage.players = pendingMessage.players.concat(players);
 
-            if(pendingMessage.players.length >= pendingMessage.playersToGet - 1 && !pendingMessage.bCompleted){
+            this.sortPlayersByScore(pendingMessage.players);
+
+            if(pendingMessage.players.length >= pendingMessage.playersToGet && !pendingMessage.bCompleted){
 
                 this.sendDiscordResponse(pendingMessage);
             }
@@ -550,6 +569,38 @@ class UT2004Q{
         return foundTeams.length;
     }
 
+    getTeamScore(players, teamId){
+
+        let findA = "red team";
+        //find B is for brightskin support, team names are different (East side, West Side)
+        let findB = "east side";
+
+        if(teamId == 1){
+
+            findA = "blue team";
+            findB = "west side";
+        }
+
+        let p = 0;
+        let currentName = "";
+
+        for(let i = 0; i < players.length; i++){
+
+            p = players[i];
+
+            if(p.id === 0){
+
+                currentName = p.name.toLowerCase();
+
+                if(currentName === findA || currentName === findB){
+                    return p.score;
+                }
+            }
+        }
+
+        return "";
+    }
+
     setTeamFields(players){
 
         let dmTeam = "";
@@ -573,7 +624,12 @@ class UT2004Q{
 
             p = players[i];
 
-            console.log(p.team);
+            //team scores are always id 0
+            if(p.id === 0){
+                continue;
+            }
+
+            //console.log(p.team);
 
             flagResult = flagReg.exec(p.name);
 
@@ -589,7 +645,7 @@ class UT2004Q{
                 
                 p.name = `:flag_${flagResult[2].toLowerCase()}: ${flagResult[1]}`;
             }else{
-                p.name = `:pirate_flag: ${p.name}`;
+                p.name = `:video_game: ${p.name}`;
             }
 
             currentString = `${p.name} **${p.score}**\n`;
@@ -622,7 +678,7 @@ class UT2004Q{
         if(redTeam != ""){
 
             result.push({
-                "name": ":red_square: Red Team",
+                "name": `:red_square: Red Team ${this.getTeamScore(players, 0)}`,
                 "value": redTeam,
                 "inline": true
             });
@@ -632,7 +688,7 @@ class UT2004Q{
         if(blueTeam != ""){
 
             result.push({
-                "name": ":blue_square: Blue Team",
+                "name": `:blue_square: Blue Team ${this.getTeamScore(players, 1)}`,
                 "value": blueTeam,
                 "inline": true
             });
@@ -657,9 +713,12 @@ class UT2004Q{
 
         }
 
+        if(spectators == ""){
+            spectators = "There are currently no spectators.";
+        }
         result.push({
-            "name": "Spectators: "+spectators,
-            "value": '\u200B',
+            "name": "Spectators: ",
+            "value": spectators,
             "inline": false
         });
 
@@ -673,6 +732,7 @@ class UT2004Q{
         console.log("GOt all players data");
 
         const server = data.serverInfo;
+
 
         //console.log(server);
         data.bCompleted = true;
@@ -699,6 +759,8 @@ class UT2004Q{
 
         let description = `**Location: ${data.city}, ${data.country}\nPlayers ${server.currentPlayers}/${server.maxPlayers}\n`;
         description += `${server.gametype}\n${server.map}**`;
+
+        console.log(data.players);
 
         const fields = this.setTeamFields(data.players);
 
