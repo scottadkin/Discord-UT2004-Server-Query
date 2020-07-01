@@ -13,27 +13,17 @@ class UT2004Q{
 
         this.createClient();
 
-        this.pendingData = [];
-        //this.currentPlayers = [];
-
-        /*this.client.send(this.getPacket(0), 7778, '80.4.151.145', (err) =>{
-            console.log(err);
-        });*/
-
-        /*
-        this.client.send(this.getPacket(0), 32101, '81.30.148.29', (err) =>{
-            console.log(err);
-        });*/
-
-        //this.client.send(this.getPacket(2), 7778, '80.4.151.145', (err) =>{
-         //  console.log(err);
-        //});
-
-        //this.getServer('80.4.151.145',7777)
-        
+        this.pendingData = [];       
     }
 
     //80.4.151.145:7777
+
+    getServerBasic(){
+
+        this.client.send(this.getPacket(0), 7778, '80.4.151.145', (err) =>{
+            if(err) console.log(err);
+        });
+    }
 
     getServer(ip, port, channel){
 
@@ -363,13 +353,57 @@ class UT2004Q{
 
 
             if(serverInfo.currentPlayers > 0){
+
                 this.client.send(this.getPacket(2), serverInfo.port + 1, ip, (err) =>{
                     console.log(err);
                 });
+
             }else{
                // console.log(pendingMessage);
                 this.sendDiscordResponse(pendingMessage);
             }
+            
+        }else{
+
+            console.log("not matching data, so it's just a basic server ping.");
+
+            /**
+             *  name TEXT NOT NULL,
+        alias TEXT NOT NULL,
+        ip TEXT NOT NULL,
+        real_ip TEXT NOT NULL,
+        port INTEGER NOT NULL,
+        gametype TEXT NOT NULL,
+        map TEXT NOT NULL,
+        current_players INTEGER NOT NULL,
+        max_players INTEGER NOT NULL,
+        added INTEGER NOT NULL,
+        modified INTEGER NOT NULL
+             */
+            const s = serverInfo;
+
+            const query = `INSERT INTO servers VALUES(?,'test server', ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+            const now = Math.floor(Date.now() * 0.001);
+
+            const vars = [
+                s.name, 
+                s.ip, 
+                s.ip, 
+                s.port, 
+                s.gametype, 
+                s.map, 
+                s.currentPlayers, 
+                s.maxPlayers,
+                now, 
+                now
+            ];
+
+            this.database.run(query, vars, (err) =>{
+
+                if(err) console.log(err);
+
+            });
         }
         
         return serverInfo;
@@ -542,7 +576,7 @@ class UT2004Q{
 
             this.sortPlayersByScore(pendingMessage.players);
 
-            if(pendingMessage.players.length >= pendingMessage.playersToGet && !pendingMessage.bCompleted){
+            if(pendingMessage.players.length >= pendingMessage.playersToGet - 1 && !pendingMessage.bCompleted){
 
                 this.sendDiscordResponse(pendingMessage);
             }
@@ -729,7 +763,7 @@ class UT2004Q{
 
     sendDiscordResponse(data){
 
-        console.log("GOt all players data");
+        //console.log("GOt all players data");
 
         const server = data.serverInfo;
 
@@ -739,7 +773,7 @@ class UT2004Q{
 
         let serverFlag = ":pirate_flag:";
 
-        console.log();
+        //console.log();
 
         if(data.country != undefined){
 
@@ -760,7 +794,7 @@ class UT2004Q{
         let description = `**Location: ${data.city}, ${data.country}\nPlayers ${server.currentPlayers}/${server.maxPlayers}\n`;
         description += `${server.gametype}\n${server.map}**`;
 
-        console.log(data.players);
+        //console.log(data.players);
 
         const fields = this.setTeamFields(data.players);
 

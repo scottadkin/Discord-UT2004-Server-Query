@@ -32,6 +32,108 @@ class Bot{
 
     }
 
+    forceStringLength(string, targetLength){
+
+        if(string.length > targetLength){
+
+           string = string.slice(0, targetLength);
+
+        }else{
+
+            while(string.length < targetLength){
+                string += " ";
+            }
+        }
+
+        return string;
+    }
+
+    createServerString(id, data){
+
+        id = parseInt(id + 1);
+
+        if(id != id){
+
+            id = "ID";
+
+        }else{
+
+            if(id < 10){
+                id = id+" ";
+            }
+
+        }
+
+        let string = "";
+
+        const idLength = 4;
+        const aliasLength = 20;
+        const mapLength = 20;
+        
+
+        data.alias = this.forceStringLength(data.alias, aliasLength);
+        data.map = this.forceStringLength(data.map, mapLength);
+
+        data.current_players = parseInt(data.current_players);
+        data.max_players = parseInt(data.max_players);
+
+        let playersString = `${data.current_players}/${data.max_players}`;
+
+        if(data.current_players != data.current_players){
+            playersString = "Players";
+        }
+
+        playersString = this.forceStringLength(playersString, 7);
+
+        
+        string = `\`${id} - ${data.alias} ${data.map} ${playersString}\`\n`;
+
+        return string;
+    }
+
+    listServers(message){
+
+        const query = `SELECT * FROM servers ORDER BY added ASC`;
+
+        const servers = [];
+
+        db.each(query, (err, row) =>{
+
+            if(err) console.trace(err);
+            console.log(row);
+
+            servers.push(row);
+
+        }, (err, totalRows) =>{
+
+            if(err){
+                console.trace(err);
+            }
+
+            console.log(`Fetched ${totalRows} rows`);
+
+            let serverString = "";
+
+            let s = "";
+
+            for(let i = 0; i < servers.length; i++){
+
+                serverString += this.createServerString(i, servers[i]);
+        
+            }
+
+            let embed = new Discord.MessageEmbed()
+            .setColor("#000000")
+            .setTitle("Unreal Tournament 2004 Servers")
+            .setDescription("Use `.q serverid` for more information on a server.")
+            .addField(this.createServerString("ID", {"alias": "Server Alias", "map": "Map", "current_players": "Play", "max_players": "ers"}), serverString);
+
+
+            message.channel.send(embed);
+
+        })
+    }
+
 
     createClient(){
 
@@ -77,7 +179,17 @@ class Bot{
 
                 this.query.getServer(result[1], parseInt(result[2]), message.channel);
 
+                return;
             }
+
+            if(message.content == "potato"){
+                this.query.getServerBasic();
+            }
+
+            if(message.content == ".servers"){
+                this.listServers(message);
+            }
+
         });
 
         this.client.login(config.token);
