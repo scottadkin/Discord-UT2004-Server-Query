@@ -17,7 +17,7 @@ class Bot{
         this.client = new Discord.Client();
 
         this.client.on('ready', () =>{
-            console.log("I'm Ready, I'm Ready (In spongebobs voice)");
+            console.log("I'm Ready, I'm Ready, I'm Ready (In spongebobs voice)");
         });
 
         this.client.on('error', (err) =>{

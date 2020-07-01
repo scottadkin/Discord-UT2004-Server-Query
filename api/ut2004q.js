@@ -41,6 +41,8 @@ class UT2004Q{
 
         const geo = geoip.lookup(ip);
 
+        console.log(geo);
+
         this.pendingData.push({
             "ip": ip,
             "port": port,
@@ -51,7 +53,8 @@ class UT2004Q{
             "players": [],
             "bCompleted": false,
             "channel": channel,
-            "country": geo.country
+            "country": geo.country,
+            "city": geo.city
         });
 
         this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
@@ -337,6 +340,8 @@ class UT2004Q{
 
         //console.log(pendingMessage);
 
+        console.log(serverInfo);
+
         if(pendingMessage != null){
 
             pendingMessage.playersToGet = serverInfo.currentPlayers;
@@ -346,9 +351,14 @@ class UT2004Q{
             //console.log(this.pendingData);
 
 
-            this.client.send(this.getPacket(2), serverInfo.port + 1, ip, (err) =>{
-                  console.log(err);
-            });
+            if(serverInfo.currentPlayers > 0){
+                this.client.send(this.getPacket(2), serverInfo.port + 1, ip, (err) =>{
+                    console.log(err);
+                });
+            }else{
+               // console.log(pendingMessage);
+                this.sendDiscordResponse(pendingMessage);
+            }
         }
         
         return serverInfo;
@@ -597,7 +607,9 @@ class UT2004Q{
                 }else if(p.team === 1){
 
                     blueTeam += currentString;
+                }else{
 
+                    spectators += `${p.name} `
                 }
 
             }else{
@@ -633,8 +645,23 @@ class UT2004Q{
                 "value": dmTeam,
                 "inline": true
             });
+        }
+
+        if(players.length === 0){
+
+            result.push({
+                "name": ":zzz: Players",
+                "value": "There are currently no players on the server.",
+                "inline": true
+            });
 
         }
+
+        result.push({
+            "name": "Spectators: "+spectators,
+            "value": '\u200B',
+            "inline": false
+        });
 
         //console.log(result);
 
@@ -652,28 +679,32 @@ class UT2004Q{
 
         let serverFlag = ":pirate_flag:";
 
-        if(server.country != undefined){
+        console.log();
 
-            server.country = server.country.toLowerCase();
+        if(data.country != undefined){
 
-            if(server.country  == "uk"){
+            data.country = data.country.toLowerCase();
 
-                server.country  = "gb";
+            if(data.country  == "uk"){
 
-            }else if(server.country  == "el"){
-                server.country  = "gr";
+                data.country  = "gb";
+
+            }else if(data.country  == "el"){
+                data.country  = "gr";
             }
+
+            serverFlag = `:flag_${data.country}:`;
             
         }
 
-        let description = `**Players ${server.currentPlayers}/${server.maxPlayers}\n`;
+        let description = `**Location: ${data.city}, ${data.country}\nPlayers ${server.currentPlayers}/${server.maxPlayers}\n`;
         description += `${server.gametype}\n${server.map}**`;
 
         const fields = this.setTeamFields(data.players);
 
         const reply = new Discord.MessageEmbed()
         .setColor("#000000")
-        .setTitle(`:flag_${serverFlag}: ${server.name}`)
+        .setTitle(`${serverFlag} ${server.name}`)
         .setDescription(description)
         .addFields(fields)
         .setFooter(`ut2004://${server.ip}:${server.port}`);
