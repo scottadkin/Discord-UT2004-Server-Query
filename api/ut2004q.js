@@ -14,6 +14,7 @@ class UT2004Q{
         this.createClient();
 
         this.pendingData = [];       
+
     }
 
     //80.4.151.145:7777
@@ -54,6 +55,8 @@ class UT2004Q{
             "city": geo.city
         });
 
+        console.table(this.pendingData);
+
         this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
             console.log(err);
         });
@@ -63,7 +66,8 @@ class UT2004Q{
     getMatchingPendingData(ip, port, type){
 
         let p = 0;
-        //console.log("looking for "+ip+":"+port+" "+type);
+
+        console.log("looking for "+ip+":"+port+" "+type);
 
         for(let i = 0; i < this.pendingData.length; i++){
 
@@ -118,7 +122,7 @@ class UT2004Q{
 
         this.client.on('message', (message, rinfo) =>{
 
-            //console.log(`${message}`);
+           // console.log(`${message}`);
             console.log(rinfo);
             if(rinfo === null || message === null){
                 return;
@@ -285,6 +289,7 @@ class UT2004Q{
         if(port != undefined){
             serverInfo.port = port - 1;
         }
+        console.log(data);
         
         //remove first byte(game id 0x80 / 128)
         data.splice(0,1);
@@ -295,11 +300,32 @@ class UT2004Q{
         //remove server id (never used) always 4 bytes long
         data.splice(0, 4);
 
+        console.log(data);
         //remove server ip (never used) always 4 bytes long
         data.splice(0, 4);
 
         //get game query port, always 4 bytes, last 2 being 0, and first two being back to front
-        const portHex = data[1].toString(16) + data[0].toString(16);
+        
+        data[0] = data[0].toString(16);
+        data[1] = data[1].toString(16);
+
+        //this fixes hex not including leading 0
+        if(data[0].length < 2){
+            data[0] = "0"+data[0];
+        }
+
+        if(data[1].length < 2){
+            data[1] = "0"+data[1];
+        }
+
+        console.log("data[1] = "+data[1]+" data[0] = "+data[0]);
+
+
+        const portHex = ''+data[1].toString(16)+'' + ''+data[0].toString(16)+'';
+        
+
+        console.log("portHex = "+portHex);
+
 
         serverInfo.port =  parseInt(portHex, 16);
 
@@ -335,8 +361,8 @@ class UT2004Q{
 
        // console.log(serverInfo);
 
-        //console.log("port = "+serverInfo.port);
-        //console.log("ip = "+ip);
+        console.log("port = "+serverInfo.port);
+        console.log("ip = "+ip);
         const pendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "full");
 
         //console.log(pendingMessage);
@@ -594,6 +620,11 @@ class UT2004Q{
 
         for(let i = 0; i < players.length; i++){
 
+            //dont class spectators as a team
+            if(players[i].team === -1){
+                continue;
+            }
+            
             if(foundTeams.indexOf(players[i].team) == -1){
 
                 foundTeams.push(players[i].team);
