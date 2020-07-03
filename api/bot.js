@@ -134,6 +134,105 @@ class Bot{
         })
     }
 
+    insertServer(ip, port){
+
+        /**
+         * name TEXT NOT NULL,
+        alias TEXT NOT NULL,
+        ip TEXT NOT NULL,
+        real_ip TEXT NOT NULL,
+        port INTEGER NOT NULL,
+        gametype TEXT NOT NULL,
+        map TEXT NOT NULL,
+        current_players INTEGER NOT NULL,
+        max_players INTEGER NOT NULL,
+        added INTEGER NOT NULL,
+        modified INTEGER NOT NULL
+         */
+
+        const alias = "Server "+Date.now();
+
+        const now = Math.floor(Date.now() * 0.001);
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "INSERT INTO servers VALUES('Another UT2004 Server',?,?,?,?,'Gametype', 'DM-Test',0,0,?,?)";
+
+            db.run(query, [alias, ip, ip, port, now, now], (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            });
+        });
+    }
+
+    bServerAlreadyAdded(ip, port){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT COUNT(*) as total_servers FROM servers WHERE ip=? AND port=?";
+
+            db.get(query, [ip, port], (err, row) =>{
+
+                if(err){
+                    //console.log(err);
+                    reject(err);
+                }else{
+                    //console.log(row);
+                    resolve(row);
+                }
+            });
+        });
+               
+    }
+
+    async addServer(message){
+
+        try{
+            const reg = /^.addserver (.+?)(:{0,1})(\d{0,5})$/i;
+
+            const result = reg.exec(message.content);
+
+            let ip = '';
+            let port = 0;
+
+            if(result != null){
+
+                console.log(result);
+
+                //port not specified set it to 7777
+                if(result[2] === ":"){
+                    port = parseInt(result[3]);
+                    ip = result[1];
+                }else{
+                    ip = result[1] + result[3];
+                    port = 7777;
+                }
+
+                const test = await this.bServerAlreadyAdded(ip, port);
+
+                if(test.total_servers > 0){
+                    //console.log("Server already added");
+                    message.channel.send("That server has already been added to the database.");
+                }else{
+                    console.log("I can add that");
+
+                    await this.insertServer(ip, port);
+                }
+
+                console.log("test = ");
+                console.log(test);
+                console.log(`Addserver ${ip}:${port}`);
+            }else{
+                console.log("result is null");
+            }
+        }catch(err){
+            console.trace(err);
+
+            message.channel.send("There was a database error, failed to added server.");
+        }
+    }
 
     createClient(){
 
@@ -153,19 +252,7 @@ class Bot{
 
             if(message.author.bot) return;
 
-           // console.log(message.channel.guild.roles.cache);
-
-          // console.log( message.channel.guild.roles.cache);
-
             console.log(this.bUserAdmin(message));
-
-         
-            //console.log(this.getRole(config.adminRole, message));
-       
-           //..console.log(this.client);
-            //console.log("role = " +this.getRoleId(config.adminRole));
-
-           // console.log(message.author.cache.roles.some(role => role.name === config.adminRole));
 
             console.log(message.content);
 
@@ -179,16 +266,21 @@ class Bot{
 
                 this.query.getServer(result[1], parseInt(result[2]), message.channel);
 
-                return;
-            }
+            }else if(message.content == ".servers"){
 
-            if(message.content == "potato"){
-                this.query.getServerBasic();
-            }
-
-            if(message.content == ".servers"){
                 this.listServers(message);
+                
+
+            }else if(message.content.startsWith(".addserver ")){
+
+                this.addServer(message);
             }
+
+            //if(message.content == "potato"){
+            //    this.query.getServerBasic();
+            //}
+
+            
 
         });
 

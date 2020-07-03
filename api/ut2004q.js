@@ -393,6 +393,7 @@ class UT2004Q{
 
             console.log("not matching data, so it's just a basic server ping.");
 
+            this.insertServer(serverInfo);
             /**
              *  name TEXT NOT NULL,
         alias TEXT NOT NULL,
@@ -406,30 +407,7 @@ class UT2004Q{
         added INTEGER NOT NULL,
         modified INTEGER NOT NULL
              */
-            const s = serverInfo;
-
-            const query = `INSERT INTO servers VALUES(?,'test server', ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-            const now = Math.floor(Date.now() * 0.001);
-
-            const vars = [
-                s.name, 
-                s.ip, 
-                s.ip, 
-                s.port, 
-                s.gametype, 
-                s.map, 
-                s.currentPlayers, 
-                s.maxPlayers,
-                now, 
-                now
-            ];
-
-            this.database.run(query, vars, (err) =>{
-
-                if(err) console.log(err);
-
-            });
+            
         }
         
         return serverInfo;
@@ -841,6 +819,34 @@ class UT2004Q{
         this.deletePendingData(data.ip, data.port, "full");
 
         //console.log(pendingMessage);
+    }
+
+    insertServer(serverInfo){
+
+        const s = serverInfo;
+
+        const query = `INSERT INTO servers VALUES(?,'test server', ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        const now = Math.floor(Date.now() * 0.001);
+
+        const vars = [
+            s.name, 
+            s.ip, 
+            s.ip, 
+            s.port, 
+            s.gametype, 
+            s.map, 
+            s.currentPlayers, 
+            s.maxPlayers,
+            now, 
+            now
+        ];
+
+        this.database.run(query, vars, (err) =>{
+
+            if(err) console.log(err);
+
+        });
     }
 }
 
