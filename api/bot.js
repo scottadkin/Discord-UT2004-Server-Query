@@ -132,7 +132,7 @@ class Bot{
                 console.trace(err);
             }
 
-            console.log(`Fetched ${totalRows} rows`);
+            //console.log(`Fetched ${totalRows} rows`);
 
             let serverString = "";
 

@@ -2,6 +2,10 @@ const Promise = require('promise');
 const dgram = require('dgram');
 const Discord = require('discord.js');
 const geoip = require('geoip-lite');
+const config = require('./config');
+
+const countryList = require('country-list');
+const db = require('./database');
 
 //const fs = require('fs');
 
@@ -15,13 +19,89 @@ class UT2004Q{
 
         this.pendingData = [];       
 
+
+        //checks for timeouts
+        setInterval(() =>{
+            this.tick();
+        }, 1000);
+
+        //loop for server pings
+        setInterval(() =>{
+
+            this.pingServerList();
+
+        },config.serverPingInterval * 1000);
+
+    }
+
+    getAllServers(){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT * FROM servers";
+
+            const servers = [];
+
+            db.each(query, (err, row) =>{
+
+                if(err) reject(err);
+
+                servers.push(row);
+
+            }, (err) =>{
+                if(err) reject(err);
+
+                resolve(servers);
+            });
+        });
+    }
+
+    async pingServerList(){
+
+        const servers = await this.getAllServers();
+
+        let s = 0;
+
+        for(let i = 0; i < servers.length; i++){
+
+            s = servers[i];
+
+            this.getServerBasic(s.ip, s.port)
+        }
+        console.table(servers);
+    }
+
+    tick(){
+
+        //console.log("Looking for timedout data");
+
+        let p = 0;
+
+        const now = Math.floor(Date.now() * 0.001);
+
+        for(let i = 0; i < this.pendingData.length; i++){
+
+            p = this.pendingData[i];
+
+            console.log(now - p.created);
+
+            if(now - p.created >= config.serverTimeout){
+
+                p.channel.send(`Server ${p.ip}:${p.port} Timed Out!`);
+                this.deletePendingData(p.ip, p.port, p.type);
+                //console.log("Server timeout");
+            }
+
+        }
     }
 
     //80.4.151.145:7777
 
-    getServerBasic(){
+    getServerBasic(ip, port){
 
-        this.client.send(this.getPacket(0), 7778, '80.4.151.145', (err) =>{
+        port = port + 1;
+
+        this.client.send(this.getPacket(0), port, ip, (err) =>{
             if(err) console.log(err);
         });
     }
@@ -52,7 +132,8 @@ class UT2004Q{
             "bCompleted": false,
             "channel": channel,
             "country": geo.country,
-            "city": geo.city
+            "city": geo.city,
+            "created": Math.floor(Date.now() * 0.001)
         });
 
         console.table(this.pendingData);
@@ -393,7 +474,7 @@ class UT2004Q{
 
             console.log("not matching data, so it's just a basic server ping.");
 
-            this.insertServer(serverInfo);
+            //this.insertServer(serverInfo);
             /**
              *  name TEXT NOT NULL,
         alias TEXT NOT NULL,
@@ -800,7 +881,17 @@ class UT2004Q{
             
         }
 
-        let description = `**Location: ${data.city}, ${data.country}\nPlayers ${server.currentPlayers}/${server.maxPlayers}\n`;
+        let countryName = countryList.getName(data.country.toUpperCase());
+
+        if(data.city != ""){
+            data.city += ", ";
+        }
+
+        if(countryName == undefined){
+            countryName = "";
+        }
+
+        let description = `**Location: ${data.city}${countryName}\nPlayers ${server.currentPlayers}/${server.maxPlayers}\n`;
         description += `${server.gametype}\n${server.map}**`;
 
         //console.log(data.players);
