@@ -15,21 +15,43 @@ class Bot{
     }
 
 
+    bAdminRole(adminRoles, role){
 
-    bUserAdmin(message){
+        for(let i = 0; i < adminRoles.length; i++){
 
-        const member = message.member;
-
-        //console.log(member);
-
-        return member.roles.cache.some((role) =>{
-
-            if(role.name.toLowerCase() == config.adminRole.toLowerCase()){
+            if(adminRoles[i].name.toLowerCase() == role.toLowerCase()){
                 return true;
             }
-            return false;
-        });
+        }
 
+        return false;
+    }
+
+    bUserAdmin(message, adminRoles){
+
+        try{
+
+            const member = message.member;
+
+            let result = false;
+
+            member.roles.cache.some((role) =>{
+
+                if(role.name.toLowerCase() == config.adminRole.toLowerCase()){
+                    result = true;
+                    return
+                }else if(this.bAdminRole(adminRoles, role.name)){
+                    console.log("user has added role");
+                    result = true;
+                    return
+                }
+            });
+
+            return result;
+
+        }catch(err){
+            console.trace(err);
+        }
     }
 
     forceStringLength(string, targetLength){
@@ -122,6 +144,10 @@ class Bot{
         
             }
 
+            if(serverString == ""){
+                serverString = "**There are currently no servers added.**";
+            }
+
             let embed = new Discord.MessageEmbed()
             .setColor("#000000")
             .setTitle("Unreal Tournament 2004 Servers")
@@ -135,20 +161,6 @@ class Bot{
     }
 
     insertServer(ip, port){
-
-        /**
-         * name TEXT NOT NULL,
-        alias TEXT NOT NULL,
-        ip TEXT NOT NULL,
-        real_ip TEXT NOT NULL,
-        port INTEGER NOT NULL,
-        gametype TEXT NOT NULL,
-        map TEXT NOT NULL,
-        current_players INTEGER NOT NULL,
-        max_players INTEGER NOT NULL,
-        added INTEGER NOT NULL,
-        modified INTEGER NOT NULL
-         */
 
         const alias = "Server "+Date.now();
 
@@ -165,6 +177,88 @@ class Bot{
                 resolve();
             });
         });
+    }
+
+    deleteServer(ip, port){
+
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "DELETE FROM servers WHERE ip=? AND port=?";
+
+            db.run(query, [ip, port], (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            });
+
+        });
+    }
+
+    getAllServers(){
+
+        return new Promise((resolve, reject) =>{
+
+            const servers = [];
+
+            const query = "SELECT * FROM servers ORDER BY added ASC";
+
+            db.each(query, (err, row) =>{
+
+                if(err) reject("There was a problem getting servers from database.");
+
+                servers.push(row);
+
+            }, (err, totalRows) =>{
+
+                if(err) reject("There was a problem getting servers from database(ALT)");
+
+                resolve(servers);
+            });
+
+        });
+    }
+
+    async removeServer(message){
+
+        try{
+
+            const reg = /^\.deleteserver (\d+)$/i;
+
+            const result = reg.exec(message.content);
+
+            //console.log(result);
+
+            if(result !== null){
+
+                const id = parseInt(result[1]) - 1;
+
+                const servers = await this.getAllServers();
+
+                if(servers.length < id){
+                    message.channel.send("Can't delete server with that id, it does not exist!");
+                    return;
+                }
+
+                //console.table(servers);
+
+                await this.deleteServer(servers[id].ip, servers[id].port);
+
+                message.channel.send("Server deleted!");
+                //this.listServers(message);
+
+            }else{
+
+                message.channel.send("Invalid syntax, correct is `.deleteserver serverid`");
+            
+            }
+
+        }catch(err){
+
+            console.trace(err);
+        }
+
     }
 
     bServerAlreadyAdded(ip, port){
@@ -219,6 +313,8 @@ class Bot{
                     console.log("I can add that");
 
                     await this.insertServer(ip, port);
+                    message.channel.send("Server successfully added.");
+                    //this.listServers(message);
                 }
 
                 console.log("test = ");
@@ -232,6 +328,383 @@ class Bot{
 
             message.channel.send("There was a database error, failed to added server.");
         }
+    }
+
+    bChannelExist(id){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT COUNT(*) as total_channels FROM channels WHERE channel_id=?";
+
+            db.get(query, [id], (err, row) =>{
+
+                if(err) reject(err);
+
+                if(row.total_channels > 0){
+                    resolve(true);
+                }
+
+                resolve(false);
+            
+            });
+        });
+    }
+
+    insertChannel(channel){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "INSERT INTO channels VALUES(?,?)";
+
+            db.run(query, [channel.id, channel.name], (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            });
+        });
+    }
+
+    async allowChannel(message){
+
+
+        try{
+
+            const bAlreadyExists = await this.bChannelExist(message.channel.id);
+
+            console.log("exists = "+bAlreadyExists);
+            //console.log(message.channel);
+
+            if(!bAlreadyExists){
+
+                await this.insertChannel(message.channel);
+
+                message.channel.send("Bot can now be used in this channel.");
+
+            }else{
+                message.channel.send("This channel has already been enabled for bot use.");
+            }
+
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
+    deleteChannel(channel){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "DELETE FROM channels WHERE channel_id=?";
+
+            db.run(query, [channel.id], (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            });
+        });
+    }
+
+    async removeChannel(message){
+
+        try{
+
+            const bAlreadyExists = await this.bChannelExist(message.channel.id);
+
+            console.log("bAlreadyExists = "+bAlreadyExists);
+            if(bAlreadyExists){
+
+                await this.deleteChannel(message.channel);
+
+                message.channel.send("Bot is no longer enabled in this channel.");
+
+            }else{
+                message.channel.send("Bot was already disabled for this channel.");
+            }
+
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
+    bRoleAlreadyExists(role){
+
+        console.log(`Looking for role ${role}`);
+
+        role = role.toLowerCase();
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT COUNT(*) as total_roles FROM roles WHERE name=?";
+
+            db.get(query, [role], (err, row) =>{
+
+                if(err) reject(err);
+
+                console.log(row);
+
+                if(row.total_roles > 0){
+                    resolve(true);
+                }
+
+                resolve(false);
+            });
+        });
+    }
+
+    insertRole(id, name){
+
+        name = name.toLowerCase();
+
+        return new Promise((resolve, reject) =>{
+
+            const now = Math.floor(Date.now() * 0.001);
+
+            const query = "INSERT INTO roles VALUES(?,?,?)";
+
+            db.run(query, [id, name, now], (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            });
+        });
+    }
+
+    getAllAdminRoles(){
+
+        return new Promise((resolve, reject) =>{
+
+            const roles = [];
+
+            const query = "SELECT * FROM roles";
+
+            db.each(query, (err, row) =>{
+
+                if(err) reject(err);
+
+                roles.push(row);
+
+            }, (err, totalRows) =>{
+
+                if(err) reject(err);
+
+                resolve(roles);
+            });
+        });
+    }
+
+    getAllRoles(message){
+
+        const roles = message.channel.guild.roles.cache;
+
+        const result = [];
+
+        roles.forEach((role) =>{
+
+            result.push(role);
+        });
+
+        return result;
+    }
+
+    getRole(message, roleName){
+
+        roleName = roleName.toLowerCase();
+        const roles = message.channel.guild.roles.cache;
+
+        let result = null;
+
+        roles.forEach((role) =>{
+
+            //console.log(role.name);
+            if(role.name.toLowerCase() == roleName){
+                result = role;
+            }
+
+        });
+
+        return result;
+    }
+
+    bValidRole(message, roleName){
+
+        const result = this.getRole(message, roleName);
+
+        if(result === null){
+            return false;
+        }
+
+        return true;
+    }
+
+    async allowRole(message){
+
+        try{
+
+            const allowRoleReg = /^.allowrole (.+)$/i;
+
+            const result = allowRoleReg.exec(message.content);
+            
+
+            if(this.bValidRole(message, result[1])){
+
+                const role = this.getRole(message, result[1]);
+           // message.channel.guild.roles.cache.forEach(a => console.log(a));
+
+                const bAlreadyExists = await this.bRoleAlreadyExists(result[1]);
+            
+
+                if(bAlreadyExists){
+                    message.channel.send(`The role **${result[1]}** already has bot admin privileges.`);
+                }else{
+                    //this.insertRole(message);
+                    await this.insertRole(role.id, role.name);
+
+                    message.channel.send(`The role **${result[1]}** now has bot admin privileges.`);
+                }
+            }else{
+                message.channel.send(`There are no roles called **${result[1]}** on this Discord server.`);
+            }
+
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
+    deleteRole(role){
+
+        role = role.toLowerCase();
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "DELETE FROM roles WHERE name=?";
+
+            db.run(query, [role], (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            });
+        });
+    }
+
+    async removeRole(message){
+
+        try{
+            const reg = /^.deleterole (.+)$/i;
+
+            const result = reg.exec(message.content);
+
+            if(result != null){
+
+                const bExists = await this.bRoleAlreadyExists(result[1]);
+
+               // console.log(this.bRoleAlreadyExists(result[1]));
+                if(bExists){
+                    await this.deleteRole(result[1]);
+                    message.channel.send(`The role **${result[1]}** no longer has admin privileges.`);
+                }else{
+                    message.channel.send(`The role **${result[1]}** did not have admin privileges already.`);
+                }
+
+            }else{
+                message.channel.send("Incorrect syntax!");
+            }
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
+    async parseCommand(message){
+
+        try{
+
+
+            if(message.author.bot) return;
+
+            const adminMessage = "You do not have permission to use this command.";
+
+            const adminRoles = await this.getAllAdminRoles();
+            
+            const bAdmin = this.bUserAdmin(message, adminRoles);
+
+            console.log("bAdmin = "+bAdmin);
+
+            console.log(message.content);
+
+            const queryServerReg = /^.q (.+?):{0,1}(\d{1,5})$/i;
+            //const allowRoleReg = /^.allowrole (.+)$/i;
+
+            //console.log(queryServerReg.exec(message.content));
+
+
+            if(queryServerReg.test(message.content)){
+
+                const result = queryServerReg.exec(message.content);
+
+                this.query.getServer(result[1], parseInt(result[2]), message.channel);
+
+            }else if(message.content == ".servers"){
+
+                this.listServers(message);
+                
+            }else if(message.content.startsWith(".addserver ")){
+
+                if(bAdmin){
+                    this.addServer(message);
+                }else{
+                    message.channel.send(adminMessage);
+                }
+
+            }else if(message.content.startsWith(".deleteserver ")){
+
+                if(bAdmin){
+                    this.removeServer(message);
+                }else{
+                    message.channel.send(adminMessage);
+                }
+
+            }else if(message.content == ".allowchannel"){
+
+                if(bAdmin){
+                    this.allowChannel(message);
+                }else{
+                    message.channel.send(adminMessage);
+                }
+
+            }else if(message.content == ".deletechannel"){
+
+                if(bAdmin){
+                    this.removeChannel(message);
+                }else{
+                    message.channel.send(adminMessage);
+                }
+
+            }else if(message.content.startsWith(".allowrole")){
+
+                //const roleResult = allowRoleReg.exec(message.content);
+                if(bAdmin){
+                    this.allowRole(message);
+                }else{
+                    message.channel.send(adminMessage);
+                }
+
+            }else if(message.content.startsWith(".deleterole")){
+
+                if(bAdmin){
+
+                    this.removeRole(message);
+
+                }else{
+                    message.channel.send(adminMessage);
+                }
+            }
+
+        }catch(err){
+            console.trace(err);
+        }
+
     }
 
     createClient(){
@@ -249,39 +722,7 @@ class Bot{
 
         this.client.on('message', (message) =>{
 
-
-            if(message.author.bot) return;
-
-            console.log(this.bUserAdmin(message));
-
-            console.log(message.content);
-
-            const queryServerReg = /^.q (.+?):{0,1}(\d{1,5})$/i;
-
-            console.log(queryServerReg.exec(message.content));
-
-            if(queryServerReg.test(message.content)){
-
-                const result = queryServerReg.exec(message.content);
-
-                this.query.getServer(result[1], parseInt(result[2]), message.channel);
-
-            }else if(message.content == ".servers"){
-
-                this.listServers(message);
-                
-
-            }else if(message.content.startsWith(".addserver ")){
-
-                this.addServer(message);
-            }
-
-            //if(message.content == "potato"){
-            //    this.query.getServerBasic();
-            //}
-
-            
-
+            this.parseCommand(message);
         });
 
         this.client.login(config.token);
