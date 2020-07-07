@@ -5,8 +5,7 @@ const geoip = require('geoip-lite');
 const config = require('./config');
 
 const countryList = require('country-list');
-const db = require('./database');
-
+const Servers = require('./servers');
 //const fs = require('fs');
 
 class UT2004Q{
@@ -16,6 +15,8 @@ class UT2004Q{
         this.database = database;
 
         this.createClient();
+
+        this.servers = new Servers(database);
 
         this.pendingData = [];       
 
@@ -34,7 +35,7 @@ class UT2004Q{
 
     }
 
-    getAllServers(){
+    /*getAllServers(){
 
         return new Promise((resolve, reject) =>{
 
@@ -54,21 +55,25 @@ class UT2004Q{
                 resolve(servers);
             });
         });
-    }
+    }*/
 
     async pingServerList(){
 
-        const servers = await this.getAllServers();
+        try{
+            const servers = await this.servers.getAllServers();
 
-        let s = 0;
+            let s = 0;
 
-        for(let i = 0; i < servers.length; i++){
+            for(let i = 0; i < servers.length; i++){
 
-            s = servers[i];
+                s = servers[i];
 
-            this.getServerBasic(s.ip, s.port)
+                this.getServerBasic(s.ip, s.port)
+            }
+            console.table(servers);
+        }catch(err){
+            console.trace(err);
         }
-        console.table(servers);
     }
 
     tick(){
@@ -136,7 +141,7 @@ class UT2004Q{
             "created": Math.floor(Date.now() * 0.001)
         });
 
-        console.table(this.pendingData);
+        //console.table(this.pendingData);
 
         this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
             console.log(err);
@@ -364,13 +369,19 @@ class UT2004Q{
 
 
         const serverInfo = {
-            "ip": ip
+            "ip": ip,
+            "port": 0,
+            "name": "",
+            "gametype": "",
+            "map": "",
+            "currentPlayers": 0,
+            "maxPlayers": 0
         };
 
         if(port != undefined){
             serverInfo.port = port - 1;
         }
-        console.log(data);
+        //console.log(data);
         
         //remove first byte(game id 0x80 / 128)
         data.splice(0,1);
@@ -381,7 +392,7 @@ class UT2004Q{
         //remove server id (never used) always 4 bytes long
         data.splice(0, 4);
 
-        console.log(data);
+        //console.log(data);
         //remove server ip (never used) always 4 bytes long
         data.splice(0, 4);
 
@@ -399,13 +410,13 @@ class UT2004Q{
             data[1] = "0"+data[1];
         }
 
-        console.log("data[1] = "+data[1]+" data[0] = "+data[0]);
+       // console.log("data[1] = "+data[1]+" data[0] = "+data[0]);
 
 
         const portHex = ''+data[1].toString(16)+'' + ''+data[0].toString(16)+'';
         
 
-        console.log("portHex = "+portHex);
+        //console.log("portHex = "+portHex);
 
 
         serverInfo.port =  parseInt(portHex, 16);
@@ -442,13 +453,13 @@ class UT2004Q{
 
        // console.log(serverInfo);
 
-        console.log("port = "+serverInfo.port);
-        console.log("ip = "+ip);
+        //console.log("port = "+serverInfo.port);
+       // console.log("ip = "+ip);
         const pendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "full");
 
         //console.log(pendingMessage);
 
-        console.log(serverInfo);
+      //  console.log(serverInfo);
 
         if(pendingMessage != null){
 
@@ -474,6 +485,7 @@ class UT2004Q{
 
             console.log("not matching data, so it's just a basic server ping.");
 
+            this.servers.updateServer(serverInfo);
             //this.insertServer(serverInfo);
             /**
              *  name TEXT NOT NULL,
@@ -912,33 +924,11 @@ class UT2004Q{
         //console.log(pendingMessage);
     }
 
-    insertServer(serverInfo){
 
-        const s = serverInfo;
+    bServerAdded(){
 
-        const query = `INSERT INTO servers VALUES(?,'test server', ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-        const now = Math.floor(Date.now() * 0.001);
-
-        const vars = [
-            s.name, 
-            s.ip, 
-            s.ip, 
-            s.port, 
-            s.gametype, 
-            s.map, 
-            s.currentPlayers, 
-            s.maxPlayers,
-            now, 
-            now
-        ];
-
-        this.database.run(query, vars, (err) =>{
-
-            if(err) console.log(err);
-
-        });
     }
+
 }
 
 

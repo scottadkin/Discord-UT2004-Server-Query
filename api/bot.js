@@ -1,6 +1,7 @@
 const Promise = require('promise');
 const Discord = require('discord.js');
 const UT2004Query = require('./ut2004q');
+const Servers = require('./servers');
 const config = require('./config');
 const db = require('./database');
 
@@ -9,6 +10,7 @@ class Bot{
     constructor(){
 
         this.createClient();
+        this.servers = new Servers(db);
         this.query = new UT2004Query(db);
 
         
@@ -113,26 +115,11 @@ class Bot{
         return string;
     }
 
-    listServers(message){
+    async listServers(message){
 
-        const query = `SELECT * FROM servers ORDER BY added ASC`;
-
-        const servers = [];
-
-        db.each(query, (err, row) =>{
-
-            if(err) console.trace(err);
-            console.log(row);
-
-            servers.push(row);
-
-        }, (err, totalRows) =>{
-
-            if(err){
-                console.trace(err);
-            }
-
-            //console.log(`Fetched ${totalRows} rows`);
+        
+        try{
+            const servers = await this.servers.getAllServers();
 
             let serverString = "";
 
@@ -157,44 +144,11 @@ class Bot{
 
             message.channel.send(embed);
 
-        })
+        }catch(err){
+            console.trace(err);
+        }
     }
 
-    insertServer(ip, port){
-
-        const alias = "Server "+Date.now();
-
-        const now = Math.floor(Date.now() * 0.001);
-
-        return new Promise((resolve, reject) =>{
-
-            const query = "INSERT INTO servers VALUES('Another UT2004 Server',?,?,?,?,'Gametype', 'DM-Test',0,0,?,?)";
-
-            db.run(query, [alias, ip, ip, port, now, now], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-        });
-    }
-
-    deleteServer(ip, port){
-
-
-        return new Promise((resolve, reject) =>{
-
-            const query = "DELETE FROM servers WHERE ip=? AND port=?";
-
-            db.run(query, [ip, port], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-
-        });
-    }
 
     getAllServers(){
 
@@ -234,7 +188,7 @@ class Bot{
 
                 const id = parseInt(result[1]) - 1;
 
-                const servers = await this.getAllServers();
+                const servers = await this.servers.getAllServers();
 
                 if(servers.length < id){
                     message.channel.send("Can't delete server with that id, it does not exist!");
@@ -243,7 +197,7 @@ class Bot{
 
                 //console.table(servers);
 
-                await this.deleteServer(servers[id].ip, servers[id].port);
+                await this.servers.deleteServer(servers[id].ip, servers[id].port);
 
                 message.channel.send("Server deleted!");
                 //this.listServers(message);
@@ -259,26 +213,6 @@ class Bot{
             console.trace(err);
         }
 
-    }
-
-    bServerAlreadyAdded(ip, port){
-
-        return new Promise((resolve, reject) =>{
-
-            const query = "SELECT COUNT(*) as total_servers FROM servers WHERE ip=? AND port=?";
-
-            db.get(query, [ip, port], (err, row) =>{
-
-                if(err){
-                    //console.log(err);
-                    reject(err);
-                }else{
-                    //console.log(row);
-                    resolve(row);
-                }
-            });
-        });
-               
     }
 
     async addServer(message){
@@ -304,15 +238,15 @@ class Bot{
                     port = 7777;
                 }
 
-                const test = await this.bServerAlreadyAdded(ip, port);
+                const test = await this.servers.bServerAlreadyAdded(ip, port);
 
                 if(test.total_servers > 0){
                     //console.log("Server already added");
                     message.channel.send("That server has already been added to the database.");
                 }else{
-                    console.log("I can add that");
+                   // console.log("I can add that");
 
-                    await this.insertServer(ip, port);
+                    await this.servers.insertServer(ip, port);
                     message.channel.send("Server successfully added.");
                     //this.listServers(message);
                 }
