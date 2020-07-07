@@ -209,7 +209,7 @@ class Bot{
             }
 
         }catch(err){
-
+            message.channel.send("There is no server with that id to delete.");
             console.trace(err);
         }
 
@@ -218,7 +218,7 @@ class Bot{
     async addServer(message){
 
         try{
-            const reg = /^.addserver (.+?) (.+?)(:{0,1})(\d{0,5})$/i;
+            const reg = /^.addserver (.+) (.+?)(:{0,1})(\d{0,5})$/i;
 
             const result = reg.exec(message.content);
 
@@ -230,7 +230,7 @@ class Bot{
                 console.log(result);
 
                 //port not specified set it to 7777
-                if(result[2] === ":"){
+                if(result[3] === ":"){
                     port = parseInt(result[4]);
                     ip = result[2];
                 }else{
@@ -551,6 +551,46 @@ class Bot{
         }
     }
 
+    async queryDatabaseServer(message){
+
+        try{
+            const reg = /^.q(\d+)$/i;
+
+            const result = reg.exec(message.content);
+
+            console.log(result);
+
+
+            if(result != null){
+
+                let id = parseInt(result[1]);
+
+                if(id !== id){
+                    message.channel.send("Server ID must be a valid integer.");
+                    return;
+                }
+
+                const servers = await this.servers.getAllServers();
+
+                console.table(servers);
+
+                if(servers.length < id || id < 1){
+                    message.channel.send(`There is no server with the id ${id}`);
+                    return;
+                }
+
+                id = id - 1;
+
+                this.query.getServer(servers[id].ip, servers[id].port, message.channel)
+
+            }else{
+                message.channel.send("Incorrect syntax! Correct is `.q serverid` Use .servers command to see available servers.");
+            }
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
     async parseCommand(message){
 
         try{
@@ -569,12 +609,16 @@ class Bot{
             console.log(message.content);
 
             const queryServerReg = /^.q (.+?):{0,1}(\d{1,5})$/i;
+            const altServerQuery = /^.q(\d+)$/i;
             //const allowRoleReg = /^.allowrole (.+)$/i;
 
             //console.log(queryServerReg.exec(message.content));
 
+            if(altServerQuery.test(message.content)){
 
-            if(queryServerReg.test(message.content)){
+                this.queryDatabaseServer(message);
+
+            }else if(queryServerReg.test(message.content)){
 
                 const result = queryServerReg.exec(message.content);
 
