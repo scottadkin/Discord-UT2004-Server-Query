@@ -218,7 +218,7 @@ class Bot{
     async addServer(message){
 
         try{
-            const reg = /^.addserver (.+?)(:{0,1})(\d{0,5})$/i;
+            const reg = /^.addserver (.+?) (.+?)(:{0,1})(\d{0,5})$/i;
 
             const result = reg.exec(message.content);
 
@@ -231,10 +231,10 @@ class Bot{
 
                 //port not specified set it to 7777
                 if(result[2] === ":"){
-                    port = parseInt(result[3]);
-                    ip = result[1];
+                    port = parseInt(result[4]);
+                    ip = result[2];
                 }else{
-                    ip = result[1] + result[3];
+                    ip = result[2] + result[4];
                     port = 7777;
                 }
 
@@ -246,7 +246,7 @@ class Bot{
                 }else{
                    // console.log("I can add that");
 
-                    await this.servers.insertServer(ip, port);
+                    await this.servers.insertServer(ip, port, result[1]);
                     message.channel.send("Server successfully added.");
                     //this.listServers(message);
                 }
@@ -255,6 +255,7 @@ class Bot{
                 console.log(test);
                 console.log(`Addserver ${ip}:${port}`);
             }else{
+                message.channel.send("Incorrect Syntax! Correct is `.addserver alias ip:port`");
                 console.log("result is null");
             }
         }catch(err){

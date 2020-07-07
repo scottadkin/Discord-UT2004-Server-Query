@@ -10,9 +10,7 @@ class Servers{
         this.db = db;
     }
 
-    insertServer(ip, port){
-
-        const alias = "Server "+Date.now();
+    insertServer(ip, port, alias){
 
         const now = Math.floor(Date.now() * 0.001);
 
