@@ -246,7 +246,9 @@ class Bot{
                 }else{
                    // console.log("I can add that");
 
-                    await this.servers.insertServer(ip, port, result[1]);
+                    const finalIp = await this.servers.getIp(ip);
+
+                    await this.servers.insertServer(ip, finalIp, port, result[1]);
                     message.channel.send("Server successfully added.");
                     //this.listServers(message);
                 }

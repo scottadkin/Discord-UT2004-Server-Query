@@ -8,6 +8,8 @@ const countryList = require('country-list');
 const Servers = require('./servers');
 //const fs = require('fs');
 
+const dns = require('dns');
+
 class UT2004Q{
 
     constructor(database){
@@ -35,28 +37,6 @@ class UT2004Q{
 
     }
 
-    /*getAllServers(){
-
-        return new Promise((resolve, reject) =>{
-
-            const query = "SELECT * FROM servers";
-
-            const servers = [];
-
-            db.each(query, (err, row) =>{
-
-                if(err) reject(err);
-
-                servers.push(row);
-
-            }, (err) =>{
-                if(err) reject(err);
-
-                resolve(servers);
-            });
-        });
-    }*/
-
     async pingServerList(){
 
         try{
@@ -70,7 +50,7 @@ class UT2004Q{
 
                 this.getServerBasic(s.ip, s.port)
             }
-            console.table(servers);
+           // console.table(servers);
         }catch(err){
             console.trace(err);
         }
@@ -88,7 +68,7 @@ class UT2004Q{
 
             p = this.pendingData[i];
 
-            console.log(now - p.created);
+            //console.log(now - p.created);
 
             if(now - p.created >= config.serverTimeout){
 
@@ -102,69 +82,106 @@ class UT2004Q{
 
     //80.4.151.145:7777
 
-    getServerBasic(ip, port){
+    async getServerBasic(ip, port){
 
-        port = port + 1;
+        try{
 
-        this.client.send(this.getPacket(0), port, ip, (err) =>{
-            if(err) console.log(err);
-        });
+            const finalIp = await this.servers.getIp(ip);
+
+            if(finalIp != null){
+                ip = finalIp;
+            }
+
+            port = port + 1;
+
+            this.client.send(this.getPacket(0), port, ip, (err) =>{
+                if(err) console.log(err);
+            });
+
+        }catch(err){
+            console.trace(err);
+        }
     }
 
-    getServer(ip, port, channel){
+    async getServer(ip, port, channel){
 
-        const now = Date.now();
+        try{
+            
+            const now = Date.now();
 
-        //console.log(geoip.lookup(ip));
+            const finalIp = await this.servers.getIp(ip);
 
-        let geo = geoip.lookup(ip);
+            //console.log("finalIp = "+finalIp);
 
-        if(geo == null){
+            if(finalIp != null){
+                ip = finalIp;
+            }
+            //console.log(geoip.lookup(ip));
 
-            geo = {"country": "xx", "city": ""};
+            let geo = geoip.lookup(ip);
+
+            if(geo == null){
+
+                geo = {"country": "xx", "city": ""};
+            }
+
+        // console.log(geo);
+
+            this.pendingData.push({
+                "ip": ip,
+                "port": port,
+                "type": "full",
+                "serverInfo": [],
+                //"timestamp": now,
+                "playersToGet": null,
+                "players": [],
+                "bCompleted": false,
+                "channel": channel,
+                "country": geo.country,
+                "city": geo.city,
+                "created": Math.floor(Date.now() * 0.001)
+            });
+
+            //console.table(this.pendingData);
+
+            this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
+                console.log(err);
+            });
+
+        }catch(err){    
+            console.trace(err);
         }
-
-       // console.log(geo);
-
-        this.pendingData.push({
-            "ip": ip,
-            "port": port,
-            "type": "full",
-            "serverInfo": [],
-            //"timestamp": now,
-            "playersToGet": null,
-            "players": [],
-            "bCompleted": false,
-            "channel": channel,
-            "country": geo.country,
-            "city": geo.city,
-            "created": Math.floor(Date.now() * 0.001)
-        });
-
-        //console.table(this.pendingData);
-
-        this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
-            console.log(err);
-        });
 
     }
 
     getMatchingPendingData(ip, port, type){
 
-        let p = 0;
+       // try{
+            let p = 0;
 
-        console.log("looking for "+ip+":"+port+" "+type);
+            /*const finalIp = await this.getIp(ip);
 
-        for(let i = 0; i < this.pendingData.length; i++){
+            if(finalIp != null){
+                ip = finalIp;
+            }*/
+            
+            console.log("looking for "+ip+":"+port+" "+type);
 
-            p = this.pendingData[i];
+            for(let i = 0; i < this.pendingData.length; i++){
 
-            if(p.ip === ip && p.port === port && p.type === type){
-                return p;
+                p = this.pendingData[i];
+
+                if(p.ip === ip && p.port === port && p.type === type){
+                    return p;
+                }
+
             }
 
-        }
-        return null;
+            return null;
+
+        //}catch(err){
+        //    console.trace(err);
+       // }
     }
 
     deletePendingData(ip, port, type){
@@ -209,7 +226,7 @@ class UT2004Q{
         this.client.on('message', (message, rinfo) =>{
 
            // console.log(`${message}`);
-            console.log(rinfo);
+           // console.log(rinfo);
             if(rinfo === null || message === null){
                 return;
             }
@@ -486,21 +503,7 @@ class UT2004Q{
             console.log("not matching data, so it's just a basic server ping.");
 
             this.servers.updateServer(serverInfo);
-            //this.insertServer(serverInfo);
-            /**
-             *  name TEXT NOT NULL,
-        alias TEXT NOT NULL,
-        ip TEXT NOT NULL,
-        real_ip TEXT NOT NULL,
-        port INTEGER NOT NULL,
-        gametype TEXT NOT NULL,
-        map TEXT NOT NULL,
-        current_players INTEGER NOT NULL,
-        max_players INTEGER NOT NULL,
-        added INTEGER NOT NULL,
-        modified INTEGER NOT NULL
-             */
-            
+       
         }
         
         return serverInfo;
@@ -641,6 +644,7 @@ class UT2004Q{
         });
         //return players;
     }
+
     parsePlayerInfo(data, ip, port){
         
         //remove game byte
@@ -686,6 +690,8 @@ class UT2004Q{
     }
 
     getTotalTeams(players){
+
+        if(players === undefined) return 0;
 
         const foundTeams = [];
 
@@ -869,6 +875,9 @@ class UT2004Q{
 
         const server = data.serverInfo;
 
+        console.log("((((((((((((((((((((((((((((((((((((");
+        console.log(data);
+
 
         //console.log(server);
         data.bCompleted = true;
@@ -876,6 +885,7 @@ class UT2004Q{
         let serverFlag = ":pirate_flag:";
 
         //console.log();
+        let countryName = "";
 
         if(data.country != undefined){
 
@@ -890,10 +900,12 @@ class UT2004Q{
             }
 
             serverFlag = `:flag_${data.country}:`;
+
+            countryName = countryList.getName(data.country.toUpperCase());
             
         }
 
-        let countryName = countryList.getName(data.country.toUpperCase());
+        
 
         if(data.city != ""){
             data.city += ", ";
