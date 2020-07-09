@@ -32,7 +32,7 @@ class Bot{
     bUserAdmin(message, adminRoles){
 
         try{
-
+            
             const member = message.member;
 
             let result = false;
@@ -55,6 +55,68 @@ class Bot{
             console.trace(err);
         }
     }
+
+    getAllowedChannels(){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT * FROM channels";
+
+            const data = [];
+
+            db.each(query, (err, row) =>{
+
+                if(err) reject(err);
+
+                data.push(row);
+
+            }, (err) =>{
+
+                if(err) reject(err);
+
+                resolve(data);
+            });
+        });
+    }
+
+    canBotPostInChannel(message, bAdmin){
+
+        return new Promise((resolve, reject) =>{
+
+            if(bAdmin){
+                resolve(true);
+            }
+
+            this.getAllowedChannels().then((channels) =>{
+
+                console.table(channels);
+
+                let c = 0;
+
+                const currentChannel = message.channel.name.toLowerCase();
+
+                for(let i = 0; i < channels.length; i++){
+
+                    c = channels[i];
+
+                    if(c.name == currentChannel){
+                        resolve(true);
+                    }
+
+                }
+
+                resolve(false);
+
+            }).catch(() =>{
+                reject(err);
+            });
+        });
+       
+
+
+    }
+
+    //DELETE LAST PENDING MESSAGE FRO SAME SERVER QUERY FOR EACH NEW QUERY
 
     forceStringLength(string, targetLength){
 
@@ -91,8 +153,8 @@ class Bot{
         let string = "";
 
         const idLength = 4;
-        const aliasLength = 20;
-        const mapLength = 20;
+        const aliasLength = 25;
+        const mapLength = 25;
         
 
         data.alias = this.forceStringLength(data.alias, aliasLength);
@@ -227,7 +289,7 @@ class Bot{
 
             if(result != null){
 
-                console.log(result);
+               // console.log(result);
 
                 //port not specified set it to 7777
                 if(result[3] === ":"){
@@ -253,9 +315,9 @@ class Bot{
                     //this.listServers(message);
                 }
 
-                console.log("test = ");
-                console.log(test);
-                console.log(`Addserver ${ip}:${port}`);
+                //console.log("test = ");
+               // console.log(test);
+               // console.log(`Addserver ${ip}:${port}`);
             }else{
                 message.channel.send("Incorrect Syntax! Correct is `.addserver alias ip:port`");
                 console.log("result is null");
@@ -309,7 +371,7 @@ class Bot{
 
             const bAlreadyExists = await this.bChannelExist(message.channel.id);
 
-            console.log("exists = "+bAlreadyExists);
+            //console.log("exists = "+bAlreadyExists);
             //console.log(message.channel);
 
             if(!bAlreadyExists){
@@ -378,7 +440,7 @@ class Bot{
 
                 if(err) reject(err);
 
-                console.log(row);
+               // console.log(row);
 
                 if(row.total_roles > 0){
                     resolve(true);
@@ -574,7 +636,7 @@ class Bot{
 
                 const servers = await this.servers.getAllServers();
 
-                console.table(servers);
+               // console.table(servers);
 
                 if(servers.length < id || id < 1){
                     message.channel.send(`There is no server with the id ${id}`);
@@ -593,6 +655,13 @@ class Bot{
         }
     }
 
+    bCanRespond(bCanPost, channel){
+
+        if(!bCanPost){
+            channel.send("The bot is not enabled in this channel, only admin commands will work.");
+        }
+    }
+
     async parseCommand(message){
 
         try{
@@ -606,9 +675,25 @@ class Bot{
             
             const bAdmin = this.bUserAdmin(message, adminRoles);
 
-            console.log("bAdmin = "+bAdmin);
+            //console.log("bAdmin = "+bAdmin);
 
-            console.log(message.content);
+            //console.log(message.content);
+
+
+
+            const bCanPost = await this.canBotPostInChannel(message, false);
+
+            if(!bCanPost){
+
+                if(!bAdmin){
+
+                    if(message.content.startsWith(".")){
+                       message.channel.send("The bot is not enabled for this channel.");
+                    }
+
+                    return;
+                }
+            }
 
             const queryServerReg = /^.q (.+?):{0,1}(\d{1,5})$/i;
             const altServerQuery = /^.q(\d+)$/i;
@@ -618,67 +703,73 @@ class Bot{
 
             if(altServerQuery.test(message.content)){
 
+                
                 this.queryDatabaseServer(message);
+                
 
             }else if(queryServerReg.test(message.content)){
 
+                
                 const result = queryServerReg.exec(message.content);
 
                 this.query.getServer(result[1], parseInt(result[2]), message.channel);
+            
 
             }else if(message.content == ".servers"){
-
+      
                 this.listServers(message);
-                
-            }else if(message.content.startsWith(".addserver ")){
+                          
+            }
 
-                if(bAdmin){
+            const adminCommands = [
+                ".addserver",
+                ".deleteserver",
+                ".allowchannel",
+                ".deletechannel",
+                ".allowrole",
+                ".deleterole"
+            ];
+
+            let bUsingAdminCommand = false;
+
+            for(let i = 0; i < adminCommands.length; i++){
+
+                if(message.content.startsWith(adminCommands[i])){
+                    bUsingAdminCommand = true;
+                    break;
+                }
+            }
+            
+            if(bUsingAdminCommand){
+
+                if(!bAdmin){
+                    message.channel.send(adminMessage);
+                    return;
+                }
+
+                if(message.content.startsWith(".addserver")){
+              
                     this.addServer(message);
-                }else{
-                    message.channel.send(adminMessage);
-                }
+                    
+                }else if(message.content.startsWith(".deleteserver")){
+          
+                    this.removeServer(message);             
 
-            }else if(message.content.startsWith(".deleteserver ")){
+                }else if(message.content == ".allowchannel"){
+       
+                    this.allowChannel(message);        
 
-                if(bAdmin){
-                    this.removeServer(message);
-                }else{
-                    message.channel.send(adminMessage);
-                }
+                }else if(message.content == ".deletechannel"){
 
-            }else if(message.content == ".allowchannel"){
+                    this.removeChannel(message);      
 
-                if(bAdmin){
-                    this.allowChannel(message);
-                }else{
-                    message.channel.send(adminMessage);
-                }
+                }else if(message.content.startsWith(".allowrole")){
 
-            }else if(message.content == ".deletechannel"){
-
-                if(bAdmin){
-                    this.removeChannel(message);
-                }else{
-                    message.channel.send(adminMessage);
-                }
-
-            }else if(message.content.startsWith(".allowrole")){
-
-                //const roleResult = allowRoleReg.exec(message.content);
-                if(bAdmin){
                     this.allowRole(message);
-                }else{
-                    message.channel.send(adminMessage);
-                }
+                    
+                }else if(message.content.startsWith(".deleterole")){
 
-            }else if(message.content.startsWith(".deleterole")){
-
-                if(bAdmin){
-
-                    this.removeRole(message);
-
-                }else{
-                    message.channel.send(adminMessage);
+                    this.removeRole(message);          
                 }
             }
 

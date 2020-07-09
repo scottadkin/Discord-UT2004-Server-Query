@@ -29,8 +29,8 @@ class Servers{
                     reject(err);
                 }
 
-                console.log("address = "+address);
-                console.log("family = "+family);
+               // console.log("address = "+address);
+                //console.log("family = "+family);
 
                 resolve(address);
             });
@@ -106,8 +106,9 @@ class Servers{
 
     updateServer(data){
 
-        console.log("update server");
-        console.log(data);
+        //console.log("update server");
+        //console.log(data);
+
         return new Promise((resolve, reject) =>{
 
             const query = "UPDATE servers SET name=?,gametype=?,map=?,current_players=?,max_players=?,modified=? WHERE ip=? AND port=?";
@@ -135,7 +136,7 @@ class Servers{
 
                 if(err) reject(err);
 
-                console.log(this);
+               // console.log(this);
 
                 if(this.changes === 0){
 

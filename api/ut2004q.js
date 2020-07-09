@@ -40,6 +40,7 @@ class UT2004Q{
     async pingServerList(){
 
         try{
+
             const servers = await this.servers.getAllServers();
 
             let s = 0;
@@ -126,6 +127,8 @@ class UT2004Q{
             }
 
         // console.log(geo);
+            
+            this.deletePendingData(ip, port, "fill");
 
             this.pendingData.push({
                 "ip": ip,
@@ -165,7 +168,7 @@ class UT2004Q{
                 ip = finalIp;
             }*/
             
-            console.log("looking for "+ip+":"+port+" "+type);
+            //console.log("looking for "+ip+":"+port+" "+type);
 
             for(let i = 0; i < this.pendingData.length; i++){
 
@@ -500,7 +503,7 @@ class UT2004Q{
             
         }else{
 
-            console.log("not matching data, so it's just a basic server ping.");
+            //console.log("not matching data, so it's just a basic server ping.");
 
             this.servers.updateServer(serverInfo);
        
@@ -752,7 +755,7 @@ class UT2004Q{
 
         const totalTeams = this.getTotalTeams(players);
 
-        console.log("totalTeams = "+totalTeams);
+        //console.log("totalTeams = "+totalTeams);
 
         let p = 0;
 
@@ -875,8 +878,8 @@ class UT2004Q{
 
         const server = data.serverInfo;
 
-        console.log("((((((((((((((((((((((((((((((((((((");
-        console.log(data);
+        //console.log("((((((((((((((((((((((((((((((((((((");
+       // console.log(data);
 
 
         //console.log(server);
