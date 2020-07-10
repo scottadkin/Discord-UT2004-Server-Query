@@ -155,6 +155,7 @@ class Bot{
         const idLength = 4;
         const aliasLength = 25;
         const mapLength = 25;
+        const playersLength = 7;
         
 
         data.alias = this.forceStringLength(data.alias, aliasLength);
@@ -169,7 +170,15 @@ class Bot{
             playersString = "Players";
         }
 
-        playersString = this.forceStringLength(playersString, 7);
+        playersString = this.forceStringLength(playersString, playersLength);
+
+        const now = Math.floor(Date.now() * 0.001);
+
+        if(now - data.modified > (config.serverTimeout + config.serverPingInterval) * 2){
+
+            data.map = this.forceStringLength("Timed Out!", mapLength);
+            playersString = this.forceStringLength("N/A", playersLength);
+        }
 
         
         string = `\`${id} - ${data.alias} ${data.map} ${playersString}\`\n`;
@@ -662,6 +671,27 @@ class Bot{
         }
     }
 
+    helpCommand(message){
+
+        let string = `**UT2004 Server Query Help.**
+
+**User Commands**
+\`.servers\` Displays the basic server information for all the servers added to the database.
+\`.q<serverId>\` Displays the server's name, current gametype, map, and players.
+\`.q <server ip>:<port>\` Displays a server's name, current gametype, map, and players.
+
+**Admin Commands**
+\`.allowchannel\` Enables the bot to be used in the current channel.
+\`.deletechannel\` Disables the bot from being used in the current channel.
+\`.allowrole <role name>\` Enables users with the specified role to use admin commands.
+\`.deleterole <role name>\` Disables users with the specified role to use the admin commands.
+\`.addserver <alias> <ip>:<port>\` Adds the specified server to the database.
+\`.deleteserver <serverid>\` Deletes the server with the specified id.
+`;
+        message.channel.send(string);
+
+    }
+
     async parseCommand(message){
 
         try{
@@ -719,6 +749,9 @@ class Bot{
       
                 this.listServers(message);
                           
+            }else if(message.content == ".help"){
+
+                this.helpCommand(message);
             }
 
             const adminCommands = [

@@ -73,7 +73,7 @@ class UT2004Q{
 
             if(now - p.created >= config.serverTimeout){
 
-                p.channel.send(`Server ${p.ip}:${p.port} Timed Out!`);
+                p.channel.send(`**Server ${p.ip}:${p.port} Timed Out!** (This can also be caused when servers are displaying fake players.)`);
                 this.deletePendingData(p.ip, p.port, p.type);
                 //console.log("Server timeout");
             }
@@ -240,6 +240,7 @@ class UT2004Q{
 
             if(data[4] === 0){
 
+                //console.log(`${message}`);
                 this.parseServerInfo(data, rinfo.address);
 
             }else if(data[4] === 1){
@@ -416,6 +417,7 @@ class UT2004Q{
         //remove server ip (never used) always 4 bytes long
         data.splice(0, 4);
 
+
         //get game query port, always 4 bytes, last 2 being 0, and first two being back to front
         
         data[0] = data[0].toString(16);
@@ -446,6 +448,8 @@ class UT2004Q{
 
         //remove port for status query (never used) always 4 bytes
         data.splice(0,4);
+
+        //console.log(data);
         
         serverInfo.name = this.parseString(data, true);
 
@@ -454,6 +458,8 @@ class UT2004Q{
         serverInfo.gametype = this.parseString(data);
 
         const playerCount = this.parsePlayerCount(data);
+
+        //console.log(data);
 
         serverInfo.currentPlayers = playerCount.current;
         serverInfo.maxPlayers = playerCount.max;    
@@ -470,6 +476,8 @@ class UT2004Q{
         //remove last byte
         data.splice(0,1);
 
+
+        //console.log(serverInfo);
 
        // console.log(serverInfo);
 
