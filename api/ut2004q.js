@@ -6,7 +6,7 @@ const config = require('./config');
 
 const countryList = require('country-list');
 const Servers = require('./servers');
-//const fs = require('fs');
+const fs = require('fs');
 
 const dns = require('dns');
 
@@ -73,7 +73,13 @@ class UT2004Q{
 
             if(now - p.created >= config.serverTimeout){
 
-                p.channel.send(`**Server ${p.ip}:${p.port} Timed Out!** (This can also be caused when servers are displaying fake players.)`);
+                console.log(p);
+                
+                if(p.serverInfo != []){
+                    this.sendDiscordResponse(p);
+                }else{
+                    p.channel.send(`**Server ${p.ip}:${p.port} Timed Out!**`);
+                }
                 this.deletePendingData(p.ip, p.port, p.type);
                 //console.log("Server timeout");
             }
@@ -228,8 +234,9 @@ class UT2004Q{
 
         this.client.on('message', (message, rinfo) =>{
 
-           // console.log(`${message}`);
+            //console.log(`${message}`);
            // console.log(rinfo);
+           
             if(rinfo === null || message === null){
                 return;
             }
@@ -241,6 +248,8 @@ class UT2004Q{
             if(data[4] === 0){
 
                 //console.log(`${message}`);
+
+                this.deletePendingData(rinfo.address, rinfo.port, "full");
                 this.parseServerInfo(data, rinfo.address);
 
             }else if(data[4] === 1){
@@ -249,6 +258,7 @@ class UT2004Q{
 
             }else if(data[4] === 2){
 
+                fs.writeFileSync("test.txt", message);
                this.parsePlayerInfo(data, rinfo.address, rinfo.port);
                 
             }else{
@@ -710,14 +720,23 @@ class UT2004Q{
 
             //dont class spectators as a team
             if(players[i].team === -1){
+
+                if(players[i].id === 0){
+                    foundTeams.push(i + 999);
+                }
+
                 continue;
             }
-            
+
+
             if(foundTeams.indexOf(players[i].team) == -1){
 
                 foundTeams.push(players[i].team);
             }
+
         }
+
+        console.log(foundTeams);
 
         return foundTeams.length;
     }
@@ -729,7 +748,6 @@ class UT2004Q{
         let findB = "east side";
 
         if(teamId == 1){
-
             findA = "blue team";
             findB = "west side";
         }
@@ -745,7 +763,7 @@ class UT2004Q{
 
                 currentName = p.name.toLowerCase();
 
-                if(currentName === findA || currentName === findB){
+                if(currentName === findA || currentName === findB || currentName === findA +" score" || currentName === findB + " score"){
                     return p.score;
                 }
             }
@@ -756,14 +774,13 @@ class UT2004Q{
 
     setTeamFields(players){
 
+        console.log(players);
         let dmTeam = "";
         let redTeam = "";
         let blueTeam = "";
         let spectators = "";
 
         const totalTeams = this.getTotalTeams(players);
-
-        //console.log("totalTeams = "+totalTeams);
 
         let p = 0;
 
@@ -779,46 +796,47 @@ class UT2004Q{
 
             //team scores are always id 0
             if(p.id === 0){
-                continue;
+               // continue;
             }
 
-            //console.log(p.team);
+            if(p.id !== 0){
 
-            flagResult = flagReg.exec(p.name);
+                flagResult = flagReg.exec(p.name);
 
-            if(flagResult != null){
+                if(flagResult != null){
 
-                if(flagResult[2] == "UK"){
+                    if(flagResult[2] == "UK"){
 
-                    flagResult[2] = "GB";
+                        flagResult[2] = "GB";
 
-                }else if(flagResult[2] == "EL"){
-                    flagResult[2] = "GR";
+                    }else if(flagResult[2] == "EL"){
+                        flagResult[2] = "GR";
+                    }
+                    
+                    p.name = `:flag_${flagResult[2].toLowerCase()}: ${flagResult[1]}`;
+
+                }else{
+                    p.name = `:video_game: ${p.name}`;
                 }
                 
-                p.name = `:flag_${flagResult[2].toLowerCase()}: ${flagResult[1]}`;
-            }else{
-                p.name = `:video_game: ${p.name}`;
+                currentString = `${p.name} **${p.score}**\n`;
             }
-
-            currentString = `${p.name} **${p.score}**\n`;
-
-            
-
-            //console.log(p.team);
 
             if(totalTeams > 1){
 
                 if(p.team === 0){
 
-                    redTeam += currentString
+                    redTeam += currentString;
 
                 }else if(p.team === 1){
 
                     blueTeam += currentString;
+
                 }else{
 
-                    spectators += `${p.name} `
+                    if(p.id !== 0){
+                        spectators += `${p.name} `;
+                    }
                 }
 
             }else{
@@ -828,7 +846,14 @@ class UT2004Q{
 
         const result = [];
 
-        if(redTeam != ""){
+  
+        //console.log(players);
+
+        if(totalTeams >= 2){
+
+            if(redTeam === ""){
+                redTeam = "No Players.";
+            }
 
             result.push({
                 "name": `:red_square: Red Team ${this.getTeamScore(players, 0)}`,
@@ -836,16 +861,19 @@ class UT2004Q{
                 "inline": true
             });
 
-        }
 
-        if(blueTeam != ""){
+            if(blueTeam === ""){
+                blueTeam = "No Players.";
+            }
 
             result.push({
                 "name": `:blue_square: Blue Team ${this.getTeamScore(players, 1)}`,
                 "value": blueTeam,
                 "inline": true
             });
+
         }
+      
 
         if(dmTeam != ""){
 
@@ -863,14 +891,14 @@ class UT2004Q{
                 "value": "There are currently no players on the server.",
                 "inline": true
             });
-
         }
 
         if(spectators == ""){
             spectators = "There are currently no spectators.";
         }
+
         result.push({
-            "name": "Spectators: ",
+            "name": "Spectators ",
             "value": spectators,
             "inline": false
         });
@@ -886,10 +914,13 @@ class UT2004Q{
 
         const server = data.serverInfo;
 
+        if(server.ip === undefined){
+            data.channel.send(`${data.ip}:${data.port} **Server Timedout!**`);
+            return;
+        }
+
         //console.log("((((((((((((((((((((((((((((((((((((");
        // console.log(data);
-
-
         //console.log(server);
         data.bCompleted = true;
 
