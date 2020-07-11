@@ -908,6 +908,25 @@ class UT2004Q{
         return result;
     }
 
+
+    getTotalPlayers(players){
+
+        let total = 0;
+
+        let p = 0;
+
+        for(let i = 0; i < players.length; i++){
+
+            p = players[i];
+
+            if(p.id != 0){
+                total++;
+            }
+        }
+
+        return total;
+    }
+
     sendDiscordResponse(data){
 
         //console.log("GOt all players data");
@@ -957,7 +976,7 @@ class UT2004Q{
             countryName = "";
         }
 
-        let description = `**Location: ${data.city}${countryName}\nPlayers ${server.currentPlayers}/${server.maxPlayers}\n`;
+        let description = `**Location: ${data.city}${countryName}\nPlayers ${this.getTotalPlayers(data.players)}/${server.maxPlayers}\n`;
         description += `${server.gametype}\n${server.map}**`;
 
         //console.log(data.players);

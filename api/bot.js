@@ -692,6 +692,39 @@ class Bot{
 
     }
 
+
+    async displayServerIp(message){
+
+        try{
+            const reg = /^\.ip(\d+)$/i;
+
+            const result = reg.exec(message.content);
+
+            if(result != null){
+
+                const servers = await this.servers.getAllServers();
+
+                console.table(servers);
+
+                const id = parseInt(result[1]) - 1;
+
+                if(id > servers.length || id < 0){
+                    message.channel.send(`There is no server with the id ${id + 1}. Use .servers to see available servers`);
+                }else{
+
+                    const data = servers[id];
+
+                    let string = `${data.name} (${data.alias})\n**<ut2004://${data.ip}:${data.port}>**`;
+
+                    message.channel.send(string);
+                    
+                }
+            }
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
     async parseCommand(message){
 
         try{
@@ -704,12 +737,6 @@ class Bot{
             const adminRoles = await this.getAllAdminRoles();
             
             const bAdmin = this.bUserAdmin(message, adminRoles);
-
-            //console.log("bAdmin = "+bAdmin);
-
-            //console.log(message.content);
-
-
 
             const bCanPost = await this.canBotPostInChannel(message, false);
 
@@ -727,24 +754,16 @@ class Bot{
 
             const queryServerReg = /^.q (.+?):{0,1}(\d{1,5})$/i;
             const altServerQuery = /^.q(\d+)$/i;
-            //const allowRoleReg = /^.allowrole (.+)$/i;
-
-            //console.log(queryServerReg.exec(message.content));
 
             if(altServerQuery.test(message.content)){
 
-                
                 this.queryDatabaseServer(message);
                 
-
             }else if(queryServerReg.test(message.content)){
-
-                
+       
                 const result = queryServerReg.exec(message.content);
-
                 this.query.getServer(result[1], parseInt(result[2]), message.channel);
             
-
             }else if(message.content == ".servers"){
       
                 this.listServers(message);
@@ -752,6 +771,11 @@ class Bot{
             }else if(message.content == ".help"){
 
                 this.helpCommand(message);
+
+            }else if(message.content.startsWith(".ip")){
+
+                this.displayServerIp(message);
+
             }
 
             const adminCommands = [
