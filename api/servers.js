@@ -45,7 +45,7 @@ class Servers{
 
         return new Promise((resolve, reject) =>{
 
-            const query = "INSERT INTO servers VALUES('Another UT2004 Server',?,?,?,?,'Gametype', 'N/A',0,0,?,?)";
+            const query = "INSERT INTO servers VALUES('Another UT2004 Server',?,?,?,?,'Gametype', 'N/A',0,0,?,?,-1,-1,-1)";
 
             if(realIp === ip){
                 realIp = "";
@@ -168,6 +168,103 @@ class Servers{
             });
 
         });
+    }
+
+
+    setServerMessageId(ip, port, messageId, channelId){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "UPDATE servers SET message_id=?, channel_id=? WHERE ip=? AND port=?";
+
+            this.db.run(query, [messageId, channelId, ip, port], (err) =>{
+
+                if(err) reject(err);
+
+                console.log(`"UPDATE servers SET message_id=${messageId}, channel_id=? WHERE ip=${ip} AND port=${port}"`);
+
+                resolve();
+            });
+        });
+    }
+
+    getServerLastMessageId(ip, port, channelId){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT message_id FROM servers WHERE ip=? AND port=? AND channel_id=?";
+
+            this.db.get(query, [ip, port], (err, row) =>{
+
+                if(err) reject(err);
+
+                resolve(row);
+            });
+        });
+    }
+
+
+    resetAutoChannel(){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "UPDATE channels set auto_query=0";
+
+            this.db.run(query, (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            });
+        });
+    }
+
+    setAutoChannel(channel){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "UPDATE channels SET auto_query=1 WHERE channel_id=?";
+
+            this.db.run(query, [channel], (err) =>{
+
+                if(err) reject(err);
+
+                let changes = 0;
+
+                if(this.changes != undefined){
+                    changes = this.changes;
+                }
+
+                console.log(this);
+
+                if(changes === 0){
+                    resolve(false);
+                }else{
+                    resolve(true);
+                }
+            });
+
+
+        });
+    }
+
+    async changeAutoChannel(channel){
+
+        try{
+
+            await this.resetAutoChannel();
+            const result = await this.setAutoChannel(channel);
+
+            if(result){
+                console.log("AUTO channel update passed");
+            }else{
+                console.log("Failed to change update channel");
+            }
+
+        }catch(err){
+            console.trace(err);
+        }   
+
     }
 
 }

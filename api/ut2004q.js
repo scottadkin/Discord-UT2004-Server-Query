@@ -12,13 +12,14 @@ const dns = require('dns');
 
 class UT2004Q{
 
-    constructor(database){
+    constructor(database, discordClient){
 
         this.database = database;
 
         this.createClient();
 
         this.servers = new Servers(database);
+        this.discprd = discordClient;
 
         this.pendingData = [];       
 
@@ -34,6 +35,26 @@ class UT2004Q{
             this.pingServerList();
 
         },config.serverPingInterval * 1000);
+
+
+        //test message edit
+        setInterval(() =>{
+
+            this.testEdit();
+
+        }, 2500);
+
+    }
+
+    async testEdit(){
+
+        try{
+            const servers = await this.servers.getAllServers();
+
+            //console.table(servers);
+        }catch(err){
+            console.log(err);
+        }
 
     }
 
@@ -929,74 +950,77 @@ class UT2004Q{
         return total;
     }
 
-    sendDiscordResponse(data){
+    async sendDiscordResponse(data){
 
-        //console.log("GOt all players data");
+        try{
+            const server = data.serverInfo;
 
-        const server = data.serverInfo;
-
-        if(server.ip === undefined){
-            data.channel.send(`${data.ip}:${data.port} **Server Timedout!**`);
-            return;
-        }
-
-        //console.log("((((((((((((((((((((((((((((((((((((");
-       // console.log(data);
-        //console.log(server);
-        data.bCompleted = true;
-
-        let serverFlag = ":pirate_flag:";
-
-        //console.log();
-        let countryName = "";
-
-        if(data.country != undefined){
-
-            data.country = data.country.toLowerCase();
-
-            if(data.country  == "uk"){
-
-                data.country  = "gb";
-
-            }else if(data.country  == "el"){
-                data.country  = "gr";
+            if(server.ip === undefined){
+                data.channel.send(`${data.ip}:${data.port} **Server Timedout!**`);
+                return;
             }
 
-            serverFlag = `:flag_${data.country}:`;
+            data.bCompleted = true;
 
-            countryName = countryList.getName(data.country.toUpperCase());
-            
+            let serverFlag = ":pirate_flag:";
+
+            let countryName = "";
+
+            if(data.country != undefined){
+
+                data.country = data.country.toLowerCase();
+
+                if(data.country  == "uk"){
+
+                    data.country  = "gb";
+
+                }else if(data.country  == "el"){
+                    data.country  = "gr";
+                }
+
+                serverFlag = `:flag_${data.country}:`;
+
+                countryName = countryList.getName(data.country.toUpperCase());
+                
+            }   
+
+            if(data.city != ""){
+                data.city += ", ";
+            }
+
+            if(countryName == undefined){
+                countryName = "";
+            }
+
+            const previousMessages = await data.channel.messages.fetch({"limit": 10});
+
+            console.table(previousMessages);
+
+            let description = `:office: **${data.city}${countryName}\n:wrestling: Players ${this.getTotalPlayers(data.players)}/${server.maxPlayers}\n`;
+            description += `:pushpin: ${server.gametype}**\n:map: **${server.map}**`;
+
+
+            const fields = this.setTeamFields(data.players);
+
+            const reply = new Discord.MessageEmbed()
+            .setColor("#000000")
+            .setTitle(`${serverFlag} ${server.name}`)
+            .setDescription(description)
+            .addFields(fields)
+            .setFooter(`ut2004://${server.ip}:${server.port}`);
+
+            const response = await data.channel.send(reply);
+
+            //console.log(response);
+
+            await this.servers.setServerMessageId(server.ip, server.port, response.id, response.channel.id);
+
+            this.deletePendingData(data.ip, data.port, "full");
+
+            //console.log(pendingMessage);
+        }catch(err){
+            console.log(err);
         }
-
-        
-
-        if(data.city != ""){
-            data.city += ", ";
-        }
-
-        if(countryName == undefined){
-            countryName = "";
-        }
-
-        let description = `:office: **${data.city}${countryName}\n:wrestling: Players ${server.currentPlayers}/${server.maxPlayers}\n`;
-        description += `:pushpin: ${server.gametype}**\n:map: **${server.map}**`;
-
-        //console.log(data.players);
-
-        const fields = this.setTeamFields(data.players);
-
-        const reply = new Discord.MessageEmbed()
-        .setColor("#000000")
-        .setTitle(`${serverFlag} ${server.name}`)
-        .setDescription(description)
-        .addFields(fields)
-        .setFooter(`ut2004://${server.ip}:${server.port}`);
-
-        data.channel.send(reply);
-
-        this.deletePendingData(data.ip, data.port, "full");
-
-        //console.log(pendingMessage);
     }
 
 

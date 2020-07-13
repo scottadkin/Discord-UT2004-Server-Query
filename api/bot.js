@@ -9,11 +9,7 @@ class Bot{
 
     constructor(){
 
-        this.createClient();
-        this.servers = new Servers(db);
-        this.query = new UT2004Query(db);
-
-        
+        this.createClient();     
     }
 
 
@@ -362,7 +358,7 @@ class Bot{
 
         return new Promise((resolve, reject) =>{
 
-            const query = "INSERT INTO channels VALUES(?,?)";
+            const query = "INSERT INTO channels VALUES(?,?,0)";
 
             db.run(query, [channel.id, channel.name], (err) =>{
 
@@ -843,6 +839,9 @@ class Bot{
 
         this.client.on('ready', () =>{
             console.log("I'm Ready, I'm Ready, I'm Ready (In spongebobs voice)");
+
+            this.servers = new Servers(db);
+            this.query = new UT2004Query(db, this.client);
         });
 
         this.client.on('error', (err) =>{
