@@ -45,7 +45,7 @@ class Servers{
 
         return new Promise((resolve, reject) =>{
 
-            const query = "INSERT INTO servers VALUES('Another UT2004 Server',?,?,?,?,'Gametype', 'N/A',0,0,?,?,-1,-1,-1)";
+            const query = "INSERT INTO servers VALUES('Another UT2004 Server',?,?,?,?,'Gametype','N/A',0,0,?,?,-1,-1)";
 
             if(realIp === ip){
                 realIp = "";
@@ -225,7 +225,9 @@ class Servers{
 
             const query = "UPDATE channels SET auto_query=1 WHERE channel_id=?";
 
-            this.db.run(query, [channel], (err) =>{
+            console.log(`"UPDATE channels SET auto_query=1 WHERE channel_id=${channel}"`);
+
+            this.db.run(query, [channel], function (err){
 
                 if(err) reject(err);
 
@@ -248,23 +250,62 @@ class Servers{
         });
     }
 
-    async changeAutoChannel(channel){
+    async changeAutoChannel(message){
 
         try{
 
             await this.resetAutoChannel();
-            const result = await this.setAutoChannel(channel);
+            const result = await this.setAutoChannel(message.channel.id);
 
             if(result){
-                console.log("AUTO channel update passed");
+                message.channel.send(`Auto query channel set to **${message.channel.name}**.`);
             }else{
-                console.log("Failed to change update channel");
+                //console.log("Failed to change update channel");
+                message.channel.send(`Failed to change auto query channel. This could be because the bot has not been enabled to post in the current channel.`);
             }
 
         }catch(err){
             console.trace(err);
         }   
+    }
 
+
+    getAutoChannel(){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT channel_id FROM channels WHERE auto_query=1";
+
+            this.db.get(query, (err, row) =>{
+
+                if(err) reject(err);
+
+                if(row === undefined){
+                    resolve(null);
+                }else{
+                    resolve(row.channel_id);
+                }
+            });
+        });
+    }
+
+    getAutoQueryMessageid(ip, port){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT message_id FROM servers WHERE ip=? AND port=?";
+
+            this.db.get(query, [ip, port], (err, row) =>{
+
+                if(err) reject(err);
+
+                if(row === undefined){
+                    resolve(null);
+                }
+
+                resolve(row.message_id);
+            });
+        });
     }
 
 }

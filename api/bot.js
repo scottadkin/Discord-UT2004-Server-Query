@@ -684,6 +684,7 @@ class Bot{
 \`.deleterole <role name>\` Disables users with the specified role to use the admin commands.
 \`.addserver <alias> <ip>:<port>\` Adds the specified server to the database.
 \`.deleteserver <serverid>\` Deletes the server with the specified id.
+\`.setauto\` Sets the current channel as the auto query channel.
 `;
         message.channel.send(string);
 
@@ -781,7 +782,8 @@ class Bot{
                 ".allowchannel",
                 ".deletechannel",
                 ".allowrole",
-                ".deleterole"
+                ".deleterole",
+                ".setauto"
             ];
 
             let bUsingAdminCommand = false;
@@ -823,7 +825,12 @@ class Bot{
                     
                 }else if(message.content.startsWith(".deleterole")){
 
-                    this.removeRole(message);          
+                    this.removeRole(message);     
+
+                }else if(message.content == ".setauto"){
+
+                    this.servers.changeAutoChannel(message);
+
                 }
             }
 

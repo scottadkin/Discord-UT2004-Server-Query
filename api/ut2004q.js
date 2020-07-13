@@ -19,7 +19,7 @@ class UT2004Q{
         this.createClient();
 
         this.servers = new Servers(database);
-        this.discprd = discordClient;
+        this.discord = discordClient;
 
         this.pendingData = [];       
 
@@ -40,16 +40,39 @@ class UT2004Q{
         //test message edit
         setInterval(() =>{
 
-            this.testEdit();
+            this.autoQuery();
 
-        }, 2500);
+        }, 5000);
 
     }
 
-    async testEdit(){
+    async autoQuery(){
 
         try{
+
             const servers = await this.servers.getAllServers();
+            const autoChannelId = await this.servers.getAutoChannel();
+
+            if(autoChannelId !== null){
+
+                //console.log(this.discord.channels);
+
+                const c = this.discord.channels;
+
+                const channel = await c.fetch(autoChannelId);
+
+                //console.log(channel);
+
+                //console.table(servers);
+
+                const previousMessages = await channel.messages.fetch();
+
+               // console.table(previousMessages);
+
+            }else{
+                console.log("AutoChannelId is NULL");
+            }
+            //console.log(autoChannelId);
 
             //console.table(servers);
         }catch(err){
@@ -342,6 +365,7 @@ class UT2004Q{
 
             if(data[i] == 27){
                 //bytesRemoved += 4;
+                //console.log("REMOVING COLOR BYTES");
                 i += 3;
             }else{
                 bytes.push(data[i]);
@@ -640,8 +664,11 @@ class UT2004Q{
 
         player.id = data[0];
 
+        //console.log(data);
+
         //remove id bytes
         data.splice(0, 4);
+
 
         player.name = this.parseString(data, -1);
 
@@ -667,6 +694,7 @@ class UT2004Q{
         //remove team bytes
         data.splice(0,4);
 
+        //console.log(player);
         return player;
     }
 
@@ -797,7 +825,7 @@ class UT2004Q{
 
     setTeamFields(players){
 
-        console.log(players);
+       // console.log(players);
         let dmTeam = "";
         let redTeam = "";
         let blueTeam = "";
@@ -820,6 +848,11 @@ class UT2004Q{
             //team scores are always id 0
             if(p.id === 0){
                // continue;
+            }
+
+            if(p.name.toLowerCase() == "demorecspectator"){
+                console.log("demorecspectator found ignoring.");
+                continue;
             }
 
             if(p.id !== 0){
@@ -992,9 +1025,10 @@ class UT2004Q{
                 countryName = "";
             }
 
-            const previousMessages = await data.channel.messages.fetch({"limit": 10});
+            //const previousMessages = await data.channel.messages.fetch({"limit": 10});
 
-            console.table(previousMessages);
+            
+            //console.table(previousMessages);
 
             let description = `:office: **${data.city}${countryName}\n:wrestling: Players ${this.getTotalPlayers(data.players)}/${server.maxPlayers}\n`;
             description += `:pushpin: ${server.gametype}**\n:map: **${server.map}**`;
@@ -1007,13 +1041,49 @@ class UT2004Q{
             .setTitle(`${serverFlag} ${server.name}`)
             .setDescription(description)
             .addFields(fields)
+            .setTimestamp()
             .setFooter(`ut2004://${server.ip}:${server.port}`);
 
-            const response = await data.channel.send(reply);
+            //if auto query channel doesn't have a message already for this channel create a new one
+          
+            const autoQueryChannelId = await this.servers.getAutoChannel();
+            const lastAutoQueryMessageId = await this.servers.getAutoQueryMessageid(server.ip, server.port);
 
+            console.log("lastAutoQueryMessageId = "+ lastAutoQueryMessageId);
+            
+            if(data.channel.id === autoQueryChannelId){
+
+                console.log("is in auto query channel");
+               // const response = await data.channel.send(reply);
+       
+                if(lastAutoQueryMessageId === null){
+
+                    console.log("No previous auto query message");
+                    const response = await data.channel.send(reply);
+                    await this.servers.setServerMessageId(server.ip, server.port, response.id, 0);
+
+                }else{
+
+                    console.log("Editing old post");
+                    if(lastAutoQueryMessageId >= 0){
+                        const oldMessage = await data.channel.messages.fetch(lastAutoQueryMessageId);
+
+                        await oldMessage.edit(reply);
+                    }else{
+                        const response = await data.channel.send(reply);
+                        await this.servers.setServerMessageId(server.ip, server.port, response.id, 0);
+                    }
+                    //console.log(oldMessage);
+                }
+                
+
+            }else{
+                await data.channel.send(reply);
+            }
+            
             //console.log(response);
 
-            await this.servers.setServerMessageId(server.ip, server.port, response.id, response.channel.id);
+            //await this.servers.setServerMessageId(server.ip, server.port, response.id, response.channel.id);
 
             this.deletePendingData(data.ip, data.port, "full");
 
