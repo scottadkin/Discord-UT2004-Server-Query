@@ -636,6 +636,8 @@ class UT2004Q{
 
         const teamByte = data[3];
 
+        console.log(`${player.name} has team byte ${teamByte}`);
+
         switch(teamByte){
 
             case 32: {  player.team = 0;} break;
@@ -898,7 +900,7 @@ class UT2004Q{
         }
 
         result.push({
-            "name": "Spectators ",
+            "name": ":eye: Spectators ",
             "value": spectators,
             "inline": false
         });
@@ -976,8 +978,8 @@ class UT2004Q{
             countryName = "";
         }
 
-        let description = `**Location: ${data.city}${countryName}\nPlayers ${this.getTotalPlayers(data.players)}/${server.maxPlayers}\n`;
-        description += `${server.gametype}\n${server.map}**`;
+        let description = `:office: **${data.city}${countryName}\n:wrestling: Players ${server.currentPlayers}/${server.maxPlayers}\n`;
+        description += `:pushpin: ${server.gametype}**\n:map: **${server.map}**`;
 
         //console.log(data.players);
 

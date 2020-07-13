@@ -679,6 +679,7 @@ class Bot{
 \`.servers\` Displays the basic server information for all the servers added to the database.
 \`.q<serverId>\` Displays the server's name, current gametype, map, and players.
 \`.q <server ip>:<port>\` Displays a server's name, current gametype, map, and players.
+\`.ip<serverid>\` Displays clickable link to the server.
 
 **Admin Commands**
 \`.allowchannel\` Enables the bot to be used in the current channel.
