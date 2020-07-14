@@ -901,6 +901,7 @@ class UT2004Q{
 
         
 
+        console.table(players);
         return players;
     }
 
@@ -966,7 +967,7 @@ class UT2004Q{
         return "";
     }
 
-    setTeamFields(players){
+    setTeamFields(players, bIgnoreSpectators){
 
        // console.log(players);
         let dmTeam = "";
@@ -1035,9 +1036,11 @@ class UT2004Q{
 
                 }else{
 
+         
                     if(p.id !== 0){
                         spectators += `${p.name} `;
                     }
+                  
                 }
 
             }else{
@@ -1094,15 +1097,17 @@ class UT2004Q{
             });
         }
 
-        if(spectators == ""){
-            spectators = "There are currently no spectators.";
-        }
+        if(!bIgnoreSpectators){
+            if(spectators == ""){
+                spectators = "There are currently no spectators.";
+            }
 
-        result.push({
-            "name": ":eye: Spectators ",
-            "value": spectators,
-            "inline": false
-        });
+            result.push({
+                "name": ":eye: Spectators ",
+                "value": spectators,
+                "inline": false
+            });
+        }
 
         //console.log(result);
 
@@ -1110,7 +1115,7 @@ class UT2004Q{
     }
 
 
-    getTotalPlayers(players){
+    getTotalPlayers(players, bDm){
 
         let total = 0;
 
@@ -1120,8 +1125,16 @@ class UT2004Q{
 
             p = players[i];
 
-            if(p.id != 0){
-                total++;
+            if(p.id != 0 && p.name.toLowerCase() !== "demorecspectator"){
+
+                if(bDm){
+                    total++;
+                }else{
+
+                    if(p.team !== -1){
+                        total++;
+                    }
+                }
             }
         }
 
@@ -1186,23 +1199,30 @@ class UT2004Q{
             
             //console.table(previousMessages);
 
-            let description = `:office: **${data.city}${countryName}\n:wrestling: Players ${this.getTotalPlayers(data.players)}/${server.maxPlayers}\n`;
+            let playerCountString  = `Players ${this.getTotalPlayers(data.players, false)}/${server.maxPlayers}`;
+
+            const totalTeams = this.getTotalTeams(data.players);
+
+            if(totalTeams < 2){
+                playerCountString = `${this.getTotalPlayers(data.players, true)} users connected.`;
+            }
+
+            let description = `:office: **${data.city}${countryName}\n:wrestling: ${playerCountString}\n`;
             description += `:pushpin: ${server.gametype}**\n:map: **${server.map}**`;
 
-
-            const fields = this.setTeamFields(data.players);
+            const fields = this.setTeamFields(data.players, (totalTeams < 2) ? true : false);
 
             const reply = new Discord.MessageEmbed()
             .setColor("#000000")
             .setTitle(`${serverFlag} ${server.name}`)
             .setDescription(description)
             .addFields(fields)
+            .addField("Join server by clicking link below",`**<ut2004://${server.ip}:${server.port}>**`, false)
             .setTimestamp()
-            .setFooter(`ut2004://${server.ip}:${server.port}`);
+            //.setFooter(`ut2004://${server.ip}:${server.port}`);
 
             //if auto query channel doesn't have a message already for this channel create a new one
-          
-            
+               
             const lastAutoQueryMessageId = await this.servers.getAutoQueryMessageid(server.ip, server.port);
 
            // console.log("lastAutoQueryMessageId = "+ lastAutoQueryMessageId);
