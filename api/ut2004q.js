@@ -100,11 +100,13 @@ class UT2004Q{
 
             //await this.deleteOldAutoQueryMessages();
 
+            this.pendingData = [];
+
             clearInterval(this.autoQueryLoop);
             await this.servers.changeAutoChannel(message);
 
             this.bCurrentAutoLoopCompleted = true;
-            await this.autoQuery();
+           // await this.autoQuery();
 
             this.autoQueryLoop = setInterval(async () =>{
                 await this.autoQuery();
