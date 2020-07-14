@@ -21,6 +21,8 @@ class UT2004Q{
         this.servers = new Servers(database);
         this.discord = discordClient;
 
+        this.bCurrentAutoLoopCompleted = true;
+
         this.pendingData = [];       
 
 
@@ -38,34 +40,130 @@ class UT2004Q{
 
 
         //test message edit
-        setInterval(() =>{
+        this.autoQueryLoop = setInterval(async () =>{
 
-            this.autoQuery();
+            await this.autoQuery();
 
-        }, 5000);
+        }, config.autoQueryInterval * 1000);
 
     }
 
-    async autoQuery(){
+    async deleteOldAutoQueryMessages(){
 
         try{
 
             const servers = await this.servers.getAllServers();
             const autoChannelId = await this.servers.getAutoChannel();
 
+
+
             if(autoChannelId !== null){
 
-                //console.log(this.discord.channels);
+                console.table(servers);
+
+                const channel = await this.discord.channels.fetch(autoChannelId);
+
+                //console.log(channel);
+
+                if(autoChannelId >= 0){
+
+                    const messages = await channel.messages.fetch({"limit": 20});
+
+                    for(let i = 0; i < messages.length; i++){
+
+                        //if(!bMessageIdExist(messages[i].id)){
+
+                            await messages[i].delete().then(() =>{
+
+                                console.log("deleted message");
+                            }).catch((err) =>{
+                                console.log(err);
+                            });
+                        //}
+
+                    }
+
+                    console.table(messages);
+                }
+            }
+
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
+
+
+    async changeAutoQuery(message){
+
+        try{
+
+            //await this.deleteOldAutoQueryMessages();
+
+            clearInterval(this.autoQueryLoop);
+            await this.servers.changeAutoChannel(message);
+
+            this.bCurrentAutoLoopCompleted = true;
+            await this.autoQuery();
+
+            this.autoQueryLoop = setInterval(async () =>{
+                await this.autoQuery();
+            }, config.autoQueryInterval * 1000);
+
+            console.log("Change auto query channel completed");
+
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
+    async autoQuery(){
+
+        try{
+
+            if(!this.bCurrentAutoLoopCompleted){
+                return;
+            }else{
+                this.bCurrentAutoLoopCompleted = false;
+            }
+
+            const servers = await this.servers.getAllServers();
+            const autoChannelId = await this.servers.getAutoChannel();
+
+            //get around discord api limits
+            const pingServer = (ip, port, channel) =>{
+
+                return new Promise((resolve, reject) =>{
+
+                    setTimeout(() =>{
+
+                        this.getServer(ip, port, channel).then(() =>{
+
+                            resolve();
+
+                        }).catch((err) =>{
+                            reject(err);
+                        });
+                        
+                    }, 1000);
+                });
+            }
+
+            if(autoChannelId !== null){
+
 
                 const c = this.discord.channels;
 
                 const channel = await c.fetch(autoChannelId);
 
-                //console.log(channel);
+                for(let i = 0; i < servers.length; i++){
 
-                //console.table(servers);
+                    console.log(`Ping ${servers[i].ip}:${servers[i].port}`);
+                    await pingServer(servers[i].ip, servers[i].port, channel);
+                    //await this.getServer(servers[i].ip, servers[i].port, channel)
+                }
 
-                const previousMessages = await channel.messages.fetch();
+                this.bCurrentAutoLoopCompleted = true;
 
                // console.table(previousMessages);
 
@@ -117,7 +215,7 @@ class UT2004Q{
 
             if(now - p.created >= config.serverTimeout){
 
-                console.log(p);
+                //console.log(p);
                 
                 if(p.serverInfo != []){
                     this.sendDiscordResponse(p);
@@ -178,7 +276,7 @@ class UT2004Q{
 
         // console.log(geo);
             
-            this.deletePendingData(ip, port, "fill");
+            //this.deletePendingData(ip, port, "full");
 
             this.pendingData.push({
                 "ip": ip,
@@ -198,7 +296,7 @@ class UT2004Q{
             //console.table(this.pendingData);
 
             this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
-                console.log(err);
+                if(err) console.log(err);
             });
 
         }catch(err){    
@@ -262,7 +360,6 @@ class UT2004Q{
         });
 
         this.client.on('error', (err) =>{
-
             console.log(err);
         });
 
@@ -556,7 +653,8 @@ class UT2004Q{
             if(serverInfo.currentPlayers > 0){
 
                 this.client.send(this.getPacket(2), serverInfo.port + 1, ip, (err) =>{
-                    console.log(err);
+
+                    if(err) console.log(err);
                 });
 
             }else{
@@ -684,7 +782,7 @@ class UT2004Q{
 
         const teamByte = data[3];
 
-        console.log(`${player.name} has team byte ${teamByte}`);
+        //console.log(`${player.name} has team byte ${teamByte}`);
 
         switch(teamByte){
 
@@ -717,6 +815,26 @@ class UT2004Q{
         //return players;
     }
 
+    removeDuplicatePlayers(players){
+
+        const result = [];
+        const names = [];
+
+        let p = 0;
+
+        for(let i = 0; i < players.length; i++){
+
+            p = players[i];
+
+            if(names.indexOf(p.name) === -1){
+                names.push(p.name);
+                result.push(p);
+            }
+        }
+
+        return result;
+    }
+
     parsePlayerInfo(data, ip, port){
         
         //remove game byte
@@ -727,13 +845,32 @@ class UT2004Q{
 
        // console.log(data);
 
-        const players = [];
+        let players = [];
 
         while(data.length > 0){
             players.push(this.parsePlayer(data));
         }
 
+        const takenNames = [];
+
+        /*let filteredPlayers = [];
+
+
+        for(let i = 0; i < players.length; i++){
+
+            if(takenNames.indexOf(players[i].name) == -1){
+                takenNames.push(players[i].name);
+                filteredPlayers.push(players[i]);
+            }else{
+                console.log(`${players[i].name} has already been taken`);
+            }
+        }
+
+        players = filteredPlayers;*/
+
         this.sortPlayersByScore(players);
+
+        //console.table(players);
 
         //console.table(players);
 
@@ -743,9 +880,11 @@ class UT2004Q{
 
         if(pendingMessage != null){
 
-            console.log("Found matching players data");
+            //console.log("Found matching players data");
 
             pendingMessage.players = pendingMessage.players.concat(players);
+
+            pendingMessage.players = this.removeDuplicatePlayers(pendingMessage.players);
 
             this.sortPlayersByScore(pendingMessage.players);
 
@@ -757,6 +896,8 @@ class UT2004Q{
         }else{
             console.log("No matching data found");
         }
+
+        
 
         return players;
     }
@@ -787,7 +928,7 @@ class UT2004Q{
 
         }
 
-        console.log(foundTeams);
+        //console.log(foundTeams);
 
         return foundTeams.length;
     }
@@ -859,20 +1000,22 @@ class UT2004Q{
 
                 flagResult = flagReg.exec(p.name);
 
-                if(flagResult != null){
+                if(!p.name.startsWith(":flag_") && !p.name.startsWith(":video_game")){
+                    if(flagResult !== null){
 
-                    if(flagResult[2] == "UK"){
+                        if(flagResult[2] == "UK"){
 
-                        flagResult[2] = "GB";
+                            flagResult[2] = "GB";
 
-                    }else if(flagResult[2] == "EL"){
-                        flagResult[2] = "GR";
+                        }else if(flagResult[2] == "EL"){
+                            flagResult[2] = "GR";
+                        }
+                        
+                        p.name = `:flag_${flagResult[2].toLowerCase()}: ${flagResult[1]}`;
+
+                    }else{
+                        p.name = `:video_game: ${p.name}`;
                     }
-                    
-                    p.name = `:flag_${flagResult[2].toLowerCase()}: ${flagResult[1]}`;
-
-                }else{
-                    p.name = `:video_game: ${p.name}`;
                 }
                 
                 currentString = `${p.name} **${p.score}**\n`;
@@ -986,10 +1129,16 @@ class UT2004Q{
     async sendDiscordResponse(data){
 
         try{
+
             const server = data.serverInfo;
 
+            const autoQueryChannelId = await this.servers.getAutoChannel();
+
             if(server.ip === undefined){
-                data.channel.send(`${data.ip}:${data.port} **Server Timedout!**`);
+                //dont post timeouts to autoquery channel
+                if(data.channel.id != autoQueryChannelId){
+                    data.channel.send(`${data.ip}:${data.port} **Server Timedout!**`);
+                }
                 return;
             }
 
@@ -1016,6 +1165,11 @@ class UT2004Q{
                 countryName = countryList.getName(data.country.toUpperCase());
                 
             }   
+
+            //console.log(`"${data.city}"`);
+           // console.log(`"${countryName}"`);
+
+            data.city = data.city.replace(", ",'');
 
             if(data.city != ""){
                 data.city += ", ";
@@ -1046,14 +1200,14 @@ class UT2004Q{
 
             //if auto query channel doesn't have a message already for this channel create a new one
           
-            const autoQueryChannelId = await this.servers.getAutoChannel();
+            
             const lastAutoQueryMessageId = await this.servers.getAutoQueryMessageid(server.ip, server.port);
 
-            console.log("lastAutoQueryMessageId = "+ lastAutoQueryMessageId);
+           // console.log("lastAutoQueryMessageId = "+ lastAutoQueryMessageId);
             
-            if(data.channel.id === autoQueryChannelId){
+            if(data.channel.id == autoQueryChannelId){
 
-                console.log("is in auto query channel");
+                //console.log("is in auto query channel");
                // const response = await data.channel.send(reply);
        
                 if(lastAutoQueryMessageId === null){
@@ -1064,10 +1218,12 @@ class UT2004Q{
 
                 }else{
 
-                    console.log("Editing old post");
-                    if(lastAutoQueryMessageId >= 0){
-                        const oldMessage = await data.channel.messages.fetch(lastAutoQueryMessageId);
+                    //console.log("Editing old post");
 
+                    console.log(`${lastAutoQueryMessageId}`)
+
+                    if(lastAutoQueryMessageId != -1){
+                        const oldMessage = await data.channel.messages.fetch(lastAutoQueryMessageId);
                         await oldMessage.edit(reply);
                     }else{
                         const response = await data.channel.send(reply);

@@ -265,6 +265,8 @@ class Bot{
                 //console.table(servers);
 
                 await this.servers.deleteServer(servers[id].ip, servers[id].port);
+                
+                //await this.query.resetAuto();
 
                 message.channel.send("Server deleted!");
                 //this.listServers(message);
@@ -684,7 +686,7 @@ class Bot{
 \`.deleterole <role name>\` Disables users with the specified role to use the admin commands.
 \`.addserver <alias> <ip>:<port>\` Adds the specified server to the database.
 \`.deleteserver <serverid>\` Deletes the server with the specified id.
-\`.setauto\` Sets the current channel as the auto query channel.
+\`.setauto\` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
 `;
         message.channel.send(string);
 
@@ -829,7 +831,7 @@ class Bot{
 
                 }else if(message.content == ".setauto"){
 
-                    this.servers.changeAutoChannel(message);
+                    this.query.changeAutoQuery(message);
 
                 }
             }

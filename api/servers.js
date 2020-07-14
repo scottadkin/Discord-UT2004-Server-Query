@@ -153,6 +153,14 @@ class Servers{
     }
 
 
+    deleteAutoServerMessage(){
+
+        return new Promise((resolve, reject) =>{
+
+            resolve();
+        });
+    }
+
     deleteServer(ip, port){
 
 
@@ -181,7 +189,7 @@ class Servers{
 
                 if(err) reject(err);
 
-                console.log(`"UPDATE servers SET message_id=${messageId}, channel_id=? WHERE ip=${ip} AND port=${port}"`);
+               // console.log(`"UPDATE servers SET message_id=${messageId}, channel_id=? WHERE ip=${ip} AND port=${port}"`);
 
                 resolve();
             });
@@ -225,7 +233,7 @@ class Servers{
 
             const query = "UPDATE channels SET auto_query=1 WHERE channel_id=?";
 
-            console.log(`"UPDATE channels SET auto_query=1 WHERE channel_id=${channel}"`);
+            //console.log(`"UPDATE channels SET auto_query=1 WHERE channel_id=${channel}"`);
 
             this.db.run(query, [channel], function (err){
 
@@ -237,7 +245,7 @@ class Servers{
                     changes = this.changes;
                 }
 
-                console.log(this);
+               // console.log(this);
 
                 if(changes === 0){
                     resolve(false);
@@ -245,8 +253,21 @@ class Servers{
                     resolve(true);
                 }
             });
+        });
+    }
 
+    removePreviousMessageIds(){
 
+        return new Promise((resolve, reject) =>{
+
+            const query = "UPDATE servers SET message_id=-1";
+
+            this.db.run(query, (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            })
         });
     }
 
@@ -255,6 +276,7 @@ class Servers{
         try{
 
             await this.resetAutoChannel();
+            await this.removePreviousMessageIds();
             const result = await this.setAutoChannel(message.channel.id);
 
             if(result){
@@ -301,9 +323,10 @@ class Servers{
 
                 if(row === undefined){
                     resolve(null);
-                }
+                }else{
 
-                resolve(row.message_id);
+                    resolve(row.message_id);
+                }
             });
         });
     }

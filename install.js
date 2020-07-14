@@ -16,8 +16,7 @@ const queries = [
         added INTEGER NOT NULL,
         modified INTEGER NOT NULL,
         message_id TEXT NOT NULL,
-        channel_id TEXT NOT NULL,
-        auto_message_id TEXT NOT NULL
+        channel_id TEXT NOT NULL
     );`,
 
     `CREATE TABLE IF NOT EXISTS channels (
