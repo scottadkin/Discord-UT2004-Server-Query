@@ -47,6 +47,9 @@ class UT2004Q{
 
         try{
 
+
+            this.pendingData = [];
+            
             clearInterval(this.autoQueryLoop);
 
             this.autoQueryLoop = setInterval(async () =>{
@@ -259,6 +262,8 @@ class UT2004Q{
                 geo = {"country": "xx", "city": ""};
             }
 
+            this.deletePendingData(ip, port, "full");
+
             this.pendingData.push({
                 "ip": ip,
                 "port": port,
@@ -341,7 +346,8 @@ class UT2004Q{
 
         this.client.on('message', (message, rinfo) =>{
 
-            //console.log(`${message}`);
+           // console.log(`${message}`);
+           // console.log("From");
            // console.log(rinfo);
            
             if(rinfo === null || message === null){
@@ -1130,11 +1136,6 @@ class UT2004Q{
                 countryName = "";
             }
 
-            //const previousMessages = await data.channel.messages.fetch({"limit": 10});
-
-            
-            //console.table(previousMessages);
-
             let playerCountString  = `Players ${this.getTotalPlayers(data.players, false)}/${server.maxPlayers}`;
 
             const totalTeams = this.getTotalTeams(data.players);
@@ -1154,8 +1155,7 @@ class UT2004Q{
             .setDescription(description)
             .addFields(fields)
             .addField("Join server by clicking link below",`**<ut2004://${server.ip}:${server.port}>**`, false)
-            .setTimestamp()
-            //.setFooter(`ut2004://${server.ip}:${server.port}`);
+            .setTimestamp();
 
             //if auto query channel doesn't have a message already for this channel create a new one
                
@@ -1165,9 +1165,6 @@ class UT2004Q{
             
             if(data.channel.id == autoQueryChannelId){
 
-                //console.log("is in auto query channel");
-               // const response = await data.channel.send(reply);
-       
                 if(lastAutoQueryMessageId === null){
 
                     console.log("No previous auto query message");
@@ -1178,8 +1175,6 @@ class UT2004Q{
 
                     //console.log("Editing old post");
 
-                    //console.log(`${lastAutoQueryMessageId}`)
-
                     if(lastAutoQueryMessageId != -1){
                         const oldMessage = await data.channel.messages.fetch(lastAutoQueryMessageId);
                         await oldMessage.edit(reply);
@@ -1187,7 +1182,7 @@ class UT2004Q{
                         const response = await data.channel.send(reply);
                         await this.servers.setServerMessageId(server.ip, server.port, response.id, 0);
                     }
-                    //console.log(oldMessage);
+            
                 }
                 
 
@@ -1195,13 +1190,8 @@ class UT2004Q{
                 await data.channel.send(reply);
             }
             
-            //console.log(response);
-
-            //await this.servers.setServerMessageId(server.ip, server.port, response.id, response.channel.id);
-
             this.deletePendingData(data.ip, data.port, "full");
 
-            //console.log(pendingMessage);
         }catch(err){
             console.log(err);
         }

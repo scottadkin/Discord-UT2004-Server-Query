@@ -322,7 +322,7 @@ class Servers{
                 if(err) reject(err);
 
                 if(row === undefined){
-                    resolve(null);
+                    resolve(-1);
                 }else{
 
                     resolve(row.message_id);
