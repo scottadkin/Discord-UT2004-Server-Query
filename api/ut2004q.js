@@ -21,9 +21,9 @@ class UT2004Q{
         this.servers = new Servers(database);
         this.discord = discordClient;
 
-        this.bCurrentAutoLoopCompleted = true;
-
         this.pendingData = [];       
+
+        this.autoQueryLoop = null;
 
 
         //checks for timeouts
@@ -39,51 +39,51 @@ class UT2004Q{
         },config.serverPingInterval * 1000);
 
 
-        //test message edit
-        this.autoQueryLoop = setInterval(async () =>{
+        this.startAutoQueryLoop();
 
-            await this.autoQuery();
+    }
 
-        }, config.autoQueryInterval * 1000);
+    async startAutoQueryLoop(){
 
+        try{
+
+            clearInterval(this.autoQueryLoop);
+
+            this.autoQueryLoop = setInterval(async () =>{
+                await this.autoQuery();
+            }, config.autoQueryInterval * 1000);
+
+        }catch(err){
+            console.trace(err);
+        }
     }
 
     async deleteOldAutoQueryMessages(){
 
         try{
 
-            const servers = await this.servers.getAllServers();
+            //console.log(this.discord.client);
+
             const autoChannelId = await this.servers.getAutoChannel();
-
-
 
             if(autoChannelId !== null){
 
-                console.table(servers);
-
                 const channel = await this.discord.channels.fetch(autoChannelId);
-
-                //console.log(channel);
 
                 if(autoChannelId >= 0){
 
-                    const messages = await channel.messages.fetch({"limit": 20});
+                    const messagesResponse = await channel.messages.fetch({"limit": 20});
+
+                    const messages = messagesResponse.array();
 
                     for(let i = 0; i < messages.length; i++){
 
-                        //if(!bMessageIdExist(messages[i].id)){
-
-                            await messages[i].delete().then(() =>{
-
-                                console.log("deleted message");
-                            }).catch((err) =>{
-                                console.log(err);
-                            });
-                        //}
 
                     }
 
-                    console.table(messages);
+
+                }else{
+                    console.log("autoChannelId < 0");
                 }
             }
 
@@ -98,19 +98,14 @@ class UT2004Q{
 
         try{
 
-            //await this.deleteOldAutoQueryMessages();
-
             this.pendingData = [];
 
-            clearInterval(this.autoQueryLoop);
             await this.servers.changeAutoChannel(message);
 
-            this.bCurrentAutoLoopCompleted = true;
-           // await this.autoQuery();
 
-            this.autoQueryLoop = setInterval(async () =>{
-                await this.autoQuery();
-            }, config.autoQueryInterval * 1000);
+            await this.deleteOldAutoQueryMessages();
+
+            this.startAutoQueryLoop();
 
             console.log("Change auto query channel completed");
 
@@ -123,11 +118,6 @@ class UT2004Q{
 
         try{
 
-            if(!this.bCurrentAutoLoopCompleted){
-                return;
-            }else{
-                this.bCurrentAutoLoopCompleted = false;
-            }
 
             const servers = await this.servers.getAllServers();
             const autoChannelId = await this.servers.getAutoChannel();
@@ -160,21 +150,16 @@ class UT2004Q{
 
                 for(let i = 0; i < servers.length; i++){
 
-                    console.log(`Ping ${servers[i].ip}:${servers[i].port}`);
+                    //console.log(`Ping ${servers[i].ip}:${servers[i].port}`);
                     await pingServer(servers[i].ip, servers[i].port, channel);
-                    //await this.getServer(servers[i].ip, servers[i].port, channel)
+
                 }
 
-                this.bCurrentAutoLoopCompleted = true;
-
-               // console.table(previousMessages);
 
             }else{
                 console.log("AutoChannelId is NULL");
             }
-            //console.log(autoChannelId);
 
-            //console.table(servers);
         }catch(err){
             console.log(err);
         }
@@ -262,12 +247,10 @@ class UT2004Q{
 
             const finalIp = await this.servers.getIp(ip);
 
-            //console.log("finalIp = "+finalIp);
-
             if(finalIp != null){
                 ip = finalIp;
             }
-            //console.log(geoip.lookup(ip));
+ 
 
             let geo = geoip.lookup(ip);
 
@@ -276,16 +259,11 @@ class UT2004Q{
                 geo = {"country": "xx", "city": ""};
             }
 
-        // console.log(geo);
-            
-            //this.deletePendingData(ip, port, "full");
-
             this.pendingData.push({
                 "ip": ip,
                 "port": port,
                 "type": "full",
                 "serverInfo": [],
-                //"timestamp": now,
                 "playersToGet": null,
                 "players": [],
                 "bCompleted": false,
@@ -294,8 +272,6 @@ class UT2004Q{
                 "city": geo.city,
                 "created": Math.floor(Date.now() * 0.001)
             });
-
-            //console.table(this.pendingData);
 
             this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
                 if(err) console.log(err);
@@ -308,33 +284,21 @@ class UT2004Q{
     }
 
     getMatchingPendingData(ip, port, type){
+     
+        let p = 0;
 
-       // try{
-            let p = 0;
+        for(let i = 0; i < this.pendingData.length; i++){
 
-            /*const finalIp = await this.getIp(ip);
+            p = this.pendingData[i];
 
-            if(finalIp != null){
-                ip = finalIp;
-            }*/
-            
-            //console.log("looking for "+ip+":"+port+" "+type);
-
-            for(let i = 0; i < this.pendingData.length; i++){
-
-                p = this.pendingData[i];
-
-                if(p.ip === ip && p.port === port && p.type === type){
-                    return p;
-                }
-
+            if(p.ip === ip && p.port === port && p.type === type){
+                return p;
             }
 
-            return null;
+        }
 
-        //}catch(err){
-        //    console.trace(err);
-       // }
+        return null;
+
     }
 
     deletePendingData(ip, port, type){
@@ -346,7 +310,7 @@ class UT2004Q{
             p = this.pendingData[i];
 
             if(p.ip === ip && p.port === port && p.type === type){
-                    this.pendingData.splice(i,1);
+                this.pendingData.splice(i,1);
                 return;
             }
 
@@ -390,9 +354,6 @@ class UT2004Q{
 
             if(data[4] === 0){
 
-                //console.log(`${message}`);
-
-                this.deletePendingData(rinfo.address, rinfo.port, "full");
                 this.parseServerInfo(data, rinfo.address);
 
             }else if(data[4] === 1){
@@ -853,32 +814,11 @@ class UT2004Q{
             players.push(this.parsePlayer(data));
         }
 
-        const takenNames = [];
-
-        /*let filteredPlayers = [];
-
-
-        for(let i = 0; i < players.length; i++){
-
-            if(takenNames.indexOf(players[i].name) == -1){
-                takenNames.push(players[i].name);
-                filteredPlayers.push(players[i]);
-            }else{
-                console.log(`${players[i].name} has already been taken`);
-            }
-        }
-
-        players = filteredPlayers;*/
-
         this.sortPlayersByScore(players);
-
-        //console.table(players);
-
-        //console.table(players);
 
         const pendingMessage = this.getMatchingPendingData(ip, port - 1, "full");
 
-       // console.log(pendingMessage);
+
 
         if(pendingMessage != null){
 
@@ -899,9 +839,7 @@ class UT2004Q{
             console.log("No matching data found");
         }
 
-        
 
-        console.table(players);
         return players;
     }
 
@@ -1181,8 +1119,6 @@ class UT2004Q{
                 
             }   
 
-            //console.log(`"${data.city}"`);
-           // console.log(`"${countryName}"`);
 
             data.city = data.city.replace(", ",'');
 
@@ -1242,7 +1178,7 @@ class UT2004Q{
 
                     //console.log("Editing old post");
 
-                    console.log(`${lastAutoQueryMessageId}`)
+                    //console.log(`${lastAutoQueryMessageId}`)
 
                     if(lastAutoQueryMessageId != -1){
                         const oldMessage = await data.channel.messages.fetch(lastAutoQueryMessageId);
@@ -1271,22 +1207,7 @@ class UT2004Q{
         }
     }
 
-
-    bServerAdded(){
-
-    }
-
 }
-
-
-/*
-
-const test = new UT2004Q();
-
-setInterval(() =>{
-
-    test.getServer('80.4.151.145',7777)
-},5000);*/
 
 
 module.exports = UT2004Q;
