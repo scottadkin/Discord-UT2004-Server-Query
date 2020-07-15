@@ -182,10 +182,11 @@ class Bot{
         return string;
     }
 
-    async listServers(message){
+    async listServers(message, bOnlyActive){
 
         
         try{
+
             const servers = await this.servers.getAllServers();
 
             let serverString = "";
@@ -194,17 +195,37 @@ class Bot{
 
             for(let i = 0; i < servers.length; i++){
 
-                serverString += this.createServerString(i, servers[i]);
+                if(bOnlyActive === undefined){
+
+                    serverString += this.createServerString(i, servers[i]);
+
+                }else{
+
+                    if(servers[i].current_players > 0){
+                        serverString += this.createServerString(i, servers[i]);
+                    }
+                }
         
             }
 
             if(serverString == ""){
-                serverString = "**There are currently no servers added.**";
+
+                if(bOnlyActive === undefined){
+                    serverString = "**There are currently no servers added.**";
+                }else{
+                    serverString = "**There are currently no servers with players active on them.**";
+                }
+            }
+
+            let title = "Unreal Tournament 2004 Servers";
+
+            if(bOnlyActive !== undefined){
+                title = "Active Unreal Tournament 2004 Servers";
             }
 
             let embed = new Discord.MessageEmbed()
             .setColor("#000000")
-            .setTitle("Unreal Tournament 2004 Servers")
+            .setTitle(title)
             .setDescription("Use `.q serverid` for more information on a server.")
             .addField(this.createServerString("ID", {"alias": "Server Alias", "map": "Map", "current_players": "Play", "max_players": "ers"}), serverString);
 
@@ -674,7 +695,8 @@ class Bot{
         let string = `**UT2004 Server Query Help.**
 
 **User Commands**
-\`.servers\` Displays the basic server information for all the servers added to the database.
+\`.servers\` Displays basic server information for all the servers added to the database.
+\`.active\` Displays basic server information for all servers added that have players on it.
 \`.q<serverId>\` Displays the server's name, current gametype, map, and players.
 \`.q <server ip>:<port>\` Displays a server's name, current gametype, map, and players.
 \`.ip<serverid>\` Displays clickable link to the server.
@@ -776,6 +798,9 @@ class Bot{
 
                 this.displayServerIp(message);
 
+            }else if(message.content == ".active"){
+
+                this.listServers(message, true);
             }
 
             const adminCommands = [

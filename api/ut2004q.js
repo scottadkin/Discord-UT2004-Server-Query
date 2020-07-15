@@ -1082,7 +1082,7 @@ class UT2004Q{
         if(dmTeam != ""){
 
             result.push({
-                "name": ":white_large_square: Players",
+                "name": ":white_large_square: Connections",
                 "value": dmTeam,
                 "inline": true
             });
@@ -1203,8 +1203,8 @@ class UT2004Q{
 
             const totalTeams = this.getTotalTeams(data.players);
 
-            if(totalTeams < 2){
-                playerCountString = `${this.getTotalPlayers(data.players, true)} users connected.`;
+            if(totalTeams < 2 && this.getTotalPlayers(data.players, true) > 0){
+                playerCountString = `${this.getTotalPlayers(data.players, true)} Users Connected.`;
             }
 
             let description = `:office: **${data.city}${countryName}\n:wrestling: ${playerCountString}\n`;
