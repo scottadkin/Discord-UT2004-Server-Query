@@ -105,7 +105,6 @@ class UT2004Q{
 
             await this.servers.changeAutoChannel(message);
 
-
             await this.deleteOldAutoQueryMessages();
 
             this.startAutoQueryLoop();
@@ -206,9 +205,14 @@ class UT2004Q{
             if(now - p.created >= config.serverTimeout){
 
                 //console.log(p);
+                //console.log(p.type);
                 
                 if(p.serverInfo != []){
-                    this.sendDiscordResponse(p);
+
+                    if(p.type == "full"){
+                        this.sendDiscordResponse(p);
+                    }
+
                 }else{
                     p.channel.send(`**Server ${p.ip}:${p.port} Timed Out!**`);
                 }
@@ -232,6 +236,14 @@ class UT2004Q{
             }
 
             port = port + 1;
+
+            this.pendingData.push({
+                "ip": ip,
+                "port": port,
+                "type": "basic",
+                "serverInfo": [],
+                "created": Math.floor(Date.now() * 0.001)
+            });
 
             this.client.send(this.getPacket(0), port, ip, (err) =>{
                 if(err) console.log(err);
@@ -310,16 +322,35 @@ class UT2004Q{
 
         let p = 0;
 
+        const result = [];
+
+        for(let i = 0; i < this.pendingData.length; i++){
+
+            p = this.pendingData[i];
+
+            if(p.ip != ip && p.port != port && p.type != type){
+                //delete
+                result.push(p);
+            }
+        }
+
+        //console.log(`Removed ${this.pendingData.length - result.length} from pending data`);
+
+        this.pendingData = result;
+
+        /*
         for(let i = 0; i < this.pendingData.length; i++){
 
             p = this.pendingData[i];
 
             if(p.ip === ip && p.port === port && p.type === type){
+
+                console.log(`DELETED ${p.ip}:${p.port} ${p.type}`);
                 this.pendingData.splice(i,1);
                 return;
             }
 
-        }
+        }*/
     }
 
     createClient(){
@@ -627,15 +658,29 @@ class UT2004Q{
                 });
 
             }else{
-               // console.log(pendingMessage);
+               // console.log(pendingMessage)
+
+
                 this.sendDiscordResponse(pendingMessage);
+             
             }
             
         }else{
 
             //console.log("not matching data, so it's just a basic server ping.");
 
-            this.servers.updateServer(serverInfo);
+            const basicPendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "basic");
+
+            //console.log("basicpendingMessage below");
+            //console.log(basicPendingMessage);
+
+            //if(basicPendingMessage !== null){
+                this.servers.updateServer(serverInfo);
+                
+            //}
+
+            this.deletePendingData(ip, serverInfo.port, "basic");
+            
        
         }
         
@@ -1089,7 +1134,9 @@ class UT2004Q{
 
         try{
 
+    
             const server = data.serverInfo;
+
 
             const autoQueryChannelId = await this.servers.getAutoChannel();
 

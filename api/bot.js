@@ -85,7 +85,7 @@ class Bot{
 
             this.getAllowedChannels().then((channels) =>{
 
-                console.table(channels);
+                //console.table(channels);
 
                 let c = 0;
 
@@ -726,7 +726,7 @@ class Bot{
 
                 const servers = await this.servers.getAllServers();
 
-                console.table(servers);
+                //console.table(servers);
 
                 const id = parseInt(result[1]) - 1;
 
