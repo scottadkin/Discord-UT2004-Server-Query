@@ -45,5 +45,5 @@ When the bot has joined the server only people with the role "adminRole" can use
 ![alt text](https://i.imgur.com/cVtcp6H.png, "image")
 
 # Known Problems
-- On rare occasions .q commands are posted twice.
+- On rare occasions .q commands are posted twice.**(Should be fixed now)**
 - If autoQueryInterval is set too low it can stop working after time, it's recommended to keep it above 60 seconds.
