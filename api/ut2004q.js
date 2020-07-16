@@ -145,7 +145,6 @@ class UT2004Q{
 
             if(autoChannelId !== null){
 
-
                 const c = this.discord.channels;
 
                 const channel = await c.fetch(autoChannelId);
@@ -154,9 +153,7 @@ class UT2004Q{
 
                     //console.log(`Ping ${servers[i].ip}:${servers[i].port}`);
                     await pingServer(servers[i].ip, servers[i].port, channel);
-
                 }
-
 
             }else{
                 console.log("AutoChannelId is NULL");
@@ -178,9 +175,12 @@ class UT2004Q{
 
             for(let i = 0; i < servers.length; i++){
 
-                s = servers[i];
+                //s = servers[i];
 
-                this.getServerBasic(s.ip, s.port)
+                setTimeout(() =>{
+                    const s = servers[i];
+                    this.getServerBasic(s.ip, s.port);
+                }, 500);
             }
            // console.table(servers);
         }catch(err){
@@ -202,7 +202,7 @@ class UT2004Q{
 
             //console.log(now - p.created);
 
-            if(now - p.created >= config.serverTimeout){
+            if(now - p.created >= 60){
 
                 //console.log(p);
                 //console.log(p.type);
@@ -210,6 +210,7 @@ class UT2004Q{
                 if(p.serverInfo != []){
 
                     if(p.type == "full"){
+                        console.log("mewoeowoewoew");
                         this.sendDiscordResponse(p);
                     }
 
@@ -287,7 +288,8 @@ class UT2004Q{
                 "channel": channel,
                 "country": geo.country,
                 "city": geo.city,
-                "created": Math.floor(Date.now() * 0.001)
+                "created": Math.floor(Date.now() * 0.001),
+                "playerPackets": 0
             });
 
             this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
@@ -669,15 +671,15 @@ class UT2004Q{
 
             //console.log("not matching data, so it's just a basic server ping.");
 
-            const basicPendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "basic");
+            //const basicPendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "basic");
 
             //console.log("basicpendingMessage below");
             //console.log(basicPendingMessage);
 
-            //if(basicPendingMessage !== null){
+           // if(basicPendingMessage !== null){
                 this.servers.updateServer(serverInfo);
                 
-            //}
+           // }
 
             this.deletePendingData(ip, serverInfo.port, "basic");
             
@@ -875,6 +877,8 @@ class UT2004Q{
 
             //console.log("Found matching players data");
 
+            //pendingMessage.playerPackets++;
+
             pendingMessage.players = pendingMessage.players.concat(players);
 
             pendingMessage.players = this.removeDuplicatePlayers(pendingMessage.players);
@@ -882,12 +886,16 @@ class UT2004Q{
             this.sortPlayersByScore(pendingMessage.players);
 
             if(pendingMessage.players.length >= pendingMessage.playersToGet - 1 && !pendingMessage.bCompleted){
+            //if(pendingMessage.players.length >= pendingMessage.playersToGet - 1 || pendingMessage.playerPackets == 2){
+                pendingMessage.bCompleted = true;
 
+                console.log("wooofofofof");
                 this.sendDiscordResponse(pendingMessage);
             }
 
         }else{
             console.log("No matching data found");
+            
         }
 
 
@@ -1148,7 +1156,7 @@ class UT2004Q{
                 return;
             }
 
-            data.bCompleted = true;
+            //data.bCompleted = true;
 
             let serverFlag = ":pirate_flag:";
 
