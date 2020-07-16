@@ -11,10 +11,17 @@
 - Now run the command **node install** to create the database tables.
 - Now open the config file /api/config.js.
 - Add your Discord bot token, if this is not done correctly the bot can't join your server. <https://discordpy.readthedocs.io/en/latest/discord.html>
+- Make sure adminRole is a role in your discord server that you have access to, to be able to use admin commands.
 
 # Running the bot
 - Open command prompt in the directory you installed the files.
 - Run the command **node app**
+
+# First time use
+When the bot has joined the server only people with the role "adminRole" can use the bot, to change this:
+- `.allowchannel` This will enable any user to use non admin commands in the current channel.
+- `.allowrole <role name>` This will enable users with the specified role to use admin commands.
+- `.setauto` Sets the current channel to be the auto query channel, it is recommended to lock this text channel from people writing in there, to stop the auto update posts from being out of view, if they do become to far out of sight you can just use the same command to make the bot post new responses.
 
 # Bot commands
 
