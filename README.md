@@ -35,6 +35,7 @@
 - `.setauto` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
 `
 
+![alt text](https://i.imgur.com/cVtcp6H.png, "image")
 
 # Known Problems
 - On rare occasions .q commands are posted twice.
