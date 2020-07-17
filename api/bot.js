@@ -226,7 +226,7 @@ class Bot{
             let embed = new Discord.MessageEmbed()
             .setColor("#000000")
             .setTitle(title)
-            .setDescription("Use `.q serverid` for more information on a server.")
+            .setDescription(`Use ${config.commandPrefix}q serverid for more information on a server.`)
             .addField(this.createServerString("ID", {"alias": "Server Alias", "map": "Map", "current_players": "Play", "max_players": "ers"}), serverString);
 
 
@@ -289,7 +289,7 @@ class Bot{
                 })
 
             }else{
-                message.channel.send(`Can't delete auto query message, there are no autoquery channel.`);
+               // message.channel.send(`Can't delete auto query message, there are no autoquery channel.`);
             }
 
 
@@ -302,7 +302,7 @@ class Bot{
 
         try{
 
-            const reg = /^\.deleteserver (\d+)$/i;
+            const reg = /^.deleteserver (\d+)$/i;
 
             const result = reg.exec(message.content);
 
@@ -322,7 +322,7 @@ class Bot{
                 //console.table(servers);
                 const messageId = servers[id].message_id;
                 if(messageId >= 0){
-                    console.log(`Going to delete autoquery with message id = ${messageId}`);
+                    //console.log(`Going to delete autoquery with message id = ${messageId}`);
                     await this.deleteAutoQueryMessage(message, messageId);
                 }
                 
@@ -337,7 +337,7 @@ class Bot{
 
             }else{
 
-                message.channel.send("Invalid syntax, correct is `.deleteserver serverid`");
+                message.channel.send(`Invalid syntax, correct is ${config.commandPrefix}deleteserver serverid`);
             
             }
 
@@ -391,7 +391,7 @@ class Bot{
                // console.log(test);
                // console.log(`Addserver ${ip}:${port}`);
             }else{
-                message.channel.send("Incorrect Syntax! Correct is `.addserver alias ip:port`");
+                message.channel.send(`Incorrect Syntax! Correct is ${config.commandPrefix}addserver alias ip:port`);
                 console.log("result is null");
             }
         }catch(err){
@@ -739,21 +739,21 @@ class Bot{
         let string = `**UT2004 Server Query Help.**
 
 **User Commands**
-\`.servers\` Displays basic server information for all the servers added to the database.
-\`.active\` Displays basic server information for all servers added that have players on it.
-\`.q<serverId>\` Displays the server's name, current gametype, map, and players.
-\`.q <server ip>:<port>\` Displays a server's name, current gametype, map, and players.
-\`.ip<serverid>\` Displays clickable link to the server.
+\`${config.commandPrefix}servers\` Displays basic server information for all the servers added to the database.
+\`${config.commandPrefix}active\` Displays basic server information for all servers added that have players on it.
+\`${config.commandPrefix}q<serverId>\` Displays the server's name, current gametype, map, and players.
+\`${config.commandPrefix}q <server ip>:<port>\` Displays a server's name, current gametype, map, and players.
+\`${config.commandPrefix}ip<serverid>\` Displays clickable link to the server.
 
 **Admin Commands**
-\`.allowchannel\` Enables the bot to be used in the current channel.
-\`.deletechannel\` Disables the bot from being used in the current channel.
-\`.allowrole <role name>\` Enables users with the specified role to use admin commands.
-\`.deleterole <role name>\` Disables users with the specified role to use the admin commands.
-\`.addserver <alias> <ip>:<port>\` Adds the specified server to the database.
-\`.deleteserver <serverid>\` Deletes the server with the specified id.
-\`.setauto\` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
-\`.stopauto\` Disables auto queries.
+\`${config.commandPrefix}allowchannel\` Enables the bot to be used in the current channel.
+\`${config.commandPrefix}deletechannel\` Disables the bot from being used in the current channel.
+\`${config.commandPrefix}allowrole <role name>\` Enables users with the specified role to use admin commands.
+\`${config.commandPrefix}deleterole <role name>\` Disables users with the specified role to use the admin commands.
+\`${config.commandPrefix}addserver <alias> <ip>:<port>\` Adds the specified server to the database.
+\`${config.commandPrefix}deleteserver <serverid>\` Deletes the server with the specified id.
+\`${config.commandPrefix}setauto\` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
+\`${config.commandPrefix}stopauto\` Disables auto queries.
 `;
         message.channel.send(string);
 
@@ -763,7 +763,7 @@ class Bot{
     async displayServerIp(message){
 
         try{
-            const reg = /^\.ip(\d+)$/i;
+            const reg = /^.ip(\d+)$/i;
 
             const result = reg.exec(message.content);
 
@@ -776,7 +776,7 @@ class Bot{
                 const id = parseInt(result[1]) - 1;
 
                 if(id > servers.length || id < 0){
-                    message.channel.send(`There is no server with the id ${id + 1}. Use .servers to see available servers`);
+                    message.channel.send(`There is no server with the id ${id + 1}. Use ${config.commandPrefix}servers to see available servers`);
                 }else{
 
                     const data = servers[id];
@@ -811,7 +811,7 @@ class Bot{
 
                 if(!bAdmin){
 
-                    if(message.content.startsWith(".")){
+                    if(message.content.startsWith(config.commandPrefix)){
                        message.channel.send("The bot is not enabled for this channel.");
                     }
 
@@ -831,32 +831,32 @@ class Bot{
                 const result = queryServerReg.exec(message.content);
                 this.query.getServer(result[1], parseInt(result[2]), message.channel);
             
-            }else if(message.content == ".servers"){
+            }else if(message.content == `${config.commandPrefix}servers`){
       
                 this.listServers(message);
                           
-            }else if(message.content == ".help"){
+            }else if(message.content == `${config.commandPrefix}help`){
 
                 this.helpCommand(message);
 
-            }else if(message.content.startsWith(".ip")){
+            }else if(message.content.startsWith(`${config.commandPrefix}ip`)){
 
                 this.displayServerIp(message);
 
-            }else if(message.content == ".active"){
+            }else if(message.content == `${config.commandPrefix}active`){
 
                 this.listServers(message, true);
             }
 
             const adminCommands = [
-                ".addserver",
-                ".deleteserver",
-                ".allowchannel",
-                ".deletechannel",
-                ".allowrole",
-                ".deleterole",
-                ".setauto",
-                ".stopauto"
+                `${config.commandPrefix}addserver`,
+                `${config.commandPrefix}deleteserver`,
+                `${config.commandPrefix}allowchannel`,
+                `${config.commandPrefix}deletechannel`,
+                `${config.commandPrefix}allowrole`,
+                `${config.commandPrefix}deleterole`,
+                `${config.commandPrefix}setauto`,
+                `${config.commandPrefix}stopauto`
             ];
 
             let bUsingAdminCommand = false;
@@ -876,35 +876,35 @@ class Bot{
                     return;
                 }
 
-                if(message.content.startsWith(".addserver")){
+                if(message.content.startsWith(`${config.commandPrefix}addserver`)){
               
                     this.addServer(message);
                     
-                }else if(message.content.startsWith(".deleteserver")){
+                }else if(message.content.startsWith(`${config.commandPrefix}deleteserver`)){
           
                     this.removeServer(message);             
 
-                }else if(message.content == ".allowchannel"){
+                }else if(message.content == `${config.commandPrefix}allowchannel`){
        
                     this.allowChannel(message);        
 
-                }else if(message.content == ".deletechannel"){
+                }else if(message.content == `${config.commandPrefix}deletechannel`){
 
                     this.removeChannel(message);      
 
-                }else if(message.content.startsWith(".allowrole")){
+                }else if(message.content.startsWith(`${config.commandPrefix}allowrole`)){
 
                     this.allowRole(message);
                     
-                }else if(message.content.startsWith(".deleterole")){
+                }else if(message.content.startsWith(`${config.commandPrefix}deleterole`)){
 
                     this.removeRole(message);     
 
-                }else if(message.content == ".setauto"){
+                }else if(message.content == `${config.commandPrefix}setauto`){
 
                     this.query.changeAutoQuery(message);
 
-                }else if(message.content == ".stopauto"){
+                }else if(message.content == `${config.commandPrefix}stopauto`){
 
                     this.query.stopAuto(message);
                 }

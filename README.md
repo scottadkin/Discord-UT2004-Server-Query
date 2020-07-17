@@ -12,6 +12,7 @@
 - Now open the config file /api/config.js.
 - Add your Discord bot token, if this is not done correctly the bot can't join your server. <https://discordpy.readthedocs.io/en/latest/discord.html>
 - Make sure adminRole is a role in your discord server that you have access to, to be able to use admin commands.
+- The config file is also where you can set the command prefix, by default it's dot(.)
 
 # Running the bot
 - Open command prompt in the directory you installed the files.
@@ -46,10 +47,10 @@ When the bot has joined the server only people with the role "adminRole" can use
 - `.addserver <alias> <ip>:<port>` Adds the specified server to the database.
 - `.deleteserver <serverid>` Deletes the server with the specified id.
 - `.setauto` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
+- `.stopauto` Disables auto query channel.
 `
 
 ![alt text](https://i.imgur.com/cVtcp6H.png, "image")
 
 # Known Problems
-- On rare occasions .q commands are posted twice.**(Should be fixed now)**
 - If autoQueryInterval is set too low it can stop working after time, it's recommended to keep it above 60 seconds.
