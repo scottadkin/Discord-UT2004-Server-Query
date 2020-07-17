@@ -61,7 +61,7 @@ class UT2004Q{
         }
     }
 
-    async deleteOldAutoQueryMessages(){
+    async deleteOldAutoQueryMessages(timeStamp){
 
         try{
 
@@ -75,12 +75,23 @@ class UT2004Q{
 
                 if(autoChannelId >= 0){
 
-                    const messagesResponse = await channel.messages.fetch({"limit": 20});
+                    const messagesResponse = await channel.messages.fetch({"limit": 50});
 
                     const messages = messagesResponse.array();
 
                     for(let i = 0; i < messages.length; i++){
+                        console.log(messages[i]);
 
+                        console.log(`LIMIT = ${timeStamp} Message timestamp = ${messages[i].createdTimestamp}`);
+
+                        if(messages[i].createdTimestamp < timeStamp){
+
+                            messages[i].delete().then(() =>{
+                                console.log("deleted message");
+                            }).catch((err) =>{
+                                console.trace(err);
+                            });     
+                        } 
 
                     }
 
@@ -103,9 +114,11 @@ class UT2004Q{
 
             this.pendingData = [];
 
+            const now = Date.now();
+
             await this.servers.changeAutoChannel(message);
 
-            await this.deleteOldAutoQueryMessages();
+            await this.deleteOldAutoQueryMessages(now);
 
             this.startAutoQueryLoop();
 
@@ -210,7 +223,7 @@ class UT2004Q{
                 if(p.serverInfo != []){
 
                     if(p.type == "full"){
-                        console.log("mewoeowoewoew");
+                        //console.log("mewoeowoewoew");
                         this.sendDiscordResponse(p);
                     }
 
@@ -889,7 +902,7 @@ class UT2004Q{
             //if(pendingMessage.players.length >= pendingMessage.playersToGet - 1 || pendingMessage.playerPackets == 2){
                 pendingMessage.bCompleted = true;
 
-                console.log("wooofofofof");
+               // console.log("wooofofofof");
                 this.sendDiscordResponse(pendingMessage);
             }
 

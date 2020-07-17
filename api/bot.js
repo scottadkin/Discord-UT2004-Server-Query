@@ -262,6 +262,42 @@ class Bot{
         });
     }
 
+    async deleteAutoQueryMessage(message, messageId){
+
+        try{
+
+            const autoQueryChannel = await this.servers.getAutoChannel();
+
+            console.log(`autoQueryChannelId = ${autoQueryChannel}`);
+
+            if(autoQueryChannel !== null){
+
+                const channel = await this.client.channels.fetch(autoQueryChannel);
+
+                console.log(`channel = ${channel}`);
+
+                const messageToDelete = await channel.messages.fetch(messageId);
+
+                console.log(`messageToDelete = ${messageToDelete}`);
+
+                messageToDelete.delete().then(() =>{
+
+                    console.log(`Message deleted successfully`);
+
+                }).catch(() =>{
+                    message.channel.send(`There was a problem deleting the auto query message.`);
+                })
+
+            }else{
+                message.channel.send(`Can't delete auto query message, there are no autoquery channel.`);
+            }
+
+
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
     async removeServer(message){
 
         try{
@@ -284,8 +320,15 @@ class Bot{
                 }
 
                 //console.table(servers);
-
+                const messageId = servers[id].message_id;
+                if(messageId >= 0){
+                    console.log(`Going to delete autoquery with message id = ${messageId}`);
+                    await this.deleteAutoQueryMessage(message, messageId);
+                }
+                
                 await this.servers.deleteServer(servers[id].ip, servers[id].port);
+                
+
                 
                 //await this.query.resetAuto();
 

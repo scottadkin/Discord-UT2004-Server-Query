@@ -280,7 +280,7 @@ class Servers{
             const result = await this.setAutoChannel(message.channel.id);
 
             if(result){
-                message.channel.send(`Auto query channel set to **${message.channel.name}**. Data will be posted shortly.`);
+                message.channel.send(`Auto query channel set to **${message.channel.name}**. Data will be posted shortly.\nAuto update interval is set to ${config.autoQueryInterval} seconds.`);
             }else{
                 //console.log("Failed to change update channel");
                 message.channel.send(`Failed to change auto query channel. This could be because the bot has not been enabled to post in the current channel.`);
@@ -330,6 +330,7 @@ class Servers{
             });
         });
     }
+
 
 }
 
