@@ -63,6 +63,21 @@ class UT2004Q{
         }
     }
 
+    async stopAuto(message){
+
+        try{
+
+            console.log("STOP AUTO");
+            clearInterval(this.autoQueryLoop);
+
+            await this.servers.resetAutoChannel();
+            message.channel.send(`Auto server query has been disabled.`);
+
+        }catch(err){
+            console.trace(err);
+        }
+    }
+
     async deleteOldAutoQueryMessages(timeStamp){
 
         try{
@@ -171,7 +186,7 @@ class UT2004Q{
                 }
 
             }else{
-                console.log("AutoChannelId is NULL");
+                console.log("Auto query is disabled");
             }
 
         }catch(err){

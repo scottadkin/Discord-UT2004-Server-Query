@@ -382,6 +382,7 @@ class Bot{
                     const finalIp = await this.servers.getIp(ip);
 
                     await this.servers.insertServer(ip, finalIp, port, result[1]);
+                    this.query.getServerBasic(ip, port);
                     message.channel.send("Server successfully added.");
                     //this.listServers(message);
                 }
@@ -752,6 +753,7 @@ class Bot{
 \`.addserver <alias> <ip>:<port>\` Adds the specified server to the database.
 \`.deleteserver <serverid>\` Deletes the server with the specified id.
 \`.setauto\` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
+\`.stopauto\` Disables auto queries.
 `;
         message.channel.send(string);
 
@@ -853,7 +855,8 @@ class Bot{
                 ".deletechannel",
                 ".allowrole",
                 ".deleterole",
-                ".setauto"
+                ".setauto",
+                ".stopauto"
             ];
 
             let bUsingAdminCommand = false;
@@ -901,6 +904,9 @@ class Bot{
 
                     this.query.changeAutoQuery(message);
 
+                }else if(message.content == ".stopauto"){
+
+                    this.query.stopAuto(message);
                 }
             }
 
