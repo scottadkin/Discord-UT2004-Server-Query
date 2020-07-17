@@ -52,6 +52,8 @@ class UT2004Q{
             
             clearInterval(this.autoQueryLoop);
 
+            await this.autoQuery();
+
             this.autoQueryLoop = setInterval(async () =>{
                 await this.autoQuery();
             }, config.autoQueryInterval * 1000);
