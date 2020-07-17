@@ -1,6 +1,8 @@
 const sqlite3 = require('sqlite3').verbose();
+const config = require('./config');
 
-const db = new sqlite3.Database('./db/ut2k4query.db', (err) => {
+
+const db = new sqlite3.Database('./db/'+config.databaseFile, (err) => {
     if (err) {
       console.error(err.message);
     }
