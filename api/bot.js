@@ -799,6 +799,8 @@ class Bot{
 
             if(message.author.bot) return;
 
+            if(!message.content.startsWith(config.commandPrefix)) return;
+
             const adminMessage = "You do not have permission to use this command.";
 
             const adminRoles = await this.getAllAdminRoles();
