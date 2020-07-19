@@ -50,11 +50,11 @@ When the bot has joined the server only people with the role "adminRole" can use
 - `.stopauto` Disables auto query channel.
 `
 Updated .q and .ip commands with join as spectator added
+
 ![alt text](https://i.imgur.com/eGdP3TK.png, "image")
 
-
-
 Old .q display with other commands
+
 ![alt text](https://i.imgur.com/cVtcp6H.png, "image")
 
 # Known Problems
