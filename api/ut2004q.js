@@ -1239,7 +1239,8 @@ class UT2004Q{
             .setTitle(`${serverFlag} ${server.name}`)
             .setDescription(description)
             .addFields(fields)
-            .addField("Join server by clicking link below",`**<ut2004://${server.ip}:${server.port}>**`, false)
+            .addField("Join server as Player",`**<ut2004://${server.ip}:${server.port}>**`, false)
+            .addField("Join server as Spectator",`**<ut2004://${server.ip}:${server.port}?spectatorOnly=1>**`, false)
             .setTimestamp();
 
             //if auto query channel doesn't have a message already for this channel create a new one

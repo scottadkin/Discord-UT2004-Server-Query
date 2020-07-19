@@ -781,7 +781,8 @@ class Bot{
 
                     const data = servers[id];
 
-                    let string = `${data.name} (${data.alias})\n**<ut2004://${data.ip}:${data.port}>**`;
+                    let string = `**${data.name} (${data.alias})\nJoin as player <ut2004://${data.ip}:${data.port}>\n`;
+                    string += `Join as spectator <ut2004://${data.ip}:${data.port}?spectatorOnly=1>**`;
 
                     message.channel.send(string);
                     

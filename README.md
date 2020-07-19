@@ -49,7 +49,10 @@ When the bot has joined the server only people with the role "adminRole" can use
 - `.setauto` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
 - `.stopauto` Disables auto query channel.
 `
+Updated .q and .ip commands with join as spectator added
+![alt text](https://i.imgur.com/eGdP3TK.png, "image")
 
+Old .q display with other commands
 ![alt text](https://i.imgur.com/cVtcp6H.png, "image")
 
 # Known Problems
