@@ -39,7 +39,7 @@ class Bot{
                     result = true;
                     return
                 }else if(this.bAdminRole(adminRoles, role.name)){
-                    console.log("user has added role");
+                    //console.log("user has added role");
                     result = true;
                     return
                 }
@@ -268,21 +268,21 @@ class Bot{
 
             const autoQueryChannel = await this.servers.getAutoChannel();
 
-            console.log(`autoQueryChannelId = ${autoQueryChannel}`);
+            //console.log(`autoQueryChannelId = ${autoQueryChannel}`);
 
             if(autoQueryChannel !== null){
 
                 const channel = await this.client.channels.fetch(autoQueryChannel);
 
-                console.log(`channel = ${channel}`);
+                //console.log(`channel = ${channel}`);
 
                 const messageToDelete = await channel.messages.fetch(messageId);
 
-                console.log(`messageToDelete = ${messageToDelete}`);
+                //console.log(`messageToDelete = ${messageToDelete}`);
 
                 messageToDelete.delete().then(() =>{
 
-                    console.log(`Message deleted successfully`);
+                    //console.log(`Message deleted successfully`);
 
                 }).catch(() =>{
                     message.channel.send(`There was a problem deleting the auto query message.`);
@@ -392,7 +392,7 @@ class Bot{
                // console.log(`Addserver ${ip}:${port}`);
             }else{
                 message.channel.send(`Incorrect Syntax! Correct is ${config.commandPrefix}addserver alias ip:port`);
-                console.log("result is null");
+                //console.log("result is null");
             }
         }catch(err){
             console.trace(err);
@@ -694,7 +694,7 @@ class Bot{
 
             const result = reg.exec(message.content);
 
-            console.log(result);
+            //console.log(result);
 
 
             if(result != null){

@@ -28,6 +28,16 @@ class UT2004Q{
 
         //checks for timeouts
         setInterval(() =>{
+
+            //console.log(process.memoryUsage());
+
+            const m = process.memoryUsage();
+
+           // console.log(`RSS = ${m.rss / 1024}KB`);
+            //console.log(`heapTotal = ${m.heapTotal / 1024}KB`);
+            //console.log(`heapTotal = ${(m.heapTotal / 1024).toFixed(2)}KB`);
+           // console.log(`external = ${m.external / 1024}KB`);
+
             this.tick();
         }, 1000);
 
@@ -67,7 +77,7 @@ class UT2004Q{
 
         try{
 
-            console.log("STOP AUTO");
+           // console.log("STOP AUTO");
             clearInterval(this.autoQueryLoop);
 
             await this.servers.resetAutoChannel();
@@ -97,14 +107,14 @@ class UT2004Q{
                     const messages = messagesResponse.array();
 
                     for(let i = 0; i < messages.length; i++){
-                        console.log(messages[i]);
+                        //console.log(messages[i]);
 
-                        console.log(`LIMIT = ${timeStamp} Message timestamp = ${messages[i].createdTimestamp}`);
+                      //  console.log(`LIMIT = ${timeStamp} Message timestamp = ${messages[i].createdTimestamp}`);
 
                         if(messages[i].createdTimestamp < timeStamp){
 
                             messages[i].delete().then(() =>{
-                                console.log("deleted message");
+                               // console.log("deleted message");
                             }).catch((err) =>{
                                 console.trace(err);
                             });     
@@ -114,7 +124,7 @@ class UT2004Q{
 
 
                 }else{
-                    console.log("autoChannelId < 0");
+                    //console.log("autoChannelId < 0");
                 }
             }
 
@@ -139,7 +149,7 @@ class UT2004Q{
 
             this.startAutoQueryLoop();
 
-            console.log("Change auto query channel completed");
+           // console.log("Change auto query channel completed");
 
         }catch(err){
             console.trace(err);
@@ -186,7 +196,7 @@ class UT2004Q{
                 }
 
             }else{
-                console.log("Auto query is disabled");
+               // console.log("Auto query is disabled");
             }
 
         }catch(err){
@@ -434,8 +444,6 @@ class UT2004Q{
                 fs.writeFileSync("test.txt", message);
                this.parsePlayerInfo(data, rinfo.address, rinfo.port);
                 
-            }else{
-                console.log("Unknown server response");
             }
             
         });
@@ -924,7 +932,7 @@ class UT2004Q{
             }
 
         }else{
-            console.log("No matching data found");
+            //console.log("No matching data found");
             
         }
 
@@ -1253,7 +1261,7 @@ class UT2004Q{
 
                 if(lastAutoQueryMessageId === null){
 
-                    console.log("No previous auto query message");
+                    //console.log("No previous auto query message");
                     const response = await data.channel.send(reply);
                     await this.servers.setServerMessageId(server.ip, server.port, response.id, 0);
 
