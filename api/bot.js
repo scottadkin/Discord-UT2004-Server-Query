@@ -694,34 +694,34 @@ class Bot{
 
             const result = reg.exec(message.content);
 
-            //console.log(result);
-
-
             if(result != null){
 
                 let id = parseInt(result[1]);
 
                 if(id !== id){
                     message.channel.send("Server ID must be a valid integer.");
-                    return;
+                    throw new Error("Server ID must be a valid integer.");
                 }
 
-                const servers = await this.servers.getAllServers();
-
-               // console.table(servers);
+                let servers = await this.servers.getAllServers();
 
                 if(servers.length < id || id < 1){
                     message.channel.send(`There is no server with the id ${id}`);
-                    return;
+                    throw new Error(`There is no server with the id ${id}`);
+                   
+                }else{
+
+                    id = id - 1;
+
+                    this.query.getServer(servers[id].ip, servers[id].port, message.channel.id);
+
+                    servers = null;
                 }
-
-                id = id - 1;
-
-                this.query.getServer(servers[id].ip, servers[id].port, message.channel)
 
             }else{
                 message.channel.send("Incorrect syntax! Correct is `.q serverid` Use .servers command to see available servers.");
             }
+
         }catch(err){
             console.trace(err);
         }
@@ -775,11 +775,12 @@ class Bot{
 
                 const id = parseInt(result[1]) - 1;
 
-                if(id > servers.length || id < 0){
+                if(id >= servers.length || id < 0){
                     message.channel.send(`There is no server with the id ${id + 1}. Use ${config.commandPrefix}servers to see available servers`);
                 }else{
 
                     const data = servers[id];
+                    
 
                     let string = `**${data.name} (${data.alias})\nJoin as player <ut2004://${data.ip}:${data.port}>\n`;
                     string += `Join as spectator <ut2004://${data.ip}:${data.port}?spectatorOnly=1>**`;
@@ -832,7 +833,7 @@ class Bot{
             }else if(queryServerReg.test(message.content)){
        
                 const result = queryServerReg.exec(message.content);
-                this.query.getServer(result[1], parseInt(result[2]), message.channel);
+                this.query.getServer(result[1], parseInt(result[2]), message.channel.id);
             
             }else if(message.content == `${config.commandPrefix}servers`){
       
@@ -927,7 +928,7 @@ class Bot{
             console.log("I'm Ready, I'm Ready, I'm Ready (In spongebobs voice)");
 
             this.servers = new Servers(db);
-            this.query = new UT2004Query(db, this.client);
+            this.query = new UT2004Query(db, this.client, this.servers);
         });
 
         this.client.on('error', (err) =>{

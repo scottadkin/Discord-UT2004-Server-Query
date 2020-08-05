@@ -3,44 +3,43 @@ const dgram = require('dgram');
 const Discord = require('discord.js');
 const geoip = require('geoip-lite');
 const config = require('./config');
-
 const countryList = require('country-list');
-const Servers = require('./servers');
-const fs = require('fs');
 
-const dns = require('dns');
+
+
 
 class UT2004Q{
 
-    constructor(database, discordClient){
+    constructor(database, discordClient, servers){
 
         this.database = database;
 
         this.createClient();
 
-        this.servers = new Servers(database);
+        this.servers = servers;
         this.discord = discordClient;
 
         this.pendingData = [];       
 
         this.autoQueryLoop = null;
 
-
+        
         //checks for timeouts
+        
         setInterval(() =>{
 
             //console.log(process.memoryUsage());
 
-            const m = process.memoryUsage();
+            //const m = process.memoryUsage();
 
            // console.log(`RSS = ${m.rss / 1024}KB`);
             //console.log(`heapTotal = ${m.heapTotal / 1024}KB`);
-            //console.log(`heapTotal = ${(m.heapTotal / 1024).toFixed(2)}KB`);
+            //console.log(`heapTotal = ${(m.heapTotal / 1024 / 1024).toFixed(2)}MB heapUsed= ${(m.heapUsed / 1024 / 1024).toFixed(2)}MB`);
            // console.log(`external = ${m.external / 1024}KB`);
 
             this.tick();
         }, 1000);
-
+        
         //loop for server pings
         setInterval(() =>{
 
@@ -50,13 +49,14 @@ class UT2004Q{
 
 
         this.startAutoQueryLoop();
+        
 
     }
 
     async startAutoQueryLoop(){
 
+        //return;
         try{
-
 
             this.pendingData = [];
             
@@ -65,6 +65,7 @@ class UT2004Q{
             await this.autoQuery();
 
             this.autoQueryLoop = setInterval(async () =>{
+                //console.log("Auto Query");
                 await this.autoQuery();
             }, config.autoQueryInterval * 1000);
 
@@ -87,6 +88,8 @@ class UT2004Q{
             console.trace(err);
         }
     }
+
+    //PASS CHANNEL ID INSTEAD OF CHANNEL OBJECT TO SEE IF THAT FIXES MEMORY LEAK
 
     async deleteOldAutoQueryMessages(timeStamp){
 
@@ -149,54 +152,54 @@ class UT2004Q{
 
             this.startAutoQueryLoop();
 
-           // console.log("Change auto query channel completed");
-
         }catch(err){
             console.trace(err);
         }
     }
 
+    //get around discord api limits
+   /* async pingServerTest(ip, port, channel){
+
+        
+
+        return new Promise((resolve, reject) =>{
+
+            const l = setTimeout(async () =>{
+
+                await this.getServer(ip, port, channel);
+                resolve();
+                
+            }, 500);
+
+        });
+        
+            
+
+     
+    }*/
+
     async autoQuery(){
 
         try{
 
-
-            const servers = await this.servers.getAllServers();
             const autoChannelId = await this.servers.getAutoChannel();
-
-            //get around discord api limits
-            const pingServer = (ip, port, channel) =>{
-
-                return new Promise((resolve, reject) =>{
-
-                    setTimeout(() =>{
-
-                        this.getServer(ip, port, channel).then(() =>{
-
-                            resolve();
-
-                        }).catch((err) =>{
-                            reject(err);
-                        });
-                        
-                    }, 1000);
-                });
-            }
 
             if(autoChannelId !== null){
 
-                const c = this.discord.channels;
+                const servers = await this.servers.getAllServers();
 
-                const channel = await c.fetch(autoChannelId);
+                let i = 0;
 
-                for(let i = 0; i < servers.length; i++){
+                let test = setInterval(async () =>{
 
-                    //console.log(`Ping ${servers[i].ip}:${servers[i].port}`);
-                    await pingServer(servers[i].ip, servers[i].port, channel);
-                }
+                    await this.getServer(servers[i].ip, servers[i].port, autoChannelId);
 
-            }else{
-               // console.log("Auto query is disabled");
+                    i++;
+
+                    if(i >= servers.length){
+                        clearInterval(test);
+                    }
+                },500);
             }
 
         }catch(err){
@@ -208,21 +211,18 @@ class UT2004Q{
     async pingServerList(){
 
         try{
-
+            
             const servers = await this.servers.getAllServers();
 
-            let s = 0;
-
             for(let i = 0; i < servers.length; i++){
-
-                //s = servers[i];
 
                 setTimeout(() =>{
                     const s = servers[i];
                     this.getServerBasic(s.ip, s.port);
+
                 }, 500);
             }
-           // console.table(servers);
+
         }catch(err){
             console.trace(err);
         }
@@ -242,7 +242,7 @@ class UT2004Q{
 
             //console.log(now - p.created);
 
-            if(now - p.created >= 60){
+            if(now - p.created >= config.serverPingInterval * 2){
 
                 //console.log(p);
                 //console.log(p.type);
@@ -257,6 +257,7 @@ class UT2004Q{
                 }else{
                     p.channel.send(`**Server ${p.ip}:${p.port} Timed Out!**`);
                 }
+
                 this.deletePendingData(p.ip, p.port, p.type);
                 //console.log("Server timeout");
             }
@@ -295,18 +296,20 @@ class UT2004Q{
         }
     }
 
-    async getServer(ip, port, channel){
+    async getServer(ip, port, channelId){
 
         try{
-            
-            const now = Date.now();
+
+            //console.log(`channelId = ${channelId}`);
+            const channel = await this.discord.channels.fetch(channelId);
+
+            //console.log(`channel = ${channel}`);
 
             const finalIp = await this.servers.getIp(ip);
 
             if(finalIp != null){
                 ip = finalIp;
             }
- 
 
             let geo = geoip.lookup(ip);
 
@@ -333,7 +336,7 @@ class UT2004Q{
             });
 
             this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
-                if(err) console.log(err);
+                if(err) throw new Error(err);
             });
 
         }catch(err){    
@@ -371,28 +374,11 @@ class UT2004Q{
             p = this.pendingData[i];
 
             if(p.ip != ip && p.port != port && p.type != type){
-                //delete
                 result.push(p);
             }
         }
 
-        //console.log(`Removed ${this.pendingData.length - result.length} from pending data`);
-
         this.pendingData = result;
-
-        /*
-        for(let i = 0; i < this.pendingData.length; i++){
-
-            p = this.pendingData[i];
-
-            if(p.ip === ip && p.port === port && p.type === type){
-
-                console.log(`DELETED ${p.ip}:${p.port} ${p.type}`);
-                this.pendingData.splice(i,1);
-                return;
-            }
-
-        }*/
     }
 
     createClient(){
@@ -419,17 +405,13 @@ class UT2004Q{
 
         this.client.on('message', (message, rinfo) =>{
 
-           // console.log(`${message}`);
-           // console.log("From");
-           // console.log(rinfo);
-           
             if(rinfo === null || message === null){
                 return;
             }
 
             let data = JSON.stringify(message);
-            data = JSON.parse(data).data;
-
+            data = JSON.parse(data)//.data;
+            data = data.data;
 
             if(data[4] === 0){
 
@@ -441,10 +423,11 @@ class UT2004Q{
 
             }else if(data[4] === 2){
 
-                fs.writeFileSync("test.txt", message);
                this.parsePlayerInfo(data, rinfo.address, rinfo.port);
                 
             }
+
+            data = null;
             
         });
 
