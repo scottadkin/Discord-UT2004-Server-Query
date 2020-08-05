@@ -148,7 +148,7 @@ class Bot{
 
         let string = "";
 
-        const idLength = 4;
+       // const idLength = 4;
         const aliasLength = 25;
         const mapLength = 25;
         const playersLength = 7;
@@ -252,7 +252,7 @@ class Bot{
 
                 servers.push(row);
 
-            }, (err, totalRows) =>{
+            }, (err) =>{
 
                 if(err) reject("There was a problem getting servers from database(ALT)");
 
@@ -927,8 +927,8 @@ class Bot{
         this.client.on('ready', () =>{
             console.log("I'm Ready, I'm Ready, I'm Ready (In spongebobs voice)");
 
-            this.servers = new Servers(db);
-            this.query = new UT2004Query(db, this.client, this.servers);
+            this.servers = new Servers();
+            this.query = new UT2004Query(this.client);
         });
 
         this.client.on('error', (err) =>{

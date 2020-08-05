@@ -4,19 +4,20 @@ const Discord = require('discord.js');
 const geoip = require('geoip-lite');
 const config = require('./config');
 const countryList = require('country-list');
+const Servers = require('./servers');
 
 
 
 
 class UT2004Q{
 
-    constructor(database, discordClient, servers){
+    constructor(discordClient){
 
-        this.database = database;
+        this.database = require('./database');
 
         this.createClient();
 
-        this.servers = servers;
+        this.servers = new Servers();
         this.discord = discordClient;
 
         this.pendingData = [];       
@@ -26,19 +27,19 @@ class UT2004Q{
         
         //checks for timeouts
         
-        setInterval(() =>{
+        /*setInterval(() =>{
 
             //console.log(process.memoryUsage());
 
-            //const m = process.memoryUsage();
+            const m = process.memoryUsage();
 
-           // console.log(`RSS = ${m.rss / 1024}KB`);
+            console.log(`RSS = ${(m.rss / 1024 / 1024).toFixed(2)}MB heapTotal = ${(m.heapTotal / 1024 / 1024).toFixed(2)}MB heapUsed= ${(m.heapUsed / 1024 / 1024).toFixed(2)}MB external = ${(m.external / 1024 / 1024).toFixed(2)}MB`);
             //console.log(`heapTotal = ${m.heapTotal / 1024}KB`);
             //console.log(`heapTotal = ${(m.heapTotal / 1024 / 1024).toFixed(2)}MB heapUsed= ${(m.heapUsed / 1024 / 1024).toFixed(2)}MB`);
            // console.log(`external = ${m.external / 1024}KB`);
 
             this.tick();
-        }, 1000);
+        }, 250);*/
         
         //loop for server pings
         setInterval(() =>{
@@ -67,6 +68,7 @@ class UT2004Q{
             this.autoQueryLoop = setInterval(async () =>{
                 //console.log("Auto Query");
                 await this.autoQuery();
+
             }, config.autoQueryInterval * 1000);
 
         }catch(err){
@@ -242,7 +244,7 @@ class UT2004Q{
 
             //console.log(now - p.created);
 
-            if(now - p.created >= config.serverPingInterval * 2){
+            if(now - p.created >= config.serverPingInterval * 3){
 
                 //console.log(p);
                 //console.log(p.type);
@@ -410,8 +412,7 @@ class UT2004Q{
             }
 
             let data = JSON.stringify(message);
-            data = JSON.parse(data)//.data;
-            data = data.data;
+            data = JSON.parse(data).data;
 
             if(data[4] === 0){
 
