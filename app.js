@@ -1,4 +1,7 @@
 const Bot = require('./api/bot');
 
-
-const test = new Bot();
+try{
+    const test = new Bot();
+}catch(err){
+    console.trace(err);
+}

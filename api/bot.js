@@ -1,3 +1,4 @@
+
 const Promise = require('promise');
 const Discord = require('discord.js');
 const UT2004Query = require('./ut2004q');
@@ -8,6 +9,8 @@ const db = require('./database');
 class Bot{
 
     constructor(){
+
+        this.servers = new Servers();
 
         this.createClient();     
     }
@@ -25,11 +28,11 @@ class Bot{
         return false;
     }
 
-    bUserAdmin(message, adminRoles){
+    bUserAdmin(member, adminRoles){
 
         try{
             
-            const member = message.member;
+            //const member = message.member;
 
             let result = false;
 
@@ -37,11 +40,11 @@ class Bot{
 
                 if(role.name.toLowerCase() == config.adminRole.toLowerCase()){
                     result = true;
-                    return
+                   // return
                 }else if(this.bAdminRole(adminRoles, role.name)){
                     //console.log("user has added role");
                     result = true;
-                    return
+                   // return
                 }
             });
 
@@ -343,7 +346,7 @@ class Bot{
 
         }catch(err){
             message.channel.send("There is no server with that id to delete.");
-            console.trace(err);
+            //console.trace(err);
         }
 
     }
@@ -382,7 +385,9 @@ class Bot{
                     const finalIp = await this.servers.getIp(ip);
 
                     await this.servers.insertServer(ip, finalIp, port, result[1]);
+
                     this.query.getServerBasic(ip, port);
+
                     message.channel.send("Server successfully added.");
                     //this.listServers(message);
                 }
@@ -700,22 +705,24 @@ class Bot{
 
                 if(id !== id){
                     message.channel.send("Server ID must be a valid integer.");
-                    throw new Error("Server ID must be a valid integer.");
+                    //throw new Error("Server ID must be a valid integer.");
+                    return;
                 }
 
                 let servers = await this.servers.getAllServers();
 
                 if(servers.length < id || id < 1){
                     message.channel.send(`There is no server with the id ${id}`);
-                    throw new Error(`There is no server with the id ${id}`);
+                    return;
+                    //throw new Error(`There is no server with the id ${id}`);
                    
                 }else{
 
                     id = id - 1;
 
-                    this.query.getServer(servers[id].ip, servers[id].port, message.channel.id);
+                    await this.query.getServer(servers[id].ip, servers[id].port, message.channel.id);
 
-                    servers = null;
+                   // servers = null;
                 }
 
             }else{
@@ -807,7 +814,7 @@ class Bot{
 
             const adminRoles = await this.getAllAdminRoles();
             
-            const bAdmin = this.bUserAdmin(message, adminRoles);
+            const bAdmin = this.bUserAdmin(message.member, adminRoles);
 
             const bCanPost = await this.canBotPostInChannel(message, false);
 
@@ -833,7 +840,8 @@ class Bot{
             }else if(queryServerReg.test(message.content)){
        
                 const result = queryServerReg.exec(message.content);
-                this.query.getServer(result[1], parseInt(result[2]), message.channel.id);
+
+                await this.query.getServer(result[1], parseInt(result[2]), message.channel.id);
             
             }else if(message.content == `${config.commandPrefix}servers`){
       
@@ -922,13 +930,14 @@ class Bot{
 
     createClient(){
 
+    
         this.client = new Discord.Client();
+
+        this.query = new UT2004Query(this.client);
 
         this.client.on('ready', () =>{
             console.log("I'm Ready, I'm Ready, I'm Ready (In spongebobs voice)");
-
-            this.servers = new Servers();
-            this.query = new UT2004Query(this.client);
+     
         });
 
         this.client.on('error', (err) =>{
@@ -936,9 +945,9 @@ class Bot{
             console.trace(err);
         });
 
-        this.client.on('message', (message) =>{
+        this.client.on('message', async (message) =>{
 
-            this.parseCommand(message);
+            await this.parseCommand(message);
         });
 
         this.client.login(config.token);

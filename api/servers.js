@@ -1,3 +1,5 @@
+
+
 const Promise = require('promise');
 const config = require('./config');
 const db = require('./database');
@@ -14,22 +16,17 @@ class Servers{
 
         return new Promise((resolve, reject) =>{
 
-           // console.log("GET IPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
             const ipReg = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i;
 
             if(ipReg.test(ip)){
                 resolve(ip);
             }
 
-            dns.lookup(ip, (err, address, family) =>{
+            dns.lookup(ip, (err, address) =>{
 
-               // console.log("INSIDE DNS>LOOKUP");
                 if(err){
                     reject(err);
                 }
-
-               // console.log("address = "+address);
-                //console.log("family = "+family);
 
                 resolve(address);
             });
@@ -152,13 +149,13 @@ class Servers{
     }
 
 
-    deleteAutoServerMessage(){
+    /*deleteAutoServerMessage(){
 
         return new Promise((resolve, reject) =>{
 
             resolve();
         });
-    }
+    }*/
 
     deleteServer(ip, port){
 
@@ -195,7 +192,7 @@ class Servers{
         });
     }
 
-    getServerLastMessageId(ip, port, channelId){
+    getServerLastMessageId(ip, port){
 
         return new Promise((resolve, reject) =>{
 
@@ -275,7 +272,9 @@ class Servers{
         try{
 
             await this.resetAutoChannel();
+            
             await this.removePreviousMessageIds();
+
             const result = await this.setAutoChannel(message.channel.id);
 
             if(result){

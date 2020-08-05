@@ -1,4 +1,5 @@
 const Promise = require('promise');
+
 const dgram = require('dgram');
 const Discord = require('discord.js');
 //const geoip = require('geoip-lite');
@@ -50,7 +51,7 @@ class UT2004Q{
         },config.serverPingInterval * 1000);
 
 
-        this.startAutoQueryLoop();
+       this.startAutoQueryLoop();
         
 
     }
@@ -160,27 +161,6 @@ class UT2004Q{
         }
     }
 
-    //get around discord api limits
-   /* async pingServerTest(ip, port, channel){
-
-        
-
-        return new Promise((resolve, reject) =>{
-
-            const l = setTimeout(async () =>{
-
-                await this.getServer(ip, port, channel);
-                resolve();
-                
-            }, 500);
-
-        });
-        
-            
-
-     
-    }*/
-
     async autoQuery(){
 
         try{
@@ -202,7 +182,8 @@ class UT2004Q{
                     if(i >= servers.length){
                         clearInterval(test);
                     }
-                },500);
+
+                }, 800);
             }
 
         }catch(err){
@@ -280,23 +261,39 @@ class UT2004Q{
                 ip = finalIp;
             }
 
-            port = port + 1;
 
             this.pendingData.push({
                 "ip": ip,
-                "port": port,
+                "port": port + 1,
                 "type": "basic",
                 "serverInfo": [],
                 "created": Math.floor(Date.now() * 0.001)
             });
 
-            this.client.send(this.getPacket(0), port, ip, (err) =>{
+           /* this.client.send(this.getPacket(0), port, ip, (err) =>{
                 if(err) console.log(err);
-            });
+            });*/
+
+            await this.sendPacket(0, port, ip)
 
         }catch(err){
             console.trace(err);
         }
+    }
+
+    sendPacket(packetType, port, ip){
+
+        return new Promise((resolve, reject) =>{
+
+            port = port + 1;
+
+            this.client.send(this.getPacket(packetType), port, ip, (err) =>{
+
+                if(err) reject(err);
+
+                resolve();
+            });
+        });
     }
 
     async getServer(ip, port, channelId){
@@ -304,7 +301,7 @@ class UT2004Q{
         try{
 
             //console.log(`channelId = ${channelId}`);
-            const channel = await this.discord.channels.fetch(channelId);
+            //const channel = await this.discord.channels.fetch(channelId);
 
             //console.log(`channel = ${channel}`);
 
@@ -331,16 +328,18 @@ class UT2004Q{
                 "playersToGet": null,
                 "players": [],
                 "bCompleted": false,
-                "channel": channel,
+                "channel": channelId,
                 "country": geo.country,
                 "city": geo.city,
                 "created": Math.floor(Date.now() * 0.001),
                 "playerPackets": 0
             });
 
-            this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
+            /*this.client.send(this.getPacket(0), port + 1, ip, (err) =>{
                 if(err) throw new Error(err);
-            });
+            });*/
+
+            await this.sendPacket(0, port, ip);
 
         }catch(err){    
             console.trace(err);
@@ -563,153 +562,158 @@ class UT2004Q{
         return {"current": currentPlayersByte, "max": maxPlayersByte};
     }
 
-    parseServerInfo(data, ip, port){
+    async parseServerInfo(data, ip, port){
+
+        try{
+
+            const serverInfo = {
+                "ip": ip,
+                "port": 0,
+                "name": "",
+                "gametype": "",
+                "map": "",
+                "currentPlayers": 0,
+                "maxPlayers": 0
+            };
+
+            if(port != undefined){
+                serverInfo.port = port - 1;
+            }
+            //console.log(data);
+            
+            //remove first byte(game id 0x80 / 128)
+            data.splice(0,1);
+
+            //remove response code (always 0 for server info)
+            data.splice(0, 1);
+
+            //remove server id (never used) always 4 bytes long
+            data.splice(0, 4);
+
+            //console.log(data);
+            //remove server ip (never used) always 4 bytes long
+            data.splice(0, 4);
 
 
-        const serverInfo = {
-            "ip": ip,
-            "port": 0,
-            "name": "",
-            "gametype": "",
-            "map": "",
-            "currentPlayers": 0,
-            "maxPlayers": 0
-        };
+            //get game query port, always 4 bytes, last 2 being 0, and first two being back to front
+            
+            data[0] = data[0].toString(16);
+            data[1] = data[1].toString(16);
 
-        if(port != undefined){
-            serverInfo.port = port - 1;
-        }
-        //console.log(data);
-        
-        //remove first byte(game id 0x80 / 128)
-        data.splice(0,1);
+            //this fixes hex not including leading 0
+            if(data[0].length < 2){
+                data[0] = "0"+data[0];
+            }
 
-        //remove response code (always 0 for server info)
-        data.splice(0, 1);
+            if(data[1].length < 2){
+                data[1] = "0"+data[1];
+            }
 
-        //remove server id (never used) always 4 bytes long
-        data.splice(0, 4);
-
-        //console.log(data);
-        //remove server ip (never used) always 4 bytes long
-        data.splice(0, 4);
+        // console.log("data[1] = "+data[1]+" data[0] = "+data[0]);
 
 
-        //get game query port, always 4 bytes, last 2 being 0, and first two being back to front
-        
-        data[0] = data[0].toString(16);
-        data[1] = data[1].toString(16);
+            const portHex = ''+data[1].toString(16)+'' + ''+data[0].toString(16)+'';
+            
 
-        //this fixes hex not including leading 0
-        if(data[0].length < 2){
-            data[0] = "0"+data[0];
-        }
-
-        if(data[1].length < 2){
-            data[1] = "0"+data[1];
-        }
-
-       // console.log("data[1] = "+data[1]+" data[0] = "+data[0]);
+            //console.log("portHex = "+portHex);
 
 
-        const portHex = ''+data[1].toString(16)+'' + ''+data[0].toString(16)+'';
-        
+            serverInfo.port =  parseInt(portHex, 16);
 
-        //console.log("portHex = "+portHex);
+            //remove server port bytes
+            data.splice(0,4);
 
+            //remove port for status query (never used) always 4 bytes
+            data.splice(0,4);
 
-        serverInfo.port =  parseInt(portHex, 16);
-
-        //remove server port bytes
-        data.splice(0,4);
-
-        //remove port for status query (never used) always 4 bytes
-        data.splice(0,4);
-
-        //console.log(data);
-        
-        serverInfo.name = this.parseString(data, true);
+            //console.log(data);
+            
+            serverInfo.name = this.parseString(data, true);
 
 
-        serverInfo.map = this.parseString(data);
-        serverInfo.gametype = this.parseString(data);
+            serverInfo.map = this.parseString(data);
+            serverInfo.gametype = this.parseString(data);
 
-        const playerCount = this.parsePlayerCount(data);
+            const playerCount = this.parsePlayerCount(data);
 
-        //console.log(data);
+            //console.log(data);
 
-        serverInfo.currentPlayers = playerCount.current;
-        serverInfo.maxPlayers = playerCount.max;    
+            serverInfo.currentPlayers = playerCount.current;
+            serverInfo.maxPlayers = playerCount.max;    
 
-        //next 4 bytes are the server ping (never used)
-        data.splice(0, 4);
+            //next 4 bytes are the server ping (never used)
+            data.splice(0, 4);
 
-        //next 4 bytes are server flags (always 0)
-        data.splice(0, 4);
+            //next 4 bytes are server flags (always 0)
+            data.splice(0, 4);
 
-        //next 4 bytes are skill level?
-        data.splice(0, 4);
+            //next 4 bytes are skill level?
+            data.splice(0, 4);
 
-        //remove last byte
-        data.splice(0,1);
-
-
-        //console.log(serverInfo);
-
-       // console.log(serverInfo);
-
-        //console.log("port = "+serverInfo.port);
-       // console.log("ip = "+ip);
-        const pendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "full");
-
-        //console.log(pendingMessage);
-
-      //  console.log(serverInfo);
-
-        if(pendingMessage != null){
-
-            pendingMessage.playersToGet = serverInfo.currentPlayers;
-            pendingMessage.serverInfo = serverInfo;
-
-           // console.log("pending data ");
-            //console.log(this.pendingData);
+            //remove last byte
+            data.splice(0,1);
 
 
-            if(serverInfo.currentPlayers > 0){
+            //console.log(serverInfo);
 
-                this.client.send(this.getPacket(2), serverInfo.port + 1, ip, (err) =>{
+        // console.log(serverInfo);
 
-                    if(err) console.log(err);
-                });
+            //console.log("port = "+serverInfo.port);
+        // console.log("ip = "+ip);
+            const pendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "full");
 
+            //console.log(pendingMessage);
+
+        //  console.log(serverInfo);
+
+            if(pendingMessage != null){
+
+                pendingMessage.playersToGet = serverInfo.currentPlayers;
+                pendingMessage.serverInfo = serverInfo;
+
+            // console.log("pending data ");
+                //console.log(this.pendingData);
+
+
+                if(serverInfo.currentPlayers > 0){
+
+                    await this.sendPacket(2, serverInfo.port, serverInfo.ip);
+                    /*this.client.send(this.getPacket(2), serverInfo.port + 1, ip, (err) =>{
+
+                        if(err) console.log(err);
+                    });*/
+
+                }else{
+                // console.log(pendingMessage)
+
+
+                    this.sendDiscordResponse(pendingMessage);
+                
+                }
+                
             }else{
-               // console.log(pendingMessage)
 
+                //console.log("not matching data, so it's just a basic server ping.");
 
-                this.sendDiscordResponse(pendingMessage);
-             
+                //const basicPendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "basic");
+
+                //console.log("basicpendingMessage below");
+                //console.log(basicPendingMessage);
+
+            // if(basicPendingMessage !== null){
+                    this.servers.updateServer(serverInfo);
+                    
+            // }
+
+                this.deletePendingData(ip, serverInfo.port, "basic");
+                
+        
             }
             
-        }else{
-
-            //console.log("not matching data, so it's just a basic server ping.");
-
-            //const basicPendingMessage = this.getMatchingPendingData(ip, serverInfo.port, "basic");
-
-            //console.log("basicpendingMessage below");
-            //console.log(basicPendingMessage);
-
-           // if(basicPendingMessage !== null){
-                this.servers.updateServer(serverInfo);
-                
-           // }
-
-            this.deletePendingData(ip, serverInfo.port, "basic");
-            
-       
+            return serverInfo;
+        }catch(err){
+            console.trace(err);
         }
-        
-        return serverInfo;
     }
 
     getGameInfoKeyValue(data){
@@ -1164,55 +1168,22 @@ class UT2004Q{
     async sendDiscordResponse(data){
 
         try{
-
     
             const server = data.serverInfo;
 
-
             const autoQueryChannelId = await this.servers.getAutoChannel();
+
+            const channel = await this.discord.channels.fetch(data.channel);
 
             if(server.ip === undefined){
                 //dont post timeouts to autoquery channel
-                if(data.channel.id != autoQueryChannelId){
-                    data.channel.send(`${data.ip}:${data.port} **Server Timedout!**`);
+                if(data.channel != autoQueryChannelId){
+                    this.deletePendingData(data.ip, data.port, "full");
+                    channel.send(`${data.ip}:${data.port} **Server Timedout!**`);
                 }
+
                 return;
             }
-
-            //data.bCompleted = true;
-
-            /*let serverFlag = ":pirate_flag:";
-
-            let countryName = "";
-
-            if(data.country != undefined){
-
-                data.country = data.country.toLowerCase();
-
-                if(data.country  == "uk"){
-
-                    data.country  = "gb";
-
-                }else if(data.country  == "el"){
-                    data.country  = "gr";
-                }
-
-                serverFlag = `:flag_${data.country}:`;
-
-                countryName = "test";//countryList.getName(data.country.toUpperCase());
-                
-            }   
-
-
-            data.city = data.city.replace(", ",'');
-
-            if(data.city != ""){
-                data.city += ", ";
-            }
-
-            if(countryName == undefined){
-                countryName = "";
-            }*/
 
             let playerCountString  = `Players ${this.getTotalPlayers(data.players, false)}/${server.maxPlayers}`;
 
@@ -1244,12 +1215,12 @@ class UT2004Q{
 
            // console.log("lastAutoQueryMessageId = "+ lastAutoQueryMessageId);
             
-            if(data.channel.id == autoQueryChannelId){
+            if(data.channel == autoQueryChannelId){
 
                 if(lastAutoQueryMessageId === null){
 
                     //console.log("No previous auto query message");
-                    const response = await data.channel.send(reply);
+                    const response = await channel.send(reply);
                     await this.servers.setServerMessageId(server.ip, server.port, response.id, 0);
 
                 }else{
@@ -1257,18 +1228,17 @@ class UT2004Q{
                     //console.log("Editing old post");
 
                     if(lastAutoQueryMessageId != -1){
-                        const oldMessage = await data.channel.messages.fetch(lastAutoQueryMessageId);
+                        const oldMessage = await channel.messages.fetch(lastAutoQueryMessageId);
                         await oldMessage.edit(reply);
                     }else{
-                        const response = await data.channel.send(reply);
+                        const response = await channel.send(reply);
                         await this.servers.setServerMessageId(server.ip, server.port, response.id, 0);
                     }
             
-                }
-                
+                }            
 
             }else{
-                await data.channel.send(reply);
+                await channel.send(reply);
             }
             
             this.deletePendingData(data.ip, data.port, "full");
