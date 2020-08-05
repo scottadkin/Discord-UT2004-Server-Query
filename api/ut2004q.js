@@ -1,9 +1,9 @@
 const Promise = require('promise');
 const dgram = require('dgram');
 const Discord = require('discord.js');
-const geoip = require('geoip-lite');
+//const geoip = require('geoip-lite');
 const config = require('./config');
-const countryList = require('country-list');
+//const countryList = require('country-list');
 const Servers = require('./servers');
 
 
@@ -23,6 +23,7 @@ class UT2004Q{
         this.pendingData = [];       
 
         this.autoQueryLoop = null;
+        this.serverPingLoop = null;
 
         
         //checks for timeouts
@@ -42,7 +43,7 @@ class UT2004Q{
         }, 250);*/
         
         //loop for server pings
-        setInterval(() =>{
+        this.serverPingLoop = setInterval(() =>{
 
             this.pingServerList();
 
@@ -313,12 +314,12 @@ class UT2004Q{
                 ip = finalIp;
             }
 
-            let geo = geoip.lookup(ip);
+            //let geo = geoip.lookup(ip);
 
-            if(geo == null){
+            //if(geo == null){
 
-                geo = {"country": "xx", "city": ""};
-            }
+               let geo = {"country": "xx", "city": ""};
+            //}
 
             this.deletePendingData(ip, port, "full");
 
@@ -1180,7 +1181,7 @@ class UT2004Q{
 
             //data.bCompleted = true;
 
-            let serverFlag = ":pirate_flag:";
+            /*let serverFlag = ":pirate_flag:";
 
             let countryName = "";
 
@@ -1198,7 +1199,7 @@ class UT2004Q{
 
                 serverFlag = `:flag_${data.country}:`;
 
-                countryName = countryList.getName(data.country.toUpperCase());
+                countryName = "test";//countryList.getName(data.country.toUpperCase());
                 
             }   
 
@@ -1211,7 +1212,7 @@ class UT2004Q{
 
             if(countryName == undefined){
                 countryName = "";
-            }
+            }*/
 
             let playerCountString  = `Players ${this.getTotalPlayers(data.players, false)}/${server.maxPlayers}`;
 
@@ -1221,14 +1222,16 @@ class UT2004Q{
                 playerCountString = `${this.getTotalPlayers(data.players, true)} Users Connected.`;
             }
 
-            let description = `:office: **${data.city}${countryName}\n:wrestling: ${playerCountString}\n`;
+           // let description = `:office: **${data.city}${countryName}\n:wrestling: ${playerCountString}\n`;
+            let description = `**:wrestling: ${playerCountString}\n`;
             description += `:pushpin: ${server.gametype}**\n:map: **${server.map}**`;
 
             const fields = this.setTeamFields(data.players, (totalTeams < 2) ? true : false);
 
             const reply = new Discord.MessageEmbed()
             .setColor("#000000")
-            .setTitle(`${serverFlag} ${server.name}`)
+            //.setTitle(`${serverFlag} ${server.name}`)
+            .setTitle(`${server.name}`)
             .setDescription(description)
             .addFields(fields)
             .addField("Join server as Player",`**<ut2004://${server.ip}:${server.port}>**`, false)
