@@ -1,0 +1,9 @@
+{
+    "token": "",
+    "adminRole": "Toilet Brush",
+    "serverTimeout": 2,
+    "serverPingInterval": 15, 
+    "autoQueryInterval": 15, 
+    "commandPrefix": ".",
+    "databaseFile": "ut2k4query.db"
+}

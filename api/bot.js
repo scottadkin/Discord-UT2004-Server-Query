@@ -3,7 +3,7 @@ const Promise = require('promise');
 const Discord = require('discord.js');
 const UT2004Query = require('./ut2004q');
 const Servers = require('./servers');
-const config = require('./config');
+const config = require('./config.json');
 const Database = require('./database');
 
 class Bot{
@@ -14,7 +14,7 @@ class Bot{
         this.db = new Database();
         this.db = this.db.sqlite;
 
-        this.servers = new Servers(this.db);
+        this.servers = new Servers();
 
         this.createClient();     
     }
@@ -35,24 +35,23 @@ class Bot{
     bUserAdmin(member, adminRoles){
 
         try{
-            
-            //const member = message.member;
 
-            let result = false;
+            const m = member.roles.cache.array();
 
-            member.roles.cache.some((role) =>{
+            for(let i = 0; i < m.length; i++){
 
-                if(role.name.toLowerCase() == config.adminRole.toLowerCase()){
-                    result = true;
-                   // return
-                }else if(this.bAdminRole(adminRoles, role.name)){
-                    //console.log("user has added role");
-                    result = true;
-                   // return
+                if(m[i].name.toLowerCase() == config.adminRole.toLowerCase()){
+
+                    return true;
+
+                }else if(this.bAdminRole(adminRoles, m[i].name)){
+
+                    return true;
+
                 }
-            });
+            }
 
-            return result;
+            return false;
 
         }catch(err){
             console.trace(err);
@@ -82,41 +81,35 @@ class Bot{
         });
     }
 
-    canBotPostInChannel(message, bAdmin){
+    async canBotPostInChannel(message, bAdmin){
 
-        return new Promise((resolve, reject) =>{
+
+        try{
 
             if(bAdmin){
-                resolve(true);
+                return true;
             }
 
-            this.getAllowedChannels().then((channels) =>{
+            const channels = await this.getAllowedChannels();
 
-                //console.table(channels);
+            let c = 0;
 
-                let c = 0;
+            const currentChannel = message.channel.name.toLowerCase();
 
-                const currentChannel = message.channel.name.toLowerCase();
+            for(let i = 0; i < channels.length; i++){
 
-                for(let i = 0; i < channels.length; i++){
+                c = channels[i];
 
-                    c = channels[i];
-
-                    if(c.name == currentChannel){
-                        resolve(true);
-                    }
-
+                if(c.name.toLowerCase() == currentChannel){
+                    return true;
                 }
+            }
+                
+            return false;
 
-                resolve(false);
-
-            }).catch(() =>{
-                reject(err);
-            });
-        });
-       
-
-
+        }catch(err){
+            console.trace(err);
+        }
     }
 
     //DELETE LAST PENDING MESSAGE FRO SAME SERVER QUERY FOR EACH NEW QUERY
@@ -565,7 +558,7 @@ class Bot{
 
                 roles.push(row);
 
-            }, (err, totalRows) =>{
+            }, (err) =>{
 
                 if(err) reject(err);
 
@@ -576,35 +569,36 @@ class Bot{
 
     getAllRoles(message){
 
-        const roles = message.channel.guild.roles.cache;
+        return message.channel.guild.roles.cache.array();
 
-        const result = [];
-
-        roles.forEach((role) =>{
-
-            result.push(role);
-        });
-
-        return result;
     }
 
     getRole(message, roleName){
 
         roleName = roleName.toLowerCase();
-        const roles = message.channel.guild.roles.cache;
+        const roles = message.channel.guild.roles.cache.array();
 
-        let result = null;
+       // let result = null;
 
-        roles.forEach((role) =>{
+        for(let i = 0; i < roles.length; i++){
+
+            if(roles[i].name.toLowerCase() == roleName){
+                return true;
+            }
+        }
+
+        return false;
+
+        /*roles.forEach((role) =>{
 
             //console.log(role.name);
             if(role.name.toLowerCase() == roleName){
                 result = role;
             }
 
-        });
+        });*/
 
-        return result;
+       //return result;
     }
 
     bValidRole(message, roleName){
@@ -750,21 +744,22 @@ class Bot{
         let string = `**UT2004 Server Query Help.**
 
 **User Commands**
-\`${config.commandPrefix}servers\` Displays basic server information for all the servers added to the database.
-\`${config.commandPrefix}active\` Displays basic server information for all servers added that have players on it.
-\`${config.commandPrefix}q<serverId>\` Displays the server's name, current gametype, map, and players.
-\`${config.commandPrefix}q <server ip>:<port>\` Displays a server's name, current gametype, map, and players.
-\`${config.commandPrefix}ip<serverid>\` Displays clickable link to the server.
+**${config.commandPrefix}servers** Displays basic server information for all the servers added to the database.
+**${config.commandPrefix}active** Displays basic server information for all servers added that have players on it.
+**${config.commandPrefix}q<serverId>** Displays the server's name, current gametype, map, and players.
+**${config.commandPrefix}q <server ip>:<port>** Displays a server's name, current gametype, map, and players.
+**${config.commandPrefix}ip<serverid>** Displays clickable link to the server.
 
 **Admin Commands**
-\`${config.commandPrefix}allowchannel\` Enables the bot to be used in the current channel.
-\`${config.commandPrefix}deletechannel\` Disables the bot from being used in the current channel.
-\`${config.commandPrefix}allowrole <role name>\` Enables users with the specified role to use admin commands.
-\`${config.commandPrefix}deleterole <role name>\` Disables users with the specified role to use the admin commands.
-\`${config.commandPrefix}addserver <alias> <ip>:<port>\` Adds the specified server to the database.
-\`${config.commandPrefix}deleteserver <serverid>\` Deletes the server with the specified id.
-\`${config.commandPrefix}setauto\` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
-\`${config.commandPrefix}stopauto\` Disables auto queries.
+**${config.commandPrefix}allowchannel** Enables the bot to be used in the current channel.
+**${config.commandPrefix}deletechannel** Disables the bot from being used in the current channel.
+**${config.commandPrefix}allowrole <role name>** Enables users with the specified role to use admin commands.
+**${config.commandPrefix}deleterole <role name>** Disables users with the specified role to use the admin commands.
+**${config.commandPrefix}addserver <alias> <ip>:<port>** Adds the specified server to the database.
+**${config.commandPrefix}deleteserver <serverid>** Deletes the server with the specified id.
+**${config.commandPrefix}setauto** Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
+**${config.commandPrefix}stopauto** Disables auto queries.
+**UT2004 URL Registry Fix** <https://github.com/serverlinkdev/shoNuff>
 `;
         message.channel.send(string);
 
@@ -821,6 +816,8 @@ class Bot{
             const bAdmin = this.bUserAdmin(message.member, adminRoles);
 
             const bCanPost = await this.canBotPostInChannel(message, false);
+
+           // console.log(bCanPost);
 
             if(!bCanPost){
 

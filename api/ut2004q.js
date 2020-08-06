@@ -3,22 +3,22 @@ const Promise = require('promise');
 const dgram = require('dgram');
 const Discord = require('discord.js');
 //const geoip = require('geoip-lite');
-const config = require('./config');
+const config = require('./config.json');
 //const countryList = require('country-list');
-//const Servers = require('./servers');
+const Servers = require('./servers');
 
 
 
 
 class UT2004Q{
 
-    constructor(discordClient, servers){
+    constructor(discordClient){
 
         this.createClient();
 
-        //this.servers = new Servers();
+        this.servers = new Servers();
         this.discord = discordClient;
-        this.servers = servers;
+        //this.servers = servers;
 
         this.pendingData = [];       
 

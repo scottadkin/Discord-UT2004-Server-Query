@@ -1,15 +1,17 @@
 
 
 const Promise = require('promise');
-const config = require('./config');
+const config = require('./config.json');
 const Database = require('./database');
 const dns = require('dns');
 
 
 class Servers{
 
-    constructor(db){
-        this.db = db;
+    constructor(){
+        
+        this.db = new Database();
+        this.db = this.db.sqlite;
     }
 
     getIp(ip){
