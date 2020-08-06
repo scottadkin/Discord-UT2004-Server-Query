@@ -4,13 +4,17 @@ const Discord = require('discord.js');
 const UT2004Query = require('./ut2004q');
 const Servers = require('./servers');
 const config = require('./config');
-const db = require('./database');
+const Database = require('./database');
 
 class Bot{
 
     constructor(){
 
-        this.servers = new Servers();
+        
+        this.db = new Database();
+        this.db = this.db.sqlite;
+
+        this.servers = new Servers(this.db);
 
         this.createClient();     
     }
@@ -63,7 +67,7 @@ class Bot{
 
             const data = [];
 
-            db.each(query, (err, row) =>{
+            this.db.each(query, (err, row) =>{
 
                 if(err) reject(err);
 
@@ -249,7 +253,7 @@ class Bot{
 
             const query = "SELECT * FROM servers ORDER BY added ASC";
 
-            db.each(query, (err, row) =>{
+            this.db.each(query, (err, row) =>{
 
                 if(err) reject("There was a problem getting servers from database.");
 
@@ -412,7 +416,7 @@ class Bot{
 
             const query = "SELECT COUNT(*) as total_channels FROM channels WHERE channel_id=?";
 
-            db.get(query, [id], (err, row) =>{
+            this.db.get(query, [id], (err, row) =>{
 
                 if(err) reject(err);
 
@@ -432,7 +436,7 @@ class Bot{
 
             const query = "INSERT INTO channels VALUES(?,?,0)";
 
-            db.run(query, [channel.id, channel.name], (err) =>{
+            this.db.run(query, [channel.id, channel.name], (err) =>{
 
                 if(err) reject(err);
 
@@ -472,7 +476,7 @@ class Bot{
 
             const query = "DELETE FROM channels WHERE channel_id=?";
 
-            db.run(query, [channel.id], (err) =>{
+            this.db.run(query, [channel.id], (err) =>{
 
                 if(err) reject(err);
 
@@ -513,7 +517,7 @@ class Bot{
 
             const query = "SELECT COUNT(*) as total_roles FROM roles WHERE name=?";
 
-            db.get(query, [role], (err, row) =>{
+            this.db.get(query, [role], (err, row) =>{
 
                 if(err) reject(err);
 
@@ -538,7 +542,7 @@ class Bot{
 
             const query = "INSERT INTO roles VALUES(?,?,?)";
 
-            db.run(query, [id, name, now], (err) =>{
+            this.db.run(query, [id, name, now], (err) =>{
 
                 if(err) reject(err);
 
@@ -555,7 +559,7 @@ class Bot{
 
             const query = "SELECT * FROM roles";
 
-            db.each(query, (err, row) =>{
+            this.db.each(query, (err, row) =>{
 
                 if(err) reject(err);
 
@@ -656,7 +660,7 @@ class Bot{
 
             const query = "DELETE FROM roles WHERE name=?";
 
-            db.run(query, [role], (err) =>{
+            this.db.run(query, [role], (err) =>{
 
                 if(err) reject(err);
 
@@ -933,7 +937,7 @@ class Bot{
     
         this.client = new Discord.Client();
 
-        this.query = new UT2004Query(this.client);
+        this.query = new UT2004Query(this.client, this.servers);
 
         this.client.on('ready', () =>{
             console.log("I'm Ready, I'm Ready, I'm Ready (In spongebobs voice)");

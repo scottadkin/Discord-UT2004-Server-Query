@@ -2,14 +2,14 @@
 
 const Promise = require('promise');
 const config = require('./config');
-const db = require('./database');
+const Database = require('./database');
 const dns = require('dns');
 
 
 class Servers{
 
-    constructor(){
-
+    constructor(db){
+        this.db = db;
     }
 
     getIp(ip){
@@ -47,7 +47,7 @@ class Servers{
                 realIp = "";
             }
 
-            db.run(query, [alias, ip, realIp, port, now, now], (err) =>{
+            this.db.run(query, [alias, ip, realIp, port, now, now], (err) =>{
 
                 if(err) reject(err);
 
@@ -62,7 +62,7 @@ class Servers{
 
             const query = "SELECT COUNT(*) as total_servers FROM servers WHERE ip=? AND port=?";
 
-            db.get(query, [ip, port], (err, row) =>{
+            this.db.get(query, [ip, port], (err, row) =>{
 
                 if(err){
                     //console.log(err);
@@ -83,7 +83,7 @@ class Servers{
 
             const servers = [];
             
-            db.each(query, (err, row) =>{
+            this.db.each(query, (err, row) =>{
 
                 if(err) reject(err);
 
@@ -128,7 +128,7 @@ class Servers{
 
             //const self= this;
 
-            db.run(query, vars, function (err){
+            this.db.run(query, vars, function (err){
 
                 if(err) reject(err);
 
@@ -136,7 +136,7 @@ class Servers{
 
                 if(this.changes === 0){
 
-                    db.run(altQuery, vars, (err) =>{
+                    this.db.run(altQuery, vars, (err) =>{
                         if(err) console.log(err);
                     });
 
@@ -164,7 +164,7 @@ class Servers{
 
             const query = "DELETE FROM servers WHERE ip=? AND port=?";
 
-            db.run(query, [ip, port], (err) =>{
+            this.db.run(query, [ip, port], (err) =>{
 
                 if(err) reject(err);
 
@@ -181,7 +181,7 @@ class Servers{
 
             const query = "UPDATE servers SET message_id=?, channel_id=? WHERE ip=? AND port=?";
 
-            db.run(query, [messageId, channelId, ip, port], (err) =>{
+            this.db.run(query, [messageId, channelId, ip, port], (err) =>{
 
                 if(err) reject(err);
 
@@ -198,7 +198,7 @@ class Servers{
 
             const query = "SELECT message_id FROM servers WHERE ip=? AND port=? AND channel_id=?";
 
-            db.get(query, [ip, port], (err, row) =>{
+            this.db.get(query, [ip, port], (err, row) =>{
 
                 if(err) reject(err);
 
@@ -214,7 +214,7 @@ class Servers{
 
             const query = "UPDATE channels set auto_query=0";
 
-            db.run(query, (err) =>{
+            this.db.run(query, (err) =>{
 
                 if(err) reject(err);
 
@@ -231,7 +231,7 @@ class Servers{
 
             //console.log(`"UPDATE channels SET auto_query=1 WHERE channel_id=${channel}"`);
 
-            db.run(query, [channel], function (err){
+            this.db.run(query, [channel], function (err){
 
                 if(err) reject(err);
 
@@ -258,7 +258,7 @@ class Servers{
 
             const query = "UPDATE servers SET message_id=-1";
 
-            db.run(query, (err) =>{
+            this.db.run(query, (err) =>{
 
                 if(err) reject(err);
 
@@ -296,7 +296,7 @@ class Servers{
 
             const query = "SELECT channel_id FROM channels WHERE auto_query=1";
 
-            db.get(query, (err, row) =>{
+            this.db.get(query, (err, row) =>{
 
                 if(err) reject(err);
 
@@ -315,7 +315,7 @@ class Servers{
 
             const query = "SELECT message_id FROM servers WHERE ip=? AND port=?";
 
-            db.get(query, [ip, port], (err, row) =>{
+            this.db.get(query, [ip, port], (err, row) =>{
 
                 if(err) reject(err);
 
