@@ -11,7 +11,7 @@ class Database{
 			if (err) {
 			  console.log(err.message);
 			}
-			console.log('Connected to the database.');
+			//console.log('Connected to the database.');
 		});
 	}
 }

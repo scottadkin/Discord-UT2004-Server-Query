@@ -40,7 +40,7 @@ class UT2004Q{
            // console.log(`external = ${m.external / 1024}KB`);
 
             this.tick();
-        }, 250);*/
+        }, 1000);*/
         
         //loop for server pings
         this.serverPingLoop = setInterval(() =>{

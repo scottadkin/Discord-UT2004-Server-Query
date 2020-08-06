@@ -1,4 +1,7 @@
-const db = require('./api/database');
+const Database = require('./api/database');
+
+let db = new Database();
+db = db.sqlite;
 
 
 const queries = [
