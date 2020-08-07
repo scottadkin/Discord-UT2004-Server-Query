@@ -6,6 +6,7 @@ const Discord = require('discord.js');
 const config = require('./config.json');
 //const countryList = require('country-list');
 const Servers = require('./servers');
+//const Buffer = require('buffer');
 
 
 
@@ -24,6 +25,14 @@ class UT2004Q{
 
         this.autoQueryLoop = null;
         this.serverPingLoop = null;
+
+
+        this.packets = [
+            `\x80\x00\x00\x00`, //server info 1 packet
+            `\x80\x00\x00\x01`, //detailed info 1 packet
+            `\x80\x00\x00\x02`, //player info 1 - 2 packets
+            `\x80\x00\x00\x03` //packet 2 and 3 | 2 - 3 packets
+        ];
 
         
         //checks for timeouts
@@ -419,7 +428,7 @@ class UT2004Q{
 
             }else if(data[4] === 1){
 
-                this.parseGameInfo(data, rinfo.address, rinfo.port);
+                this.parseGameInfo(data);
 
             }else if(data[4] === 2){
 
@@ -443,26 +452,13 @@ class UT2004Q{
 
     getPacket(id){      
 
-        const packets = [
-            [128, 0, 0, 0], //server info 1 packet
-            [128, 0, 0, 1], //detailed info 1 packet
-            [128, 0, 0, 2], //player info 1 - 2 packets
-            [128, 0, 0, 3] //packet 2 and 3 | 2 - 3 packets
-        ];
 
-        if(id < packets.length){
-
-            let string = "";
-
-            for(let i = 0; i < packets[id].length; i++){
-
-                string += String.fromCharCode(packets[id][i]);
-            }
-
-            return string;     
+        if(id < 0 || id >= 4){
+            return null;
         }
 
-        return null;
+       return this.packets[id];
+
     }
 
 
@@ -754,7 +750,7 @@ class UT2004Q{
         return null;
     }
 
-    parseGameInfo(data, ip, port){
+    parseGameInfo(data){
 
         //remove game byte
         data.splice(0, 1);

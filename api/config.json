@@ -3,7 +3,7 @@
     "adminRole": "Toilet Brush",
     "serverTimeout": 2,
     "serverPingInterval": 15, 
-    "autoQueryInterval": 15, 
+    "autoQueryInterval": 60, 
     "commandPrefix": ".",
     "databaseFile": "ut2k4query.db"
 }
