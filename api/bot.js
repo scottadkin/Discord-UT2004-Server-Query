@@ -285,7 +285,7 @@ class Bot{
                     //console.log(`Message deleted successfully`);
 
                 }).catch(() =>{
-                    message.channel.send(`There was a problem deleting the auto query message.`);
+                    message.channel.send(`${config.failIcon} There was a problem deleting the auto query message.`);
                 })
 
             }else{
@@ -315,7 +315,7 @@ class Bot{
                 const servers = await this.servers.getAllServers();
 
                 if(servers.length < id){
-                    message.channel.send("Can't delete server with that id, it does not exist!");
+                    message.channel.send(`${config.failIcon} Can't delete server with that id, it does not exist!`);
                     return;
                 }
 
@@ -332,17 +332,17 @@ class Bot{
                 
                 //await this.query.resetAuto();
 
-                message.channel.send("Server deleted!");
+                message.channel.send(`${config.passIcon} Server deleted!`);
                 //this.listServers(message);
 
             }else{
 
-                message.channel.send(`Invalid syntax, correct is ${config.commandPrefix}deleteserver serverid`);
+                message.channel.send(`${config.failIcon} Invalid syntax, correct is ${config.commandPrefix}deleteserver serverid`);
             
             }
 
         }catch(err){
-            message.channel.send("There is no server with that id to delete.");
+            message.channel.send(`${config.failIcon} There is no server with that id to delete.`);
             //console.trace(err);
         }
 
@@ -375,7 +375,7 @@ class Bot{
 
                 if(test.total_servers > 0){
                     //console.log("Server already added");
-                    message.channel.send("That server has already been added to the database.");
+                    message.channel.send(`${config.failIcon} That server has already been added to the database.`);
                 }else{
                    // console.log("I can add that");
 
@@ -385,7 +385,7 @@ class Bot{
 
                     this.query.getServerBasic(ip, port);
 
-                    message.channel.send("Server successfully added.");
+                    message.channel.send(`${config.passIcon} Server successfully added.`);
                     //this.listServers(message);
                 }
 
@@ -393,13 +393,13 @@ class Bot{
                // console.log(test);
                // console.log(`Addserver ${ip}:${port}`);
             }else{
-                message.channel.send(`Incorrect Syntax! Correct is ${config.commandPrefix}addserver alias ip:port`);
+                message.channel.send(`${config.failIcon} Incorrect Syntax! Correct is ${config.commandPrefix}addserver alias ip:port`);
                 //console.log("result is null");
             }
         }catch(err){
             console.trace(err);
 
-            message.channel.send("There was a database error, failed to added server.");
+            message.channel.send(`${config.failIcon} There was a database error, failed to added server.`);
         }
     }
 
@@ -452,10 +452,10 @@ class Bot{
 
                 await this.insertChannel(message.channel);
 
-                message.channel.send("Bot can now be used in this channel.");
+                message.channel.send(`${config.passIcon} Bot can now be used in this channel.`);
 
             }else{
-                message.channel.send("This channel has already been enabled for bot use.");
+                message.channel.send(`${config.failIcon} This channel has already been enabled for bot use.`);
             }
 
         }catch(err){
@@ -484,15 +484,15 @@ class Bot{
 
             const bAlreadyExists = await this.bChannelExist(message.channel.id);
 
-            console.log("bAlreadyExists = "+bAlreadyExists);
+            //console.log("bAlreadyExists = "+bAlreadyExists);
             if(bAlreadyExists){
 
                 await this.deleteChannel(message.channel);
 
-                message.channel.send("Bot is no longer enabled in this channel.");
+                message.channel.send(`${config.passIcon} Bot is no longer enabled in this channel.`);
 
             }else{
-                message.channel.send("Bot was already disabled for this channel.");
+                message.channel.send(`${config.failIcon} Bot was already disabled for this channel.`);
             }
 
         }catch(err){
@@ -589,16 +589,6 @@ class Bot{
 
         return false;
 
-        /*roles.forEach((role) =>{
-
-            //console.log(role.name);
-            if(role.name.toLowerCase() == roleName){
-                result = role;
-            }
-
-        });*/
-
-       //return result;
     }
 
     bValidRole(message, roleName){
@@ -630,15 +620,15 @@ class Bot{
             
 
                 if(bAlreadyExists){
-                    message.channel.send(`The role **${result[1]}** already has bot admin privileges.`);
+                    message.channel.send(`${config.failIcon} The role **${result[1]}** already has bot admin privileges.`);
                 }else{
                     //this.insertRole(message);
                     await this.insertRole(role.id, role.name);
 
-                    message.channel.send(`The role **${result[1]}** now has bot admin privileges.`);
+                    message.channel.send(`${config.passIcon} The role **${result[1]}** now has bot admin privileges.`);
                 }
             }else{
-                message.channel.send(`There are no roles called **${result[1]}** on this Discord server.`);
+                message.channel.send(`${config.failIcon} There are no roles called **${result[1]}** on this Discord server.`);
             }
 
         }catch(err){
@@ -677,13 +667,13 @@ class Bot{
                // console.log(this.bRoleAlreadyExists(result[1]));
                 if(bExists){
                     await this.deleteRole(result[1]);
-                    message.channel.send(`The role **${result[1]}** no longer has admin privileges.`);
+                    message.channel.send(`${config.passIcon} The role **${result[1]}** no longer has admin privileges.`);
                 }else{
-                    message.channel.send(`The role **${result[1]}** did not have admin privileges already.`);
+                    message.channel.send(`${config.passIcon} The role **${result[1]}** did not have admin privileges already.`);
                 }
 
             }else{
-                message.channel.send("Incorrect syntax!");
+                message.channel.send(`${config.failIcon} Incorrect syntax!`);
             }
         }catch(err){
             console.trace(err);
@@ -702,7 +692,7 @@ class Bot{
                 let id = parseInt(result[1]);
 
                 if(id !== id){
-                    message.channel.send("Server ID must be a valid integer.");
+                    message.channel.send(`${config.failIcon} Server ID must be a valid integer.`);
                     //throw new Error("Server ID must be a valid integer.");
                     return;
                 }
@@ -710,7 +700,7 @@ class Bot{
                 let servers = await this.servers.getAllServers();
 
                 if(servers.length < id || id < 1){
-                    message.channel.send(`There is no server with the id ${id}`);
+                    message.channel.send(`${config.failIcon} There is no server with the id ${id}`);
                     return;
                     //throw new Error(`There is no server with the id ${id}`);
                    
@@ -724,7 +714,7 @@ class Bot{
                 }
 
             }else{
-                message.channel.send("Incorrect syntax! Correct is `.q serverid` Use .servers command to see available servers.");
+                message.channel.send(`${config.failIcon} Incorrect syntax! Correct is \`.q serverid\` Use .servers command to see available servers.`);
             }
 
         }catch(err){
@@ -734,8 +724,8 @@ class Bot{
 
     bCanRespond(bCanPost, channel){
 
-        if(!bCanPost){
-            channel.send("The bot is not enabled in this channel, only admin commands will work.");
+        if(!bCanPost && config.bDisplayNotEnabledMessage){
+            channel.send(`${confi.failIcon} The bot is not enabled in this channel, only admin commands will work.`);
         }
     }
 
@@ -782,7 +772,7 @@ class Bot{
                 const id = parseInt(result[1]) - 1;
 
                 if(id >= servers.length || id < 0){
-                    message.channel.send(`There is no server with the id ${id + 1}. Use ${config.commandPrefix}servers to see available servers`);
+                    message.channel.send(`${config.failIcon} There is no server with the id ${id + 1}. Use ${config.commandPrefix}servers to see available servers`);
                 }else{
 
                     const data = servers[id];
@@ -807,9 +797,15 @@ class Bot{
 
             if(message.author.bot) return;
 
-            if(!message.content.startsWith(config.commandPrefix)) return;
+            if(!message.content.startsWith(config.commandPrefix) && message.content.length < 2){
+                return;
+            }
 
-            const adminMessage = "You do not have permission to use this command.";
+            if(message.content[0] === config.commandPrefix && message.content[1] === config.commandPrefix){
+                return;
+            }
+
+            const adminMessage = `${config.failIcon} You do not have permission to use this command.`;
 
             const adminRoles = await this.getAllAdminRoles();
             
@@ -824,7 +820,10 @@ class Bot{
                 if(!bAdmin){
 
                     if(message.content.startsWith(config.commandPrefix)){
-                       message.channel.send("The bot is not enabled for this channel.");
+
+                        if(config.bDisplayNotEnabledMessage){
+                            message.channel.send(`${config.failIcon} The bot is not enabled for this channel.`);
+                        }
                     }
 
                     return;

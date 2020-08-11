@@ -5,5 +5,8 @@
     "serverPingInterval": 15, 
     "autoQueryInterval": 60, 
     "commandPrefix": ".",
-    "databaseFile": "ut2k4query.db"
+    "databaseFile": "ut2k4query.db",
+    "failIcon": ":no_entry:",
+    "passIcon": ":white_check_mark:",
+    "bDisplayNotEnabledMessage": true
 }
