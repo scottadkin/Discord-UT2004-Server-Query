@@ -1,57 +1,43 @@
 const Database = require('./api/database');
 
-let db = new Database();
-db = db.sqlite;
+const db = new Database().sqlite;
 
 
 const queries = [
-
-    `CREATE TABLE IF NOT EXISTS servers (
+    `CREATE TABLE IF NOT EXISTS servers(
         name TEXT NOT NULL,
         alias TEXT NOT NULL,
         ip TEXT NOT NULL,
-        real_ip TEXT NOT NULL,
         port INTEGER NOT NULL,
-        gametype TEXT NOT NULL,
-        map TEXT NOT NULL,
-        current_players INTEGER NOT NULL,
+        players INTEGER NOT NULL,
         max_players INTEGER NOT NULL,
+        map TEXT NOT NULL,
+        gametype TEXT NOT NULL,
+        country TEXT NOT NULL,
         added INTEGER NOT NULL,
         modified INTEGER NOT NULL,
-        message_id TEXT NOT NULL,
-        channel_id TEXT NOT NULL
-    );`,
+        last_message TEXT NOT NULL
+        )
+    `,
 
-    `CREATE TABLE IF NOT EXISTS channels (
-        channel_id TEXT NOT NULL,
-        name TEXT NOT NULL, 
-        auto_query INT NOT NULL
+    `CREATE TABLE IF NOT EXISTS roles(
+        id TEXT NOT NULL,
+        added INTEGER NOT NULL
     )`,
 
-    `CREATE TABLE IF NOT EXISTS roles (
-        role_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        added INTEGER NOT NULL
+    `CREATE TABLE IF NOT EXISTS channels(
+        id TEXT NOT NULL,
+        added INTEGER NOT NULL,
+        auto_channel INTEGER NOT NULL
     )`
 ];
 
+for(let i = 0; i < queries.length; i++){
 
-db.serialize(() =>{
+    db.run(queries[i], (err) =>{
 
-    for(let i = 0; i < queries.length; i++){
+        if(err) console.log(err);
+    })
+}
 
-        console.log(`Attempting query ${i}`);
-
-        db.run(queries[i] , (err) =>{
-
-            if(err){
-                console.trace(err);
-            }
-            
-            if(err == null){
-                console.log(`Query ${i} passed!`);
-            }
-        });
-    } 
-    //process.exit();
-});
+console.log("Database Install completed.");

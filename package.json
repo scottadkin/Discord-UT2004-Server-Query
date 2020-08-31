@@ -1,22 +1,32 @@
 {
-  "name": "ut2k4discordbot",
+  "name": "ut2k4querydiscord",
   "version": "1.0.0",
-  "description": "Discord bot for querying UT 2004 servers and displaying the results",
+  "description": "ut,ut2004,2004,server,query,discord,bot",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scottadkin/Discord-UT2004-Server-Query.git"
+  },
   "keywords": [
+    "ut",
     "ut2004",
-    "ut2k4",
-    "unreal",
-    "tournament",
+    "2004",
+    "server",
+    "query",
     "discord",
     "bot",
-    "query"
+    "unreal",
+    "tournament"
   ],
   "author": "Scott Adkin",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/scottadkin/Discord-UT2004-Server-Query/issues"
+  },
+  "homepage": "https://github.com/scottadkin/Discord-UT2004-Server-Query#readme",
   "dependencies": {
     "discord.js": "^12.2.0",
     "promise": "^8.1.0",

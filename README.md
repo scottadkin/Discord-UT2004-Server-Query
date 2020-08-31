@@ -32,30 +32,30 @@ When the bot has joined the server only people with the role "adminRole" can use
 
 # Bot commands
 
-**User Commands**
-- `.servers` Displays basic server information for all the servers added to the database.
-- `.active` Displays basic server information for all servers added that have players on it.
-- `.q<serverId>` Displays the server's name, current gametype, map, and players.
-- `.q <server ip>:<port>` Displays a server's name, current gametype, map, and players.
-- `.ip<serverid>` Displays clickable link to the server.
+## adminCommands
+**.addserver alias ip:port** Add a server to the database with the specified alias ip and port, if port is not specified 7777 is used.
+**.deleteserver serverID** Deletes the specified server matching the IP:PORT of the ID.
+**.editserver serverID type value** Edits the specified server's type with the new value, valid types are **IP, Port, Alias**.
+**.roles** Displays all user roles that can use admin commands.
+**.allowrole Name** Allows users with said role to use admin commands.
+**.removerole Name** Disables users with said role from using admin commands.
+**.allowchannel** Allows the bot to be used in the current channel.
+**.removechannel** Disables the bot to be used in the current channel.
+**.channels** Displays all channels that are enabled for bot usage.
 
-**Admin Commands**
-- `.allowchannel` Enables the bot to be used in the current channel.
-- `.deletechannel` Disables the bot from being used in the current channel.
-- `.allowrole <role name>` Enables users with the specified role to use admin commands.
-- `.deleterole <role name>` Disables users with the specified role to use the admin commands.
-- `.addserver <alias> <ip>:<port>` Adds the specified server to the database.
-- `.deleteserver <serverid>` Deletes the server with the specified id.
-- `.setauto` Sets the current channel as the auto query channel. This can also be used to reset the auto query making it post all new responses.
-- `.stopauto` Disables auto query channel.
+## Normal Commands
+**.help** Displays this command.
+**.servers** Displays all the servers added to the database.
+**.active** Displays all the servers added to the database that has at least 1 player in it.
+**.qID** Queries the specified server ip:port matching that server ID in the database.
+**.q ip:port** Queries a UT2004 server with the specified ip:port, if port is not provided 7777 is used.
+**.ipID** Displays the name and ip:port of the server added to the database.
+        
 `
 Updated .q and .ip commands with join as spectator added
 
-![alt text](https://i.imgur.com/eGdP3TK.png, "image")
+![alt text](https://i.imgur.com/dmMjVwW.png, "image")
 
 Old .q display with other commands
 
-![alt text](https://i.imgur.com/cVtcp6H.png, "image")
-
-# Known Problems
-- If autoQueryInterval is set too low it can stop working after time, it's recommended to keep it above 60 seconds.
+![alt text](https://i.imgur.com/txWh80F.png, "image")
