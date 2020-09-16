@@ -6,7 +6,7 @@ class Database{
 
     constructor(){
 
-        this.sqlite = new sqlite3.Database(`./db/${config.dbFile}`);
+        this.sqlite = new sqlite3.Database(`${config.dbFile}`);
     }
 }
 

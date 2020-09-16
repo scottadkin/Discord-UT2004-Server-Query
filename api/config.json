@@ -1,6 +1,6 @@
 {
     "discordToken": "",
-    "dbFile": "data.db",
+    "dbFile": "./db/data.db",
     "defaultAdminRole": "Toilet Brush",
     "commandPrefix": ".",
     "udpPort": 1333,
