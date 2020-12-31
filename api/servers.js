@@ -297,11 +297,20 @@ class Servers{
 
         try{
 
+
+            const serversPerMessage = 8;
+            const messages = [];
+
             const servers = await this.getAllServers();
 
             let string = ``;
 
             for(let i = 0; i < servers.length; i++){
+
+                if(i % serversPerMessage === 0 && i !== 0){
+                    messages.push(string);
+                    string = '';
+                }
 
                 if(bOnlyActive !== undefined){
 
@@ -323,15 +332,29 @@ class Servers{
                 }
             }
 
+            messages.push(string);
+
+
             const title = (bOnlyActive === undefined) ? `Unreal Tournament 2004 Servers` : `Active Unreal Tournament 2004 Servers` ;
 
-            const response = new Discord.MessageEmbed()
-            .setColor(config.embedColor)
-            .setTitle(title)
-            .setDescription(`Type **${config.commandPrefix}qID** to get more information about a server.`)
-            .addField(this.createServerString(), string);
+            let response = null;
 
-            channel.send(response);
+            for(let i = 0; i < messages.length; i++){
+
+                if(i === 0){
+                    response = new Discord.MessageEmbed()
+                    .setColor(config.embedColor)
+                    .setTitle(title)
+                    .setDescription(`Type **${config.commandPrefix}qID** to get more information about a server.`)
+                    .addField(this.createServerString(), messages[i]);
+                }else{
+                    response = new Discord.MessageEmbed()
+                    .setColor(config.embedColor)
+                    .setDescription( messages[i])
+                }
+
+                await channel.send(response);
+            }
 
         }catch(err){
             console.trace(err);
