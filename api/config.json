@@ -1,6 +1,6 @@
 {
     "discordToken": "",
-    "dbFile": "./db/data.db",
+    "dbFile": "../db/data.db",
     "defaultAdminRole": "Toilet Brush",
     "commandPrefix": ".",
     "udpPort": 1333,
@@ -18,5 +18,7 @@
         "port",
         "country",
         "alias"
-    ]
+    ],
+    "serversPerMessage": 10,
+    "maxMemoryUsage": 50
 }

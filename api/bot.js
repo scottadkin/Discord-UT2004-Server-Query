@@ -8,6 +8,7 @@ const Roles = require('./roles');
 const Channels = require('./channels');
 
 
+
 class Bot{
 
     constructor(){
@@ -206,7 +207,7 @@ class Bot{
 
                     }else if(adminRegs[9].test(text)){
 
-                        this.channels.setAutoChannel(message.channel);
+                        this.channels.setAutoChannel(message.channel, Discord);
                         return;
 
                     }else if(adminRegs[10].test(text)){
@@ -228,7 +229,7 @@ class Bot{
 
                 if(serversReg.test(text)){
 
-                    this.servers.displayAllServers(message.channel);
+                    this.servers.displayAllServers(message.channel, false);
 
                 }else if(activeReg.test(text)){
                 

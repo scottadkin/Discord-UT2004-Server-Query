@@ -298,28 +298,32 @@ class Servers{
         try{
 
 
-            const serversPerMessage = 8;
+
             const messages = [];
 
             const servers = await this.getAllServers();
 
             let string = ``;
+            let currentServers = 0;
 
             for(let i = 0; i < servers.length; i++){
 
-                if(i % serversPerMessage === 0 && i !== 0){
+                if(currentServers % config.serversPerMessage === 0 && currentServers !== 0){
                     messages.push(string);
+                    currentServers = 0;
                     string = '';
                 }
 
-                if(bOnlyActive !== undefined){
+                if(bOnlyActive){
 
                     if(servers[i].players > 0){
+                        currentServers++;
                         string += this.createServerString(i + 1, servers[i]);
                     }
 
                 }else{
                     string += this.createServerString(i + 1, servers[i]);
+                    currentServers++;
                 }
             }
 
@@ -327,7 +331,7 @@ class Servers{
 
                 if(string == ''){
 
-                    if(bOnlyActive === undefined){
+                    if(bOnlyActive){
                         string = `:zzz: There are currently no servers added.`;
                     }else{
                         string = `:zzz: There are currently no servers with active players.`;
@@ -339,8 +343,7 @@ class Servers{
                 messages.push(string);
             }
 
-
-            const title = (bOnlyActive === undefined) ? `Unreal Tournament 2004 Servers` : `Active Unreal Tournament 2004 Servers` ;
+            const title = (!bOnlyActive) ? `Unreal Tournament 2004 Servers` : `Active Unreal Tournament 2004 Servers` ;
 
             let response = null;
 
@@ -355,7 +358,7 @@ class Servers{
                 }else{
                     response = new Discord.MessageEmbed()
                     .setColor(config.embedColor)
-                    .setDescription( messages[i])
+                    .setDescription(messages[i])
                 }
 
                 await channel.send(response);

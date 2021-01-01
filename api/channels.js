@@ -1,6 +1,5 @@
 const Promise = require('promise');
 const config = require('./config.json');
-
 const Discord = require('discord.js');
 
 
