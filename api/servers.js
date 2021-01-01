@@ -331,7 +331,7 @@ class Servers{
 
                 if(string == ''){
 
-                    if(bOnlyActive){
+                    if(!bOnlyActive){
                         string = `:zzz: There are currently no servers added.`;
                     }else{
                         string = `:zzz: There are currently no servers with active players.`;
