@@ -1,6 +1,8 @@
 const Promise = require('promise');
 const config = require('./config.json');
 
+const Discord = require('discord.js');
+
 
 class Channels{
 
@@ -226,15 +228,35 @@ class Channels{
 
                 await this.servers.resetAllAutoMessageIds();
 
+                let string = `**Welcome to the auto server query channel, the posts here will be updated with the latest UT2004 server information for each server added to the database.**`;
+
+                await channel.send(`${string}`);
+
+                const addedServers = await this.servers.getAllServers();
+              //  console.log(await this.servers.getAllServers());
+
+                //console.log(addedServers);
+
+                let currentEmbed = 0;
+
+                for(let i = 0; i < addedServers.length; i++){
+
+                    currentEmbed = new Discord.MessageEmbed().setDescription(`Waiting for data for **${addedServers[i].name}** id ${i + 1}`);
+
+                    await channel.send(currentEmbed).then(async (message) =>{
+                        
+                        console.log(`${message.id} server id =${i + 1}`);
+                        await this.servers.setAutoMessageId(addedServers[i].ip, addedServers[i].port, message.id)
+                    });
+                    
+                    
+                }
+
                 await this.enableAutoChannel(channel.id);
 
                 await channel.setTopic(`**Welcome to the auto server query channel, the posts here will be updated with the latest UT2004 server information for each server added to the database.**`);
 
-                let string = `**Welcome to the auto server query channel, the posts here will be updated with the latest UT2004 server information for each server added to the database.**`;
-
-                channel.send(`${string}`);
-
-                await this.deleteNonBotMessages(channel);
+               // await this.deleteNonBotMessages(channel);
 
             }else{
 

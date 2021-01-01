@@ -134,7 +134,7 @@ class Servers{
 
         return new Promise((resolve, reject) =>{
 
-            const query = "SELECT * FROM servers";
+            const query = "SELECT * FROM servers ORDER BY added ASC";
 
             const servers = [];
 
