@@ -323,16 +323,21 @@ class Servers{
                 }
             }
 
-            if(string == ''){
+            if(messages.length === 0){
 
-                if(bOnlyActive === undefined){
-                    string = `:zzz: There are currently no servers added.`;
-                }else{
-                    string = `:zzz: There are currently no servers with active players.`;
+                if(string == ''){
+
+                    if(bOnlyActive === undefined){
+                        string = `:zzz: There are currently no servers added.`;
+                    }else{
+                        string = `:zzz: There are currently no servers with active players.`;
+                    }
                 }
             }
 
-            messages.push(string);
+            if(string !== ''){
+                messages.push(string);
+            }
 
 
             const title = (bOnlyActive === undefined) ? `Unreal Tournament 2004 Servers` : `Active Unreal Tournament 2004 Servers` ;
