@@ -245,7 +245,7 @@ class Channels{
 
                     await channel.send(currentEmbed).then(async (message) =>{
                         
-                        console.log(`${message.id} server id =${i + 1}`);
+                       // console.log(`${message.id} server id =${i + 1}`);
                         await this.servers.setAutoMessageId(addedServers[i].ip, addedServers[i].port, message.id)
                     });
                     

@@ -27,7 +27,7 @@ class Bot{
 
         this.client = new Discord.Client({
             messageEditHistoryMaxSize: 0,
-            messageCacheLifetime: 0,
+            messageCacheLifetime: 1,
             messageCacheMaxSize: 0,
             messageSweepInterval: 30
         });

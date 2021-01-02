@@ -167,6 +167,7 @@ class UT2k4Query{
 
                         this.responses.push(new ServerResponse(address, port, "full", channel, ip, bAuto, this.servers));
                         this.sendPacket(0, address, port);
+                        //this.sendPacket(1, address, port);
                         this.sendPacket(2, address, port);
                     }
                 });
@@ -175,6 +176,7 @@ class UT2k4Query{
 
                 this.responses.push(new ServerResponse(ip, port, "full", channel, null, bAuto, this.servers));
                 this.sendPacket(0, ip, port);
+               // this.sendPacket(1, ip, port);
                 this.sendPacket(2, ip, port);
             }
 
@@ -282,6 +284,19 @@ class UT2k4Query{
         return {"string": parsedData.string, "removedBytes": parsedData.removedBytes};
     }
 
+    bDMMap(name){
+
+        const reg = /^dm-.+$/i;
+        return reg.test(name)
+    }
+
+    bHaveTamInName(name){
+
+        const reg = /tam/i;
+
+        return reg.test(name);
+    }
+
     parseBasicInfo(byteOffset, data, rinfo){
 
         const response = this.getMatchingResponse(rinfo.address, rinfo.port, true);
@@ -310,7 +325,19 @@ class UT2k4Query{
         byteOffset += mapName.removedBytes;
         
         const gametype = this.parseString(byteOffset, data);
+        
         response.setValue('gametype', gametype.string);
+
+        if(config.labelAsTAM){
+
+            if(this.bDMMap(mapName.string)){
+
+                if(this.bHaveTamInName(serverName.string)){
+                    response.setValue('gametype', "TAM");
+                }
+            }
+        }
+
         byteOffset += gametype.removedBytes;
 
         const currentPlayers = parseInt(data[byteOffset],10);
@@ -325,13 +352,48 @@ class UT2k4Query{
        // console.log(response);
 
        //memory leak after
-        response.finishedStep(Discord);
+        response.finishedStep(Discord, config.embedColor);
 
 
     }
 
-    parseServerInfo(){
-        console.log(`parseServerInfo`);
+    getOptionValue(byteOffset, data){
+
+        const option = this.parseString(byteOffset, data);
+        const value = this.parseString(byteOffset + option.removedBytes, data);
+
+        return {"option": option.string, "value": value.string, "removedBytes": option.removedBytes + value.removedBytes}
+    }
+
+    parseServerInfo(byteOffset, data, rinfo){
+
+        console.log(`parseServerInfo-------------------------------------------------------------------------------------------`);
+        console.log(data);
+        console.log(data.toString());
+
+        //console.log(this.parseString(byteOffset, data));
+
+
+        const options = [];
+
+        let currentOption = [];
+
+        while(byteOffset <= data.length){
+
+           // options.push(this.getOptionValue(byteOffset, data));
+           currentOption = this.getOptionValue(byteOffset, data);
+           options.push({
+               "option": currentOption.option,
+               "value": currentOption.value,
+           });
+
+           byteOffset += currentOption.removedBytes;
+
+        }
+
+        console.log(options);
+        
+
     }
 
     getDWord(data, startOffset){
@@ -413,7 +475,7 @@ class UT2k4Query{
 
         response.setValue('players', players);
 
-        response.finishedStep(Discord);
+        response.finishedStep(Discord, config.embedColor);
 
     }
 

@@ -1,5 +1,3 @@
-const config = require('./config.json');
-
 class ServerResponse{
 
     constructor(ip, port, type, channel, domain, bAuto, servers){
@@ -243,7 +241,7 @@ class ServerResponse{
         }
     }
 
-    async sendFullResponse(Discord){
+    async sendFullResponse(Discord,embedColor){
 
         try{
 
@@ -266,7 +264,7 @@ class ServerResponse{
             }
 
             const response = new Discord.MessageEmbed()
-            .setColor(config.embedColor)
+            .setColor(embedColor)
             .setTitle(this.data.name)
             .setDescription(description)
             .addFields(teamFields)
@@ -333,7 +331,7 @@ class ServerResponse{
     }
 
 
-     async finishedStep(Discord){
+     async finishedStep(Discord, embedColor){
 
         
         try{
@@ -365,7 +363,7 @@ class ServerResponse{
                     if(this.data.currentPlayers == 0){
 
                         this.bGotAllData = true;
-                        this.sendFullResponse(Discord);
+                        this.sendFullResponse(Discord, embedColor);
                         
                     }
 
@@ -378,7 +376,7 @@ class ServerResponse{
                     if(this.data.players.length >= this.data.currentPlayers - 1 || this.playerPacketsReceived >= 2){
 
                         this.bGotAllData = true;
-                        this.sendFullResponse(Discord);
+                        this.sendFullResponse(Discord, embedColor);
 
                        // return;
 
