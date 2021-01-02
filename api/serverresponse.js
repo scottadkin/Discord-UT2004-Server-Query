@@ -251,7 +251,7 @@ class ServerResponse{
                 this.setTeamScores();
             }
 
-            let description = `:wrestling: Players **${this.getTotalPlayers(totalTeams)}/${this.data.maxPlayers}**
+            let description = `:wrestling: Users Online **${this.getTotalPlayers(totalTeams)}/${this.data.maxPlayers}**
             :pushpin: Gametype **${this.data.gametype}**
             :map: Map **${this.data.map}**`;
 
