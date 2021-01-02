@@ -2,6 +2,7 @@ const dgram = require('dgram');
 const config = require('./config.json');
 const ServerResponse = require('./serverresponse');
 const dns = require('dns');
+const Discord = require('discord.js');
 
 
 
@@ -324,7 +325,7 @@ class UT2k4Query{
        // console.log(response);
 
        //memory leak after
-        response.finishedStep();
+        response.finishedStep(Discord);
 
 
     }
@@ -412,7 +413,7 @@ class UT2k4Query{
 
         response.setValue('players', players);
 
-        response.finishedStep();
+        response.finishedStep(Discord);
 
     }
 

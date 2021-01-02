@@ -1,6 +1,4 @@
 const config = require('./config.json');
-const Discord = require('discord.js');
-//const Servers = require('./servers');
 
 class ServerResponse{
 
@@ -245,7 +243,7 @@ class ServerResponse{
         }
     }
 
-    async sendFullResponse(){
+    async sendFullResponse(Discord){
 
         try{
 
@@ -335,7 +333,7 @@ class ServerResponse{
     }
 
 
-     async finishedStep(){
+     async finishedStep(Discord){
 
         
         try{
@@ -367,7 +365,7 @@ class ServerResponse{
                     if(this.data.currentPlayers == 0){
 
                         this.bGotAllData = true;
-                        this.sendFullResponse();
+                        this.sendFullResponse(Discord);
                         
                     }
 
@@ -380,7 +378,7 @@ class ServerResponse{
                     if(this.data.players.length >= this.data.currentPlayers - 1 || this.playerPacketsReceived >= 2){
 
                         this.bGotAllData = true;
-                        this.sendFullResponse();
+                        this.sendFullResponse(Discord);
 
                        // return;
 

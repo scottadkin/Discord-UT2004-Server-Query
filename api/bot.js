@@ -25,7 +25,12 @@ class Bot{
 
     createClient(){
 
-        this.client = new Discord.Client();
+        this.client = new Discord.Client({
+            messageEditHistoryMaxSize: 0,
+            messageCacheLifetime: 0,
+            messageCacheMaxSize: 0,
+            messageSweepInterval: 30
+        });
 
         this.client.on('ready', () =>{
 
