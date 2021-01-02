@@ -35,10 +35,10 @@ class UT2k4Query{
 
     tick(){
 
-        this.tickLoop = setInterval(() =>{
+        this.tickLoop = setInterval( () =>{
 
-            const now = Math.floor(Date.now() * 0.001);
-
+           const now = Math.floor(Date.now() * 0.001);
+            
             let newResponses = [];
 
             for(let i = 0; i < this.responses.length; i++){
@@ -52,14 +52,16 @@ class UT2k4Query{
                         }
                     }
 
+                   // this.responses[i] = null;
                     continue;
                 }       
 
                 newResponses.push(this.responses[i]);
             }
-
+            
+            this.responses = null;
             this.responses = newResponses;
-
+            
             if(this.lastPingInterval === null || now - this.lastPingInterval >= config.serverInfoInterval){
                 this.pingInterval();
             }
@@ -220,6 +222,8 @@ class UT2k4Query{
 
     parsePacket(data, rinfo){
 
+        ////memory leak starts from here
+
         const byteOffset = 4;
 
         const packetType = data[4];
@@ -282,13 +286,14 @@ class UT2k4Query{
         const response = this.getMatchingResponse(rinfo.address, rinfo.port, true);
 
         if(response === null){
+            
             return;
         }
 
         byteOffset += 6;
 
         let portByte1 = data[byteOffset].toString(16);
-        let portByte2 = data[byteOffset].toString(16);
+        let portByte2 = data[byteOffset + 2].toString(16);
 
         let port = parseInt(`${portByte2}${portByte1}`,16);
 
@@ -318,6 +323,7 @@ class UT2k4Query{
 
        // console.log(response);
 
+       //memory leak after
         response.finishedStep();
 
 

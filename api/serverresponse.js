@@ -282,30 +282,31 @@ class ServerResponse{
             if(!this.bAuto){
 
                // console.log(`Not auto message id`);
-                this.channel.send(response);
+                await this.channel.send(response);
+                this.channel = null;
 
             }else{
 
                 const editMessageId = await this.servers.getServerAutoMessageId(address, this.port);
 
-                //console.log(`editMessageId = ${editMessageId}`);
-
-                //747557428442431540
                 
                 if(editMessageId !== null){
 
                     const message = await this.channel.messages.fetch(editMessageId);
 
                     message.edit(response);
+
+                    //message = null;
+                    //this.channel = null;
                     
                 }else{
 
-                    this.channel.send(response).then(async (msg) =>{
+                    this.channel.send(response).then((msg) =>{
 
                         try{
                             //console.log(msg);
-
-                            await this.servers.setAutoMessageId(address, this.port, msg.id);
+                            this.servers.setAutoMessageId(address, this.port, msg.id);
+                            this.servers = null;
                         }catch(err){
                             console.trace(err);
                         }   
@@ -328,23 +329,19 @@ class ServerResponse{
                 });
 
             }else{
-
                 console.trace(err);
-
-            }
-
-            
+            }        
         }
-
     }
 
 
-    async finishedStep(){
+     async finishedStep(){
 
+        
         try{
 
             if(this.type == 'basic'){
-
+                
                 this.bGotAllData = true;
                 this.bGotBasic = true;
 
@@ -358,10 +355,9 @@ class ServerResponse{
                 if(this.data.name !== undefined){
                     await this.servers.updateServerInfo(ip, this.port, this.data);
                 }
-
-                return;
+              // return;
             }
-
+           
             if(this.type == 'full'){
 
                 if(!this.bGotBasic){
@@ -375,7 +371,7 @@ class ServerResponse{
                         
                     }
 
-                    return;
+                   // return;
 
                 }else{
 
@@ -386,17 +382,16 @@ class ServerResponse{
                         this.bGotAllData = true;
                         this.sendFullResponse();
 
-                        return;
+                       // return;
 
-                    }else{
-                        //console.log('Waiting for the second players packet');
-                    }         
+                    }      
                 }
             }
-
+            
         }catch(err){
-            console.trace(err);
-        }
+           console.trace(err);
+       }
+        
     }
 }
 

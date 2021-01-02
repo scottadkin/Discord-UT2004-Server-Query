@@ -14,9 +14,11 @@ class Bot{
     constructor(){
 
         this.db = new Database().sqlite;
-        this.servers = new Servers(this.db);
-        this.roles = new Roles(this.db);
-        this.channels = new Channels(this.db, this.servers);
+        this.servers = new Servers();
+        this.roles = new Roles();
+        this.channels = new Channels(this.servers);
+
+        this.bDisabled = false;
 
         this.createClient();
     }
@@ -45,6 +47,13 @@ class Bot{
         });
 
         this.client.login(config.discordToken);
+    }
+
+    disconnect(){
+
+        console.log('disconnect');
+        this.bDisabled = true;
+        this.client.destroy();
     }
 
 
@@ -116,6 +125,7 @@ class Bot{
     async parseCommand(message){
 
         try{
+
             const text = message.content;
 
             if(text.startsWith(config.commandPrefix) && text.length > 1){

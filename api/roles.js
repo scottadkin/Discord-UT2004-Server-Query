@@ -1,12 +1,13 @@
 const Promise = require('promise');
 const config = require('./config.json');
+const Database = require('./database');
 
 
 class Roles{
 
-    constructor(db){
+    constructor(){
 
-        this.db = db;
+        this.db = new Database().sqlite;
     }
 
 

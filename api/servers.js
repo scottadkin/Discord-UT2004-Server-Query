@@ -2,12 +2,14 @@ const dns = require('dns');
 const Promise = require('promise');
 const config = require('./config.json');
 const Discord = require('discord.js');
+const Database = require('./database');
+
 
 class Servers{
 
-    constructor(db){    
+    constructor(){    
 
-        this.db = db;
+        this.db = new Database().sqlite;
 
     }
 
@@ -380,9 +382,9 @@ class Servers{
 
             const now = Math.floor(Date.now() * 0.001);
 
-            const vars = [data.name, data.currentPlayers, data.maxPlayers, data.map, data.gametype, now, ip, port];
+            //const vars = [data.name, data.currentPlayers, data.maxPlayers, data.map, data.gametype, now, ip, port];
 
-            this.db.run(query, vars, (err) =>{
+            this.db.run(query, [data.name, data.currentPlayers, data.maxPlayers, data.map, data.gametype, now, ip, port], (err) =>{
 
                 if(err) reject(err);
 
