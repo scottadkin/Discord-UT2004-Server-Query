@@ -255,6 +255,7 @@ class ServerResponse{
             :pushpin: Gametype **${this.data.gametype}**
             :map: Map **${this.data.map}**`;
 
+
             const teamFields = this.createTeamFields(totalTeams);
 
             let address = this.ip;
@@ -285,12 +286,19 @@ class ServerResponse{
 
                 const editMessageId = await this.servers.getServerAutoMessageId(address, this.port);
 
+                //console.log(editMessageId);
                 
                 if(editMessageId !== null){
 
                     const message = await this.channel.messages.fetch(editMessageId);
 
-                    message.edit(response);
+                    await message.edit(response)
+                    .then(() =>{
+                       // console.log('edit message');
+                    })
+                    .catch(err =>{
+                        console.log(err);
+                    });
 
                     //message = null;
                     //this.channel = null;
@@ -313,7 +321,9 @@ class ServerResponse{
 
         }catch(err){
 
-            if(this.bAuto){
+            console.trace(err);
+
+            /*if(this.bAuto){
 
                 this.channel.send(this.response).then(async (msg) =>{
 
@@ -326,7 +336,7 @@ class ServerResponse{
 
             }else{
                 console.trace(err);
-            }        
+            }   */     
         }
     }
 
