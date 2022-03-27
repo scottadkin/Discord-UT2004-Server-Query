@@ -1,5 +1,6 @@
 
-const dgram =  require("dgram");
+const dgram = require("dgram");
+const { Buffer } = require('buffer');
 
 
 class UT2K4Query{
@@ -32,6 +33,10 @@ class UT2K4Query{
             msg = this.removeServerResponse(msg);
             const responseId = msg[0];
             msg = this.removeResponseId(msg);
+            msg = this.removeServerId(msg);
+            msg = this.removeServerIp(msg);
+            msg = this.removeServerPort(msg);
+            msg = this.removeQueryPort(msg);
 
             if(responseId === 0){
                 this.parseBasicInfo(rinfo.address, rinfo.port, msg);
@@ -79,22 +84,107 @@ class UT2K4Query{
         return data.slice(1, data.length - 1);
     }
 
-    removeColorData(){
+    removeServerId(data){
+        return data.slice(4, data.length - 1);
+    }
+
+    removeServerIp(data){
+        return data.slice(1, data.length - 1);
+    }
+
+    removeServerPort(data){
+        return data.slice(4, data.length - 1);
+    }
+
+    removeQueryPort(data){
+        return data.slice(4, data.length - 1);
+    }
+
+    removeColorData(data){
+
+        for(let i = 0; i < data.length; i++){
+
+            const d = parseInt(data[i]);
+
+            if(d === 27){
+
+                const start = data.subarray(0, i);
+                const end = data.subarray(i + 4);
+
+                //console.log(`${start} ${end}`);
+
+                console.log(`Length was ${data.length}, length is now ${start.length + end.length}`);
+
+                const newBuffer = Buffer.concat([start, end], start.length + end.length);
+                return this.removeColorData(newBuffer);
+            }
+        }
+
+        return data;
+    }
+
+
+    getNextString(data){
+
+
+        const length = parseInt(data[0]);
+
+        console.log(`Length is ${length}`);
+
+        let buffer = [];
+        let i = 1;
+
+        for(; i < length; i++){
+
+            if(data[i] === 0) break;
+            
+            buffer.push(data[i]);
+        }
+
+        
+        const string = Buffer.from(buffer);
+        const newData = data.subarray(i + 1);
+
+        return {"string": string, "data": newData};
 
     }
 
-    parseBasicInfo(ip, port, content){
+    async parseBasicInfo(ip, port, content){
 
-        const test = content.slice(4, content.length -1);
 
-        let byteOffset = 4;
-
-        console.log(content[byteOffset]);
-        console.log(test[0]);
 
         console.log(`parsing basic info. For: ${ip}:${port - 1}`);
 
-        console.log(`${content}`);
+        const jsonData = JSON.parse(JSON.stringify(content));
+
+        
+
+        const noColorData = this.removeColorData(content);
+
+        console.log(JSON.parse(JSON.stringify(noColorData)));
+        console.log(`${noColorData}`);
+       // console.log(`${content}`);
+
+        //console.log(this.getNextString(noColorData));
+
+        let currentStringResult = this.getNextString(noColorData);
+        const serverName = currentStringResult.string;
+
+        console.log(`Server Name is ${serverName}`);
+
+        currentStringResult = this.getNextString(currentStringResult.data);
+
+        const mapName = currentStringResult.string;
+
+        console.log(`Map name is ${mapName}`);
+
+        currentStringResult = this.getNextString(currentStringResult.data);
+
+        const gametypeName = currentStringResult.string;
+
+        console.log(`Gametype name is ${gametypeName}`);
+        //console.log(`${this.getNextString(noColorData)}`);
+     
     }
 
 }
