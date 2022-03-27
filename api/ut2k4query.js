@@ -23,27 +23,18 @@ class UT2K4Query{
         });
         
         this.server.on("message", (msg, rinfo) =>{
-        
-            //console.log(msg[0]);
-           // console.log(JSON.stringify(msg));
-            //console.log("message");
-           ///console.log(`${msg}`);
-           // console.log(rinfo);
 
             msg = this.removeServerResponse(msg);
             const responseId = msg[0];
-            msg = this.removeResponseId(msg);
-            msg = this.removeServerId(msg);
-            msg = this.removeServerIp(msg);
-            msg = this.removeServerPort(msg);
-            msg = this.removeQueryPort(msg);
 
-
-           
 
             if(responseId === 0){
-                console.log(this.parseBasicInfo(rinfo.address, rinfo.port, msg));
-            }else{
+
+                this.parseBasicInfo(rinfo.address, rinfo.port, msg);
+
+            }else if(responseId === 1){
+
+                this.parseServerInfo(rinfo.address, rinfo.port, msg);
                 console.log(`Unknown response id`);
             }
         });
@@ -55,14 +46,11 @@ class UT2K4Query{
         
         this.server.bind(13438);
         
-        //this.server.send(`\x80\x00\x00\x01`, testPort + 1, testIp);
     }
 
     fetchBasicInfo(ip, port){
 
         this.server.send(`\x80\x00\x00\x00`, port, ip);
-        //this.server.send(`\x80\x00\x00\x01`, port, ip);
-        //this.server.send(`\x80\x00\x00\x02`, port, ip);
     }
 
     fetchServerInfo(ip, port){
@@ -151,20 +139,23 @@ class UT2K4Query{
 
     }
 
+    removeJunkBasic(data){
 
-    async parseBasicInfo(ip, port, content){
+        data = this.removeResponseId(data);
+        data = this.removeServerId(data);
+        data = this.removeServerIp(data);
+        data = this.removeServerPort(data);
+        data = this.removeQueryPort(data);
+        data = this.removeColorData(data);
+
+        return data;
+    }
+
+    parseBasicInfo(ip, port, content){
 
 
-
-        console.log(`parsing basic info. For: ${ip}:${port - 1}`);
-
-        const jsonData = JSON.parse(JSON.stringify(content));
-
-
+        content = this.removeJunkBasic(content);
         
-
-        content = this.removeColorData(content);
-
         let currentStringResult = this.getNextString(content);
         const serverName = currentStringResult.string;
 
@@ -187,6 +178,8 @@ class UT2K4Query{
         const maxPlayers = parseInt(maxPlayerBytes[0]);
 
         return {
+            "ip": ip,
+            "port": port,
             "serverName": serverName,
             "mapName": mapName,
             "gametypeName": gametypeName,
