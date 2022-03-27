@@ -38,8 +38,11 @@ class UT2K4Query{
             msg = this.removeServerPort(msg);
             msg = this.removeQueryPort(msg);
 
+
+           
+
             if(responseId === 0){
-                this.parseBasicInfo(rinfo.address, rinfo.port, msg);
+                console.log(this.parseBasicInfo(rinfo.address, rinfo.port, msg));
             }else{
                 console.log(`Unknown response id`);
             }
@@ -111,10 +114,6 @@ class UT2K4Query{
                 const start = data.subarray(0, i);
                 const end = data.subarray(i + 4);
 
-                //console.log(`${start} ${end}`);
-
-                console.log(`Length was ${data.length}, length is now ${start.length + end.length}`);
-
                 const newBuffer = Buffer.concat([start, end], start.length + end.length);
                 return this.removeColorData(newBuffer);
             }
@@ -129,25 +128,29 @@ class UT2K4Query{
 
         const length = parseInt(data[0]);
 
-        console.log(`Length is ${length}`);
-
-        let buffer = [];
+        let string = "";
         let i = 1;
 
         for(; i < length; i++){
 
-            if(data[i] === 0) break;
+            const d = data[i];
+
+            if(d === 0) break;
+
+            //ignore whitespace chars
+            if(d < 32) continue;
+
             
-            buffer.push(data[i]);
+            string += String.fromCharCode(d);
         }
 
-        
-        const string = Buffer.from(buffer);
+
         const newData = data.subarray(i + 1);
 
         return {"string": string, "data": newData};
 
     }
+
 
     async parseBasicInfo(ip, port, content){
 
@@ -157,34 +160,39 @@ class UT2K4Query{
 
         const jsonData = JSON.parse(JSON.stringify(content));
 
+
         
 
-        const noColorData = this.removeColorData(content);
+        content = this.removeColorData(content);
 
-        console.log(JSON.parse(JSON.stringify(noColorData)));
-        console.log(`${noColorData}`);
-       // console.log(`${content}`);
-
-        //console.log(this.getNextString(noColorData));
-
-        let currentStringResult = this.getNextString(noColorData);
+        let currentStringResult = this.getNextString(content);
         const serverName = currentStringResult.string;
-
-        console.log(`Server Name is ${serverName}`);
 
         currentStringResult = this.getNextString(currentStringResult.data);
 
         const mapName = currentStringResult.string;
 
-        console.log(`Map name is ${mapName}`);
-
         currentStringResult = this.getNextString(currentStringResult.data);
 
         const gametypeName = currentStringResult.string;
 
-        console.log(`Gametype name is ${gametypeName}`);
-        //console.log(`${this.getNextString(noColorData)}`);
+        content = currentStringResult.data;
+
+        const playerCountBytes = content.subarray(0, 4);
+
+        content = content.subarray(4);
+        const maxPlayerBytes = content.subarray(0, 4);
      
+        const currentPlayers = parseInt(playerCountBytes[0]);
+        const maxPlayers = parseInt(maxPlayerBytes[0]);
+
+        return {
+            "serverName": serverName,
+            "mapName": mapName,
+            "gametypeName": gametypeName,
+            "players": {"current": currentPlayers, "max": maxPlayers}
+        };
+
     }
 
 }
