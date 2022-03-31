@@ -3,7 +3,7 @@ const { token } = require("./config.json");
 const UT2K4Query = require("./api/ut2k4query.js");
 //80.4.151.145
 //74.91.115.167
-const testIp = "74.91.115.167";
+const testIp = "80.4.151.145";
 const testPort = 7777;
 
 
@@ -19,6 +19,7 @@ const testServer = new UT2K4Query();
 
 testServer.fetchBasicInfo(testIp, testPort + 1);
 testServer.fetchGameInfo(testIp, testPort + 1);
+testServer.fetchPlayerInfo(testIp, testPort + 1);
 
 
 /*

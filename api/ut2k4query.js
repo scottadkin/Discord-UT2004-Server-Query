@@ -38,6 +38,10 @@ class UT2K4Query{
 
                 this.parseGameInfo(rinfo.address, rinfo.port, msg);
                 
+            }else if(responseId === 2){
+                
+                this.parsePlayerInfo(rinfo.address, rinfo.port, msg);
+
             }else{
 
                 console.log(`Unknown response id`);
@@ -212,7 +216,6 @@ class UT2K4Query{
             return;
         }
 
-        serverResponse.startTimer();
         content = this.removeJunkBasic(content);
 
         const info = serverResponse.serverInfo;
@@ -239,6 +242,7 @@ class UT2K4Query{
         info.players = {"players": currentPlayers, "maxPlayers": maxPlayers};
 
         console.log("check");
+        serverResponse.startTimer();
         serverResponse.receivedPacket(0);
        
 
@@ -270,8 +274,6 @@ class UT2K4Query{
             return;
         }
 
-        serverResponse.startTimer();
-
         while(content.length > 0){
 
             const {data, key, value} = this.getNextKeyValuePair(content);
@@ -285,8 +287,114 @@ class UT2K4Query{
             content = data;
         }
 
+        serverResponse.startTimer();
         serverResponse.receivedPacket(1);
 
+    }
+
+    getPlayerId(content){
+
+        const playerIdBytes = content.subarray(0, 4);
+
+        let id = 0;
+
+        for(let i = 0; i < playerIdBytes.length; i++){
+
+            if(playerIdBytes[i] !== 0){
+                id += parseInt(playerIdBytes[i]);
+            }else{
+                break;
+            }
+
+        }
+
+        return {"data": content.subarray(4), "playerId": id};
+    }
+
+    getPlayerPing(content){
+
+        let ping = 0;
+
+        const pingBytes = content.subarray(0, 4);
+
+        for(let i = 0; i < pingBytes.length; i++){
+            ping += parseInt(pingBytes[i]);
+        }
+
+        content = content.subarray(4);
+        return {"data": content, "ping": ping};
+    }
+
+    getPlayerScore(content){
+
+        let score = 0;
+
+        const scoreBytes = content.subarray(0, 4);
+
+        for(let i = 0; i < scoreBytes.length; i++){
+            score += parseInt(scoreBytes[i]);
+        }
+
+        content = content.subarray(4);
+        return {"data": content, "score": score};
+    }
+
+    getNextPlayer(content){
+
+        const player = {
+            "name": "",
+            "id": 0,
+            "ping": 0,
+            "score": 0
+        };
+
+        let result = this.getPlayerId(content);
+        player.id = result.playerId;
+
+        result = this.getNextString(result.data);
+
+        player.name = result.string;
+
+        result = this.getPlayerPing(result.data);
+
+        player.ping = result.ping;
+
+
+        result = this.getPlayerScore(result.data);
+        player.score = result.score;
+
+        content = result.data.subarray(4);
+
+        return {"data": content, "player": player};
+        
+    }
+
+    parsePlayerInfo(ip, port, content){
+
+        const serverResponse = this.serverResponses[`${ip}:${port}`];
+        
+        if(serverResponse === undefined){
+            console.log(`ut2kquery.parsePlayerInfo(${ip},${port}) response is undefined`);
+            return;
+        }
+
+        content = this.removeResponseId(content);
+
+        this.getNextPlayer(content);
+
+        while(content.length > 0){
+
+            const result = this.getNextPlayer(content);
+
+            content = result.data;
+            console.log(result.player);
+            serverResponse.players.push(result.player);
+        }
+
+
+        serverResponse.startTimer();
+        serverResponse.receivedPacket(2);
+        
     }
 }
 

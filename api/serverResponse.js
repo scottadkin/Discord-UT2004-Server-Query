@@ -49,6 +49,8 @@ class ServerResponse{
 
         this.bFinished = false;
         this.packetsReceived = 0;
+
+        this.players = [];
         
         console.log("new server response");
 
