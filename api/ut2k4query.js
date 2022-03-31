@@ -67,6 +67,19 @@ class UT2K4Query{
         if(!this.bServerResponseActive(ip, port, type)){
 
             this.serverResponses[`${ip}:${port}${type}`] = new ServerResponse(ip, port, type);
+
+            const response = this.serverResponses[`${ip}:${port}${type}`];
+
+            response.events.on("finished", () =>{
+
+                console.log(response);
+            });
+
+            response.events.on("timeout", () =>{
+
+                console.log("TIMED OUT");
+            });
+
             console.log(`Need to create new response`);
         }else{
             console.log(`Already processing`);
@@ -261,7 +274,6 @@ class UT2K4Query{
         }
 
         serverResponse.packetsReceived++;
-        console.log(serverResponse);
 
     }
 }

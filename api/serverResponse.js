@@ -1,3 +1,6 @@
+const EventEmitter = require('events');
+class MyEmitter extends EventEmitter {}
+
 class ServerResponse{
 
     constructor(ip, port, type){
@@ -8,7 +11,9 @@ class ServerResponse{
         this.created = Date.now();
         this.lastPacket = Date.now();
 
-        this.timeout = 500;
+        this.initialTimeout = 1000;
+        //timeout between multiple packets of the game type
+        this.additionTimeout = 100;
         this.bTimedOut = false;
 
         this.serverInfo = {};
@@ -16,12 +21,15 @@ class ServerResponse{
             "mutators": []
         };
 
-        this.bCompleted = false;
+        this.bFinished = false;
         this.packetsReceived = 0;
         
         console.log(this);
 
         console.log("new server response");
+
+        this.events = new MyEmitter();
+
     }
 
 
@@ -29,13 +37,18 @@ class ServerResponse{
 
         const now = Date.now();
 
-        console.log(now - this.lastPacket);
-
         const diff = now - this.lastPacket;
+        
+        if(diff > (this.packetsReceived === 0) ? this.initialTimeout : this.additionTimeout){
 
-        if(diff > this.timeout){
+            if(this.packetsReceived === 0){
 
-            this.bTimedOut = true;
+                this.events.emit("timeout");
+                this.bTimedOut = true;
+            }else{
+                this.bFinished = true;
+                this.events.emit("finished");
+            }    
         }
 
         this.lastPacket = now;
