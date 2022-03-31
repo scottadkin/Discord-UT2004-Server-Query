@@ -20,6 +20,7 @@ const testServer = new UT2K4Query();
 testServer.fetchBasicInfo(testIp, testPort + 1);
 testServer.fetchGameInfo(testIp, testPort + 1);
 
+
 /*
 // Create a new client instance
 const client = new Client(discordOptions);

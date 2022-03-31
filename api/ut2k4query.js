@@ -270,6 +270,8 @@ class UT2K4Query{
             return;
         }
 
+        serverResponse.startTimer();
+
         while(content.length > 0){
 
             const {data, key, value} = this.getNextKeyValuePair(content);

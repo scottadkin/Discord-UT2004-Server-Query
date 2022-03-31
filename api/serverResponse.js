@@ -5,7 +5,7 @@ class ServerResponse{
 
     constructor(ip, port, type){
 
-        if(type === "basic"){
+        /*if(type === "basic"){
 
             this.requireBasic = true;
             this.requireGame = false;
@@ -24,7 +24,7 @@ class ServerResponse{
             this.requireBasic = true;
             this.requireGame = false;
             this.requirePlayers = true;
-        }
+        }*/
 
 
         this.receivedBasic = false;
@@ -62,7 +62,8 @@ class ServerResponse{
     startTimer(){
 
         if(this.timer !== undefined){
-            console.log(`Timer already running`);
+            this.lastPacket = Date.now();
+            //console.log(`Timer already running`);
             return;
         }
 
@@ -72,6 +73,8 @@ class ServerResponse{
 
             const now = Date.now();
             const diff = now - this.lastPacket;
+
+            console.log(diff);
     
             const timeoutLimit = (this.packetsReceived === 0) ? this.initialTimeout : this.additionTimeout;
 
@@ -85,11 +88,9 @@ class ServerResponse{
                 this.events.emit("timeout");
             }else{
                 this.events.emit("finished");
-            }
-
-            
+            }        
    
-        }, 100);
+        }, 50);
     }
 
     receivedPacket(responseId){
