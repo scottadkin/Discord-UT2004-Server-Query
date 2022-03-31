@@ -31,7 +31,7 @@ class UT2K4Query{
 
             if(responseId === 0){
 
-                console.log(this.parseBasicInfo(rinfo.address, rinfo.port, msg));
+                this.parseBasicInfo(rinfo.address, rinfo.port, msg);
 
             }else if(responseId === 1){
 
@@ -53,9 +53,9 @@ class UT2K4Query{
     }
     
 
-    bServerResponseActive(ip, port, type){
+    bServerResponseActive(ip, port){
 
-        if(this.serverResponses[`${ip}:${port}${type}`] === undefined){
+        if(this.serverResponses[`${ip}:${port}`] === undefined){
             return false;
         }
 
@@ -66,12 +66,12 @@ class UT2K4Query{
 
         if(!this.bServerResponseActive(ip, port, type)){
 
-            this.serverResponses[`${ip}:${port}${type}`] = new ServerResponse(ip, port, type);
+            this.serverResponses[`${ip}:${port}`] = new ServerResponse(ip, port, type);
 
-            const response = this.serverResponses[`${ip}:${port}${type}`];
+            const response = this.serverResponses[`${ip}:${port}`];
 
             response.events.on("finished", () =>{
-
+                console.log(`I finished`);
                 console.log(response);
             });
 
@@ -99,6 +99,7 @@ class UT2K4Query{
     }
 
     fetchPlayerInfo(ip, port){
+        this.createNewServerResponse(ip, port, "players");
         this.server.send(`\x80\x00\x00\x02`, port, ip);
     }
 
@@ -197,21 +198,29 @@ class UT2K4Query{
     parseBasicInfo(ip, port, content){
 
 
+        const serverResponse = this.serverResponses[`${ip}:${port}`];
+
+        if(serverResponse === undefined){
+
+            console.log(`ut2kquery.parseBasicInfo(${ip},${port}) response is undefined`);
+            return;
+        }
+
         content = this.removeJunkBasic(content);
-        
+
+        const info = serverResponse.serverInfo;
+
         let currentStringResult = this.getNextString(content);
-        const serverName = currentStringResult.string;
+        info.name = currentStringResult.string;
 
         currentStringResult = this.getNextString(currentStringResult.data);
-
-        const mapName = currentStringResult.string;
-
+        info.map = currentStringResult.string;
+        
         currentStringResult = this.getNextString(currentStringResult.data);
 
-        const gametypeName = currentStringResult.string;
+        info.gametype = currentStringResult.string;
 
         content = currentStringResult.data;
-
         const playerCountBytes = content.subarray(0, 4);
 
         content = content.subarray(4);
@@ -220,14 +229,11 @@ class UT2K4Query{
         const currentPlayers = parseInt(playerCountBytes[0]);
         const maxPlayers = parseInt(maxPlayerBytes[0]);
 
-        return {
-            "ip": ip,
-            "port": port,
-            "serverName": serverName,
-            "mapName": mapName,
-            "gametypeName": gametypeName,
-            "players": {"current": currentPlayers, "max": maxPlayers}
-        };
+        info.players = {"players": currentPlayers, "maxPlayers": maxPlayers};
+
+        serverResponse.receivedPacket(0);
+        console.log("check");
+
     }
 
     getNextKeyValuePair(content){
@@ -247,21 +253,17 @@ class UT2K4Query{
 
     parseGameInfo(ip, port, content){
 
-        const debugData = JSON.parse(JSON.stringify(content)).data;
         content = this.removeResponseId(content);
 
-        const serverResponse = this.serverResponses[`${ip}:${port}game`];
-        serverResponse.receivedPacket();
-
+        const serverResponse = this.serverResponses[`${ip}:${port}`];
+        
         if(serverResponse === undefined){
-            console.log(`ut2kquery.parseGameInfo(${ip},${port}) gameinfo is undefined`);
+            console.log(`ut2kquery.parseGameInfo(${ip},${port}) response is undefined`);
             return;
         }
 
         while(content.length > 0){
 
-            //console.log(content);
-            //console.log(JSON.parse(JSON.stringify(content)).data);
             const {data, key, value} = this.getNextKeyValuePair(content);
 
             if(key.toLowerCase() !== "mutator"){
@@ -273,7 +275,7 @@ class UT2K4Query{
             content = data;
         }
 
-        serverResponse.packetsReceived++;
+        serverResponse.receivedPacket(1);
 
     }
 }
