@@ -12,6 +12,7 @@ class UT2K4Query{
 
         this.createServerEvents();
 
+        this.pendingResponses = [];
         this.serverResponses = {};
     }
 
@@ -70,18 +71,23 @@ class UT2K4Query{
 
             const response = this.serverResponses[`${ip}:${port}`];
 
-            response.events.on("finished", () =>{
+            console.log(Date.now());
+            response.events.once("finished", () =>{
+                console.log(Date.now());
                 console.log(`I finished`);
                 console.log(response);
             });
 
-            response.events.on("timeout", () =>{
+            response.events.once("timeout", () =>{
 
                 console.log("TIMED OUT");
             });
 
             console.log(`Need to create new response`);
         }else{
+
+            this.pendingResponses.push({"ip": ip, "port": port, "type": type});
+
             console.log(`Already processing`);
         }
         
@@ -206,6 +212,7 @@ class UT2K4Query{
             return;
         }
 
+        serverResponse.startTimer();
         content = this.removeJunkBasic(content);
 
         const info = serverResponse.serverInfo;
@@ -231,8 +238,9 @@ class UT2K4Query{
 
         info.players = {"players": currentPlayers, "maxPlayers": maxPlayers};
 
-        serverResponse.receivedPacket(0);
         console.log("check");
+        serverResponse.receivedPacket(0);
+       
 
     }
 

@@ -54,18 +54,19 @@ class ServerResponse{
 
         this.events = new MyEmitter();
 
-        this.startTimer();
+        //this.startTimer();
 
     }
 
 
     startTimer(){
 
-        this.timer = setInterval(() =>{
+        if(this.timer !== undefined){
+            console.log(`Timer already running`);
+            return;
+        }
 
-            if(this.bFinished){
-                clearInterval(this.timer);
-            }
+        this.timer = setInterval(() =>{
 
             console.log(`I received ${this.packetsReceived} packets`);
 
@@ -76,16 +77,14 @@ class ServerResponse{
 
 
             if(diff > timeoutLimit){
-                clearInterval(this.timer);
+                clearInterval(this.timer)
             }
 
             if(diff > this.initialTimeout){
 
                 this.events.emit("timeout");
-                this.bFinished = true;
             }else{
                 this.events.emit("finished");
-                this.bFinished = true;
             }
 
             
