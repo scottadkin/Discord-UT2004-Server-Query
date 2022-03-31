@@ -1,6 +1,7 @@
 
 const dgram = require("dgram");
-const { Buffer } = require('buffer');
+const { Buffer } = require("buffer");
+const ServerResponse = require("./serverResponse");
 
 
 class UT2K4Query{
@@ -11,7 +12,7 @@ class UT2K4Query{
 
         this.createServerEvents();
 
-        this.pendingData = [];
+        this.serverResponses = {};
     }
 
     createServerEvents(){
@@ -50,13 +51,37 @@ class UT2K4Query{
         this.server.bind(13438);
         
     }
+    
+
+    bServerResponseActive(ip, port, type){
+
+        if(this.serverResponses[`${ip}:${port}${type}`] === undefined){
+            return false;
+        }
+
+        return true;
+    }
+
+    createNewServerResponse(ip, port, type){
+
+        if(!this.bServerResponseActive(ip, port, type)){
+
+            this.serverResponses[`${ip}:${port}${type}`] = new ServerResponse(ip, port, type);
+            console.log(`Need to create new response`);
+        }else{
+            console.log(`Already processing`);
+        }
+        
+    }
 
     fetchBasicInfo(ip, port){
 
+        this.createNewServerResponse(ip, port, "basic");
         this.server.send(`\x80\x00\x00\x00`, port, ip);
     }
 
     fetchGameInfo(ip, port){
+        this.createNewServerResponse(ip, port, "game");
         this.server.send(`\x80\x00\x00\x01`, port, ip);
     }
 
@@ -100,7 +125,7 @@ class UT2K4Query{
 
             const d = parseInt(data[i]);
 
-            if(d === 27){
+            if(d === 27 && i !== 0){
 
                 const start = data.subarray(0, i);
                 const end = data.subarray(i + 4);
@@ -209,13 +234,16 @@ class UT2K4Query{
 
     parseGameInfo(ip, port, content){
 
+        const debugData = JSON.parse(JSON.stringify(content)).data;
         content = this.removeResponseId(content);
 
-        console.log(`${content}`);
+        const serverResponse = this.serverResponses[`${ip}:${port}game`];
+        serverResponse.receivedPacket();
 
-        //const test = this.getNextKeyValuePair(content);
-
-       // console.log(test);
+        if(serverResponse === undefined){
+            console.log(`ut2kquery.parseGameInfo(${ip},${port}) gameinfo is undefined`);
+            return;
+        }
 
         while(content.length > 0){
 
@@ -223,12 +251,17 @@ class UT2K4Query{
             //console.log(JSON.parse(JSON.stringify(content)).data);
             const {data, key, value} = this.getNextKeyValuePair(content);
 
-            console.log(`${key} = ${value}`);
-
-
+            if(key.toLowerCase() !== "mutator"){
+                serverResponse.gameInfo[key] = value;
+            }else{
+                serverResponse.gameInfo.mutators.push(value);
+            }
 
             content = data;
         }
+
+        serverResponse.packetsReceived++;
+        console.log(serverResponse);
 
     }
 }

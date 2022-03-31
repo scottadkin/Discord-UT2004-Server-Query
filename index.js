@@ -1,8 +1,9 @@
 const { Client, Intents } = require("discord.js");
 const { token } = require("./config.json");
 const UT2K4Query = require("./api/ut2k4query.js");
-
-const testIp = "80.4.151.145";
+//80.4.151.145
+//74.91.115.167
+const testIp = "74.91.115.167";
 const testPort = 7777;
 
 
