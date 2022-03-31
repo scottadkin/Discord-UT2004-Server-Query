@@ -30,11 +30,14 @@ class UT2K4Query{
 
             if(responseId === 0){
 
-                this.parseBasicInfo(rinfo.address, rinfo.port, msg);
+                console.log(this.parseBasicInfo(rinfo.address, rinfo.port, msg));
 
             }else if(responseId === 1){
 
-                this.parseServerInfo(rinfo.address, rinfo.port, msg);
+                this.parseGameInfo(rinfo.address, rinfo.port, msg);
+                
+            }else{
+
                 console.log(`Unknown response id`);
             }
         });
@@ -53,7 +56,7 @@ class UT2K4Query{
         this.server.send(`\x80\x00\x00\x00`, port, ip);
     }
 
-    fetchServerInfo(ip, port){
+    fetchGameInfo(ip, port){
         this.server.send(`\x80\x00\x00\x01`, port, ip);
     }
 
@@ -67,28 +70,28 @@ class UT2K4Query{
 
     removeServerResponse(data){
 
-        return data.slice(4, data.length - 1);
+        return data.subarray(4, data.length - 1);
     }
 
     removeResponseId(data){
 
-        return data.slice(1, data.length - 1);
+        return data.subarray(1, data.length - 1);
     }
 
     removeServerId(data){
-        return data.slice(4, data.length - 1);
+        return data.subarray(4, data.length - 1);
     }
 
     removeServerIp(data){
-        return data.slice(1, data.length - 1);
+        return data.subarray(1, data.length - 1);
     }
 
     removeServerPort(data){
-        return data.slice(4, data.length - 1);
+        return data.subarray(4, data.length - 1);
     }
 
     removeQueryPort(data){
-        return data.slice(4, data.length - 1);
+        return data.subarray(4, data.length - 1);
     }
 
     removeColorData(data){
@@ -106,6 +109,8 @@ class UT2K4Query{
                 return this.removeColorData(newBuffer);
             }
         }
+        
+ 
 
         return data;
     }
@@ -124,9 +129,9 @@ class UT2K4Query{
             const d = data[i];
 
             if(d === 0) break;
-
+   
             //ignore whitespace chars
-            if(d < 32) continue;
+            if(d < 32 || d === 255) continue;
 
             
             string += String.fromCharCode(d);
@@ -185,9 +190,47 @@ class UT2K4Query{
             "gametypeName": gametypeName,
             "players": {"current": currentPlayers, "max": maxPlayers}
         };
+    }
+
+    getNextKeyValuePair(content){
+
+
+        let currentResult = this.getNextString(content);
+
+        const key = currentResult.string;
+
+        currentResult = this.getNextString(currentResult.data);
+
+        const value = currentResult.string;
+
+        return {"data": currentResult.data, "key": key, "value": value};
 
     }
 
+    parseGameInfo(ip, port, content){
+
+        content = this.removeResponseId(content);
+
+        console.log(`${content}`);
+
+        //const test = this.getNextKeyValuePair(content);
+
+       // console.log(test);
+
+        while(content.length > 0){
+
+            //console.log(content);
+            //console.log(JSON.parse(JSON.stringify(content)).data);
+            const {data, key, value} = this.getNextKeyValuePair(content);
+
+            console.log(`${key} = ${value}`);
+
+
+
+            content = data;
+        }
+
+    }
 }
 
 module.exports = UT2K4Query;
