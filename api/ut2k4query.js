@@ -320,6 +320,29 @@ class UT2K4Query{
 
     }
 
+
+    getPlayerTeam(bytes){
+
+
+        let teamValue = 0;
+
+        if(bytes.length === 2){
+
+            teamValue = bytes[1];
+        }else{
+            teamValue = bytes[3];
+        }
+
+
+
+        //0 is red team
+        //64 is blue team
+        //32 is spectator
+
+        return parseInt(teamValue);
+    }
+
+
     getNextPlayer(content){
 
         const player = {
@@ -345,15 +368,11 @@ class UT2K4Query{
 
         result = this.getBytes(result.data, 4, true);
         player.score = result.value;
-
-        //content = result.data;
-        //console.log(result.data);
-
-        //result = this.getPlayerTeam(result.data);
-
+        
         result = this.getBytes(result.data, 4, false);
 
-        console.log(result.value);
+        const playerTeam = this.getPlayerTeam(result.value);
+        player.team = playerTeam;
 
         content = result.data;
 
@@ -384,8 +403,7 @@ class UT2K4Query{
             serverResponse.players.push(result.player);
         }
 
-
-        /*serverResponse.players.sort((a, b) =>{
+        serverResponse.players.sort((a, b) =>{
 
             a = a.score;
             b = b.score;
@@ -397,7 +415,7 @@ class UT2K4Query{
             }
 
             return 0;
-        });*/
+        });
 
         serverResponse.startTimer();
         serverResponse.receivedPacket(2);
