@@ -250,7 +250,6 @@ class UT2K4Query{
 
     getNextKeyValuePair(content){
 
-
         let currentResult = this.getNextString(content);
 
         const key = currentResult.string;
@@ -262,6 +261,8 @@ class UT2K4Query{
         return {"data": currentResult.data, "key": key, "value": value};
 
     }
+
+
 
     parseGameInfo(ip, port, content){
 
@@ -292,51 +293,31 @@ class UT2K4Query{
 
     }
 
-    getPlayerId(content){
 
-        const playerIdBytes = content.subarray(0, 4);
+    getBytes(data, totalBytes, bSumBytes){
 
-        let id = 0;
+        bSumBytes = bSumBytes ?? false;
 
-        for(let i = 0; i < playerIdBytes.length; i++){
+        let total = 0;
 
-            if(playerIdBytes[i] !== 0){
-                id += parseInt(playerIdBytes[i]);
-            }else{
-                break;
+        const selectedBytes = data.subarray(0, totalBytes);
+
+        if(bSumBytes){
+
+            if(selectedBytes.length === 4){
+
+                total = selectedBytes.readInt32LE(0); 
+
+            }else if(selectedBytes.length === 2){
+
+                total = selectedBytes.readInt16LE(0);
             }
-
         }
 
-        return {"data": content.subarray(4), "playerId": id};
-    }
+        data = data.subarray(totalBytes);
 
-    getPlayerPing(content){
+        return {"data": data, "value": (bSumBytes) ? total : selectedBytes};
 
-        let ping = 0;
-
-        const pingBytes = content.subarray(0, 4);
-
-        for(let i = 0; i < pingBytes.length; i++){
-            ping += parseInt(pingBytes[i]);
-        }
-
-        content = content.subarray(4);
-        return {"data": content, "ping": ping};
-    }
-
-    getPlayerScore(content){
-
-        let score = 0;
-
-        const scoreBytes = content.subarray(0, 4);
-
-        for(let i = 0; i < scoreBytes.length; i++){
-            score += parseInt(scoreBytes[i]);
-        }
-
-        content = content.subarray(4);
-        return {"data": content, "score": score};
     }
 
     getNextPlayer(content){
@@ -345,25 +326,37 @@ class UT2K4Query{
             "name": "",
             "id": 0,
             "ping": 0,
-            "score": 0
+            "score": 0,
+            "team": 0
         };
 
-        let result = this.getPlayerId(content);
-        player.id = result.playerId;
+        //let result = this.getPlayerId(content);
+        let result = this.getBytes(content, 4, true);
+        player.id = result.value;
 
         result = this.getNextString(result.data);
 
         player.name = result.string;
 
-        result = this.getPlayerPing(result.data);
+        result = this.getBytes(result.data, 4, true);
 
-        player.ping = result.ping;
+        player.ping = result.value;
 
 
-        result = this.getPlayerScore(result.data);
-        player.score = result.score;
+        result = this.getBytes(result.data, 4, true);
+        player.score = result.value;
 
-        content = result.data.subarray(4);
+        //content = result.data;
+        //console.log(result.data);
+
+        //result = this.getPlayerTeam(result.data);
+
+        result = this.getBytes(result.data, 4, false);
+
+        console.log(result.value);
+
+        content = result.data;
+
 
         return {"data": content, "player": player};
         
@@ -387,10 +380,24 @@ class UT2K4Query{
             const result = this.getNextPlayer(content);
 
             content = result.data;
-            console.log(result.player);
+         
             serverResponse.players.push(result.player);
         }
 
+
+        /*serverResponse.players.sort((a, b) =>{
+
+            a = a.score;
+            b = b.score;
+
+            if(a < b){
+                return 1;
+            }else if(a > b){
+                return -1;
+            }
+
+            return 0;
+        });*/
 
         serverResponse.startTimer();
         serverResponse.receivedPacket(2);
