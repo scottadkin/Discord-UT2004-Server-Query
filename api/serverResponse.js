@@ -5,27 +5,7 @@ class ServerResponse{
 
     constructor(ip, port, type){
 
-        /*if(type === "basic"){
-
-            this.requireBasic = true;
-            this.requireGame = false;
-            this.requirePlayers = false;
-        }
-
-        if(type === "game"){
-
-            this.requireBasic = false;
-            this.requireGame = true;
-            this.requirePlayers = false;
-        }
-
-        if(type === "players"){
-
-            this.requireBasic = true;
-            this.requireGame = false;
-            this.requirePlayers = true;
-        }*/
-
+        this.bSinglePacketOnly = (type === "basic") ? true : false;
 
         this.receivedBasic = false;
         this.receivedGame = false;
@@ -34,13 +14,14 @@ class ServerResponse{
         this.ip = ip;
         this.port = port;
         this.type = type;
-        this.created = Date.now();
-        this.lastPacket = Date.now();
+        this.timeAlive = 0;
 
         this.initialTimeout = 1000;
         //timeout between multiple packets of the game type
         this.additionTimeout = 100;
-        this.bTimedOut = false;
+        
+        this.created = Date.now();
+        this.lastPacket = Date.now();
 
         this.serverInfo = {};
         this.gameInfo = {
@@ -51,48 +32,57 @@ class ServerResponse{
         this.packetsReceived = 0;
 
         this.players = [];
-        
-        console.log("new server response");
 
         this.events = new MyEmitter();
+
+
+        this.bCanTick = false;
+
+        this.bSentMessageToDiscord = false;
 
         //this.startTimer();
 
     }
 
 
-    startTimer(){
+    enableTick(){
+        this.bCanTick = true;
+    }
 
-        if(this.timer !== undefined){
-            this.lastPacket = Date.now();
-            //console.log(`Timer already running`);
+
+    tick(){
+
+        if(!this.bCanTick) return;
+
+        if(this.bFinished) return;
+
+
+        console.log(`I received ${this.packetsReceived} packets`);
+
+        const now = Date.now();
+        const diff = now - this.lastPacket;
+
+        console.log(diff);
+
+        const timeoutLimit = (this.packetsReceived === 0) ? this.initialTimeout : this.additionTimeout;
+
+
+        if(diff > timeoutLimit){
+            this.bFinished = true;
+            this.events.emit("finished");
             return;
         }
 
-        this.timer = setInterval(() =>{
+        if(diff > this.initialTimeout){ 
+            this.bFinished = true;
+            this.events.emit("timeout");
+        }else{
+            this.bFinished = true;
+            this.events.emit("finished");
+        }        
 
-            console.log(`I received ${this.packetsReceived} packets`);
+        this.lastPacket = now;
 
-            const now = Date.now();
-            const diff = now - this.lastPacket;
-
-            console.log(diff);
-    
-            const timeoutLimit = (this.packetsReceived === 0) ? this.initialTimeout : this.additionTimeout;
-
-
-            if(diff > timeoutLimit){
-                clearInterval(this.timer)
-            }
-
-            if(diff > this.initialTimeout){
-
-                this.events.emit("timeout");
-            }else{
-                this.events.emit("finished");
-            }        
-   
-        }, 50);
     }
 
     receivedPacket(responseId){
@@ -102,6 +92,11 @@ class ServerResponse{
         if(responseId === 2) this.receivedPlayers = true;
 
         const now = Date.now();
+
+        if(this.bSinglePacketOnly){
+            this.bFinished = true;
+            this.events.emit("finished");
+        }
 
         this.lastPacket = now;
         this.packetsReceived++;

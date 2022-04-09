@@ -2,6 +2,7 @@
 const dgram = require("dgram");
 const { Buffer } = require("buffer");
 const ServerResponse = require("./serverResponse");
+const ServerResponseQueue = require("./serverResponseQueue");
 
 
 class UT2K4Query{
@@ -12,8 +13,8 @@ class UT2K4Query{
 
         this.createServerEvents();
 
-        this.pendingResponses = [];
-        this.serverResponses = {};
+        //this.messages = new MessageResponseQueue();
+        this.serverResponses = new ServerResponseQueue();
     }
 
     createServerEvents(){
@@ -60,37 +61,43 @@ class UT2K4Query{
 
     bServerResponseActive(ip, port){
 
-        if(this.serverResponses[`${ip}:${port}`] === undefined){
+        if(this.serverResponses.getResponse(ip, port) === null){
             return false;
         }
 
         return true;
     }
 
+ 
     createNewServerResponse(ip, port, type){
 
         if(!this.bServerResponseActive(ip, port, type)){
 
-            this.serverResponses[`${ip}:${port}`] = new ServerResponse(ip, port, type);
+            //this.serverResponses[`${ip}:${port}`] = new ServerResponse(ip, port, type);
 
-            const response = this.serverResponses[`${ip}:${port}`];
+            const response = this.serverResponses.create(ip, port, type);
 
-            console.log(Date.now());
+           // const response = this.serverResponses[`${ip}:${port}`];
+
+            //console.log(Date.now());
+
             response.events.once("finished", () =>{
                 console.log(Date.now());
                 console.log(`I finished`);
                 console.log(response);
+                response.bSentMessageToDiscord = true;
             });
 
             response.events.once("timeout", () =>{
 
                 console.log("TIMED OUT");
+                response.bSentMessageToDiscord = true;
             });
 
             console.log(`Need to create new response`);
         }else{
 
-            this.pendingResponses.push({"ip": ip, "port": port, "type": type});
+            //const response = this.serverResponses.getResponse(ip, port, type);
 
             console.log(`Already processing`);
         }
@@ -207,14 +214,18 @@ class UT2K4Query{
 
     parseBasicInfo(ip, port, content){
 
+        console.log(`-----------`);
+        console.log(content);
 
-        const serverResponse = this.serverResponses[`${ip}:${port}`];
+        const serverResponse = this.serverResponses.getResponse(ip, port);
 
-        if(serverResponse === undefined){
+        if(serverResponse === null){
 
-            console.log(`ut2kquery.parseBasicInfo(${ip},${port}) response is undefined`);
+            console.log(`ut2kquery.parseBasicInfo(${ip},${port}) response is null`);
             return;
         }
+
+        console.log(`WOOOOOOOOF`);
 
         content = this.removeJunkBasic(content);
 
@@ -241,8 +252,7 @@ class UT2K4Query{
 
         info.players = {"players": currentPlayers, "maxPlayers": maxPlayers};
 
-        console.log("check");
-        serverResponse.startTimer();
+        serverResponse.enableTick();
         serverResponse.receivedPacket(0);
        
 
@@ -268,10 +278,11 @@ class UT2K4Query{
 
         content = this.removeResponseId(content);
 
-        const serverResponse = this.serverResponses[`${ip}:${port}`];
-        
-        if(serverResponse === undefined){
-            console.log(`ut2kquery.parseGameInfo(${ip},${port}) response is undefined`);
+        const serverResponse = this.serverResponses.getResponse(ip, port);
+
+        if(serverResponse === null){
+
+            console.log(`ut2kquery.parseGameInfo(${ip},${port}) response is null`);
             return;
         }
 
@@ -288,7 +299,7 @@ class UT2K4Query{
             content = data;
         }
 
-        serverResponse.startTimer();
+        serverResponse.enableTick();
         serverResponse.receivedPacket(1);
 
     }
@@ -383,10 +394,11 @@ class UT2K4Query{
 
     parsePlayerInfo(ip, port, content){
 
-        const serverResponse = this.serverResponses[`${ip}:${port}`];
-        
-        if(serverResponse === undefined){
-            console.log(`ut2kquery.parsePlayerInfo(${ip},${port}) response is undefined`);
+        const serverResponse = this.serverResponses.getResponse(ip, port);
+
+        if(serverResponse === null){
+
+            console.log(`ut2kquery.parsePlayerInfo(${ip},${port}) response is null`);
             return;
         }
 
@@ -417,7 +429,7 @@ class UT2K4Query{
             return 0;
         });
 
-        serverResponse.startTimer();
+        serverResponse.enableTick();
         serverResponse.receivedPacket(2);
         
     }
