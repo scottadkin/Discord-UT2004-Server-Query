@@ -18,16 +18,17 @@ class ServerResponse{
         this.type = type;
         this.timeAlive = 0;
 
-        this.initialTimeout = 1000;
+        this.initialTimeout = 2000;
         //timeout between multiple packets of the game type
-        this.additionTimeout = 100;
+        this.additionTimeout = 500;
         
         this.created = Date.now();
         this.lastPacket = Date.now();
 
         this.serverInfo = {};
         this.gameInfo = {
-            "mutators": []
+            "mutators": [],
+            "teamsInfo": []
         };
 
         this.bFinished = false;
@@ -71,6 +72,7 @@ class ServerResponse{
 
         if(diff > timeoutLimit){
             this.bFinished = true;
+            this.setTotalTeams();
             this.events.emit("finished");
             return;
         }
@@ -80,6 +82,7 @@ class ServerResponse{
             this.events.emit("timeout");
         }else{
             this.bFinished = true;
+            this.setTotalTeams();
             this.events.emit("finished");
         }        
 
@@ -94,9 +97,24 @@ class ServerResponse{
         for(let i = 0; i < this.players.length; i++){
 
             const p = this.players[i];
+            
+            //team names
+            if(p.id === 0){
+
+                this.gameInfo.teamsInfo.push({"name": p.name, "score": p.score});
+
+                continue;
+            }
 
             if(found.indexOf(p.team) === -1){
                 found.push(p.team);
+            }
+        }
+
+        if(found.length === 0){
+
+            if(this.gameInfo.teamsInfo.length > 0){
+                return this.gameInfo.teamsInfo.length;
             }
         }
 
@@ -106,38 +124,22 @@ class ServerResponse{
 
     receivedPacket(responseId){
 
-        if(responseId === 0) this.receivedBasic = true;
-        if(responseId === 1) this.receivedGame = true;
-        if(responseId === 2) this.receivedPlayers = true;
-
         const now = Date.now();
+
+        this.lastPacket = now;
+        this.packetsReceived++;
 
         if(this.bSinglePacketOnly){
             this.bFinished = true;
             this.events.emit("finished");
             return;
         }
-
-        if(this.type === "full"){
-
-            if(this.receivedBasic && this.receivedGame && this.receivedPlayers){
-
-                console.log("FULL FINISHED");
-                this.setTotalTeams();
-                this.bFinished = true;
-                this.events.emit("finished");
-                return;
-            }
-        }
-
-        this.lastPacket = now;
-        this.packetsReceived++;
+   
     }
 
 
     async sendFullReply(){
 
-        //await this.messageChannel.send("oink");
         const fullReply = new serverQueryMessage(this);
         await fullReply.send();
         this.bSentMessageToDiscord = true;

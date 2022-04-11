@@ -345,6 +345,7 @@ class UT2K4Query{
 
     getPlayerTeam(bytes){
 
+        console.log(bytes);
 
         let teamValue = 0;
 
@@ -396,6 +397,7 @@ class UT2K4Query{
 
         content = result.data;
 
+        console.log(player);
 
         return {"data": content, "player": player};
         

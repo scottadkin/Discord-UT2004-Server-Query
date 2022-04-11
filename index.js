@@ -4,9 +4,14 @@ const UT2K4Query = require("./api/ut2k4query");
 const serverQueryMessage = require("./api/serverQueryMessage");
 //80.4.151.145
 //74.91.115.167
+
 const testIp = "80.4.151.145";
 const testPort = 7777;
 
+const testIp2 = "74.91.115.167";
+const testIp3 = "81.30.148.30";
+
+const testPort2 = 32800;
 
 const discordOptions = { 
     "intents": [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
@@ -43,8 +48,22 @@ client.on("messageCreate", async message =>{
 
     if(message.content === "test"){
 
+        //testServer.fetchFullResponse(testIp, testPort + 1, message.channel);
         testServer.fetchFullResponse(testIp, testPort + 1, message.channel);
         //new serverQueryMessage(MessageEmbed, message.channel);
+    }
+
+    if(message.content === "test2"){
+        testServer.fetchFullResponse(testIp2, testPort + 1, message.channel);
+    }
+
+    if(message.content === "test3"){
+        testServer.fetchFullResponse(testIp3, testPort2 + 1, message.channel);
+    }
+
+    if(message.content === "test4"){
+        // /109.230.224.189:6969
+        testServer.fetchFullResponse("109.230.224.189", 6969 + 1, message.channel);
     }
 });
                       

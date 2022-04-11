@@ -22,7 +22,7 @@ class serverQueryMessage{
 
     createPlayerFields(){
 
-        if(this.serverResponse.players.length === 0){
+        if(this.serverResponse.players.length === 0 && this.serverResponse.gameInfo.teamsInfo.length === 0){
 
             return [
                 { "name": 'Players', "value": ':zzz: There are no players currently on the server.', "inline": false }
@@ -37,72 +37,127 @@ class serverQueryMessage{
             let bluePlayers = "";
             let spectators = "";
 
-            //0 is red team
+            //32 is red team
             //64 is blue team
-            //32 is spectator
-
-            //:first_place: :second_place: :third_place: :medal: 
+            //0 is spectator
 
             for(let i = 0; i < this.serverResponse.players.length; i++){
 
                 const p = this.serverResponse.players[i];
 
-                console.log(`${p.team} ${p.score}`);
-
                 let currentString = "";
 
-                if(p.team === 32){
-                
-                    currentString = `${p.name}`;
-
-                }else{
+                if(this.serverResponse.gameInfo.totalTeams > 1){
+                    //team names
+                    if(p.id === 0) continue;
 
                     if(p.team === 0){
+                    
+                        currentString = `${p.name}`;
 
-                        totalRedPlayers++;
+                    }else{
 
-                    }else if(p.team === 64){
-                        totalBluePlayers++;
+                        if(p.team === 32){
+
+                            totalRedPlayers++;
+
+                        }else if(p.team === 64){
+                            totalBluePlayers++;
+                        }
+
+                        const icon = this.getPlayerIcon((p.team === 32) ? totalRedPlayers : totalBluePlayers);
+
+                        currentString = `${icon} ${p.name} **${p.score}**\n`;
                     }
 
-                    const icon = this.getPlayerIcon((p.team === 0) ? totalRedPlayers : totalBluePlayers);
+                    if(p.team === 32){
+
+                        redPlayers += currentString;
+
+                    }else if(p.team === 64){
+
+                        bluePlayers += currentString;
+
+                    }else{
+
+                        if(spectators.length > 0) spectators += `, `;
+                        spectators += currentString;
+                    }
+                }
+
+                if(this.serverResponse.gameInfo.totalTeams <= 1){
+
+                    const icon = this.getPlayerIcon(i + 1);
 
                     currentString = `${icon} ${p.name} **${p.score}**\n`;
-                }
-
-                if(p.team === 0){
-
-                    //if(redPlayers.length > 0) redPlayers += `, `;
 
                     redPlayers += currentString;
-
-                }else if(p.team === 64){
-
-                    //if(bluePlayers.length > 0) bluePlayers += `, `;
-
-                    bluePlayers += currentString;
-
-                }else{
-
-                    if(spectators.length > 0) spectators += `, `;
-                    spectators += currentString;
                 }
+
             }
 
-            if(this.serverResponse.gameInfo.totalTeams > 1){
+            if(this.serverResponse.gameInfo.totalTeams > 1 || this.serverResponse.gameInfo.teamsInfo.length > 1){
 
-                return [
-                    { name: 'Red Team', "value": redPlayers, "inline": true },
-                    { name: 'Blue Team', "value": bluePlayers, "inline": true },
-                    { name: 'Spectators', "value": spectators, "inline": false },
+                if(redPlayers === "") redPlayers = "No Players.";
+                if(bluePlayers === "") bluePlayers = "No Players.";
+
+                const team1Info = this.serverResponse.gameInfo.teamsInfo[0] ?? null;
+                const team2Info = this.serverResponse.gameInfo.teamsInfo[1] ?? null;
+
+                let team1Title = "Red Team";
+                let team2Title = "Blue Team";
+
+                if(team1Info !== null){
+                    team1Title = `${team1Info.name} ${team1Info.score}`;
+                }
+
+                if(team1Info !== null){
+                    team2Title = `${team2Info.name} ${team2Info.score}`;
+                }
+
+                const fields = [
+                    { "name": `:red_square: ${team1Title}`, "value": redPlayers, "inline": true },
+                    { "name": `:blue_square: ${team2Title}`, "value": bluePlayers, "inline": true }
                 ];
+
+
+
+                if(spectators.length !== 0){
+                    fields.push({ name: ':eyes: Spectators', "value": spectators, "inline": false });
+                }
+
+                return fields;
+                    
+                
             }else{
+
+                let text = redPlayers /*+ bluePlayers + spectators*/;
+
+                if(text.length === 0) text = "No players online.";
     
                 return [
-                    {"name": "Users Online", "value": redPlayers + bluePlayers + spectators, "inline": false}
+                    {"name": "Users Online", "value": text, "inline": false}
                 ];
             }
         }   
+    }
+
+
+    getTotalPlayers(){
+
+        let found = 0;
+
+        for(let i = 0; i < this.serverResponse.players.length; i++){
+
+            const p = this.serverResponse.players[i];
+
+            //not a team name, and not a spectator
+            if(p.id !== 0 && p.team !== 0 || this.serverResponse.gameInfo.totalTeams === 1){
+                found++;
+            }
+        }
+
+        return found;
     }
 
 
@@ -115,7 +170,7 @@ class serverQueryMessage{
         .setTitle(name)
        // .setURL('https://discord.js.org/')
         .setAuthor({ "name": `${this.ip}:${this.port}`, iconURL: 'https://i.imgur.com/ihsPMOD.png', url: 'https://github.com/scottadkin/Discord-UT2004-Server-Query' })
-        .setDescription(`:video_game: Gametype **${gametype}**\n:map: Map **${map}**\n:technologist: Players **${players.players}/${players.maxPlayers}**`)
+        .setDescription(`:video_game: Gametype **${gametype}**\n:map: Map **${map}**\n:technologist: Players **${this.getTotalPlayers()}/${players.maxPlayers}**`)
         .setThumbnail('https://i.imgur.com/ihsPMOD.png')
         .addFields(this.createPlayerFields()
             //{ name: 'Regular field title', value: 'Some value here' },
@@ -125,8 +180,8 @@ class serverQueryMessage{
             //{ name: '**Join as Player:** <ut2004://www.google.com>', value: '\u200B', inline: false },
            // { name: '**Join as Spectator:** <ut2004://www.google.com>', value: '\u200B', inline: false },
         )
-        .addField(`Join Server`,`**<ut2004://www.google.com>**`, false)
-        .addField(`Join Server as Spectator`,`**<ut2004://www.google.com?spectatorOnly=1>**`, false)
+        .addField(`Join Server`,`**<ut2004://${this.ip}:${this.port}>**`, false)
+        .addField(`Join Server as Spectator`,`**<ut2004://${this.ip}:${this.port}?spectatorOnly=1>**`, false)
        // .addField('Inline field title', 'Some value here', true)
         //.setImage('https://i.imgur.com/ihsPMOD.png')
         .setTimestamp()
