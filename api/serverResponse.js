@@ -1,15 +1,17 @@
 const EventEmitter = require('events');
 class MyEmitter extends EventEmitter {}
+const serverQueryMessage = require("./serverQueryMessage");
 
 class ServerResponse{
 
-    constructor(ip, port, type){
+    constructor(ip, port, type, messageChannel){
 
         this.bSinglePacketOnly = (type === "basic") ? true : false;
 
         this.receivedBasic = false;
         this.receivedGame = false;
         this.receivedPlayers = false;
+        this.messageChannel = messageChannel;
 
         this.ip = ip;
         this.port = port;
@@ -96,10 +98,33 @@ class ServerResponse{
         if(this.bSinglePacketOnly){
             this.bFinished = true;
             this.events.emit("finished");
+            return;
+        }
+
+        if(this.type === "full"){
+
+            if(this.receivedBasic && this.receivedGame && this.receivedPlayers){
+
+                console.log("FULL FINISHED");
+
+                this.bFinished = true;
+                this.events.emit("finished");
+                return;
+            }
         }
 
         this.lastPacket = now;
         this.packetsReceived++;
+    }
+
+
+    async sendFullReply(){
+
+        //await this.messageChannel.send("oink");
+        const fullReply = new serverQueryMessage(this.messageChannel);
+        await fullReply.send();
+        this.bSentMessageToDiscord = true;
+
     }
 }
 

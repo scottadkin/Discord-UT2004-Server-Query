@@ -1,7 +1,14 @@
+const { MessageEmbed } = require("discord.js"); 
+
 class serverQueryMessage{
 
-    constructor(MessageEmbed, channel){
+    constructor(channel){
 
+
+        this.channel = channel;
+    }
+
+    async send(){
 
         const exampleEmbed = new MessageEmbed()
         .setColor('#0099ff')
@@ -24,7 +31,7 @@ class serverQueryMessage{
         .setTimestamp()
         .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
 
-        channel.send({"embeds": [exampleEmbed]});
+        await this.channel.send({"embeds": [exampleEmbed]});
     }
 }
 

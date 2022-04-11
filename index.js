@@ -18,9 +18,10 @@ const discordOptions = {
 
 const testServer = new UT2K4Query();
 
-testServer.fetchBasicInfo(testIp, testPort + 1);
+//testServer.fetchBasicInfo(testIp, testPort + 1);
 //testServer.fetchGameInfo(testIp, testPort + 1);
 //testServer.fetchPlayerInfo(testIp, testPort + 1);
+
 
 //setInterval(() =>{
  //   testServer.fetchBasicInfo(testIp, testPort + 1);
@@ -42,9 +43,10 @@ client.on("messageCreate", async message =>{
 
     if(message.content === "test"){
 
-        new serverQueryMessage(MessageEmbed, message.channel);
+        testServer.fetchFullResponse(testIp, testPort + 1, message.channel);
+        //new serverQueryMessage(MessageEmbed, message.channel);
     }
 });
-
+                      
 // Login to Discord with your client"s token
 client.login(token);

@@ -5,6 +5,7 @@ const ServerResponse = require("./serverResponse");
 const ServerResponseQueue = require("./serverResponseQueue");
 
 
+
 class UT2K4Query{
 
     constructor(){
@@ -69,23 +70,29 @@ class UT2K4Query{
     }
 
  
-    createNewServerResponse(ip, port, type){
+    createNewServerResponse(ip, port, type, messageChannel){
 
         if(!this.bServerResponseActive(ip, port, type)){
 
             //this.serverResponses[`${ip}:${port}`] = new ServerResponse(ip, port, type);
 
-            const response = this.serverResponses.create(ip, port, type);
+            const response = this.serverResponses.create(ip, port, type, messageChannel);
 
            // const response = this.serverResponses[`${ip}:${port}`];
 
             //console.log(Date.now());
 
-            response.events.once("finished", () =>{
+            response.events.once("finished", async () =>{
                 console.log(Date.now());
                 console.log(`I finished`);
                 console.log(response);
-                response.bSentMessageToDiscord = true;
+               // response.bSentMessageToDiscord = true;
+
+                if(response.type === "full"){
+
+                    //new serverQueryMessage();
+                    await response.sendFullReply();
+                }
             });
 
             response.events.once("timeout", () =>{
@@ -121,7 +128,16 @@ class UT2K4Query{
     }
 
     fetchServerInfoAndPlayerInfo(ip, port){
+        this.createNewServerResponse(ip, port, "sandp");
         this.server.send(`\x80\x00\x00\x03`, port, ip);
+    }
+
+    fetchFullResponse(ip, port, messageChannel){
+
+        this.createNewServerResponse(ip, port, "full", messageChannel);
+        this.server.send(`\x80\x00\x00\x00`, port, ip);
+        this.server.send(`\x80\x00\x00\x01`, port, ip);
+        this.server.send(`\x80\x00\x00\x02`, port, ip);
     }
 
     removeServerResponse(data){

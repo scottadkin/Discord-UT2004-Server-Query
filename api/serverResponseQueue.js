@@ -9,9 +9,9 @@ class ServerResponseQueue{
         this.startInterval();
     }
 
-    create(ip, port, type){
+    create(ip, port, type, messageChannel){
 
-        const response = new ServerResponse(ip, port, type);
+        const response = new ServerResponse(ip, port, type, messageChannel);
 
         this.responses.push(response);
         return response;
@@ -35,7 +35,6 @@ class ServerResponseQueue{
 
     deleteCompletedResponses(){
 
-        console.log("dewekkdfeofregju");
         if(this.responses.length === 0) return;
 
         const indexesToDelete = [];
@@ -50,7 +49,7 @@ class ServerResponseQueue{
 
         }
    
-        console.log(indexesToDelete);
+        //console.log(indexesToDelete);
 
         if(indexesToDelete.length > 0){
 
@@ -82,7 +81,7 @@ class ServerResponseQueue{
 
         this.interval = setInterval(() =>{
             //console.log("tick");
-            console.log(this.responses.length);
+            //console.log(this.responses.length);
             this.responseTick();
             this.deleteCompletedResponses();
         }, 50);
