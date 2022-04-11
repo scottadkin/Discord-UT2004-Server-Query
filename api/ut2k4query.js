@@ -230,9 +230,6 @@ class UT2K4Query{
 
     parseBasicInfo(ip, port, content){
 
-        console.log(`-----------`);
-        console.log(content);
-
         const serverResponse = this.serverResponses.getResponse(ip, port);
 
         if(serverResponse === null){
@@ -240,8 +237,6 @@ class UT2K4Query{
             console.log(`ut2kquery.parseBasicInfo(${ip},${port}) response is null`);
             return;
         }
-
-        console.log(`WOOOOOOOOF`);
 
         content = this.removeJunkBasic(content);
 
@@ -359,8 +354,6 @@ class UT2K4Query{
         }else{
             teamValue = bytes[3];
         }
-
-
 
         //0 is red team
         //64 is blue team

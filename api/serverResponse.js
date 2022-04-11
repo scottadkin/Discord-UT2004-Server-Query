@@ -87,6 +87,23 @@ class ServerResponse{
 
     }
 
+    setTotalTeams(){
+
+        let found = [];
+
+        for(let i = 0; i < this.players.length; i++){
+
+            const p = this.players[i];
+
+            if(found.indexOf(p.team) === -1){
+                found.push(p.team);
+            }
+        }
+
+        this.gameInfo.totalTeams = found.length;
+
+    }
+
     receivedPacket(responseId){
 
         if(responseId === 0) this.receivedBasic = true;
@@ -106,7 +123,7 @@ class ServerResponse{
             if(this.receivedBasic && this.receivedGame && this.receivedPlayers){
 
                 console.log("FULL FINISHED");
-
+                this.setTotalTeams();
                 this.bFinished = true;
                 this.events.emit("finished");
                 return;
@@ -121,7 +138,7 @@ class ServerResponse{
     async sendFullReply(){
 
         //await this.messageChannel.send("oink");
-        const fullReply = new serverQueryMessage(this.messageChannel);
+        const fullReply = new serverQueryMessage(this);
         await fullReply.send();
         this.bSentMessageToDiscord = true;
 
