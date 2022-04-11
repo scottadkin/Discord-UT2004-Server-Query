@@ -196,21 +196,28 @@ class UT2K4Query{
         let string = "";
         let i = 1;
 
-        for(; i < length; i++){
+        let d = 1;
 
-            const d = data[i];
 
-            if(d === 0) break;
+        while(d !== 0){
+
+            const d = parseInt(data[i]);
+
+            if(d !== d || d === 0) break;
+
+            if(d === 27){
+                i+=4;
+                continue;
+            }
    
-            //ignore whitespace chars
-            if(d < 32 || d === 255) continue;
-
-            
             string += String.fromCharCode(d);
+            i++;
         }
 
 
         const newData = data.subarray(i + 1);
+
+        console.log(`string =============================================== ${string}`);
 
         return {"string": string, "data": newData};
 
@@ -223,7 +230,7 @@ class UT2K4Query{
         data = this.removeServerIp(data);
         data = this.removeServerPort(data);
         data = this.removeQueryPort(data);
-        data = this.removeColorData(data);
+        //data = this.removeColorData(data);
 
         return data;
     }
@@ -241,7 +248,7 @@ class UT2K4Query{
         content = this.removeJunkBasic(content);
 
         const info = serverResponse.serverInfo;
-
+        console.log(content);
         let currentStringResult = this.getNextString(content);
         info.name = currentStringResult.string;
 
