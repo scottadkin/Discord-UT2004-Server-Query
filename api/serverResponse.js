@@ -20,7 +20,7 @@ class ServerResponse{
 
         this.initialTimeout = 2000;
         //timeout between multiple packets of the game type
-        this.additionTimeout = 500;
+        this.additionTimeout = 300;
         
         this.created = Date.now();
         this.lastPacket = Date.now();
@@ -39,7 +39,7 @@ class ServerResponse{
         this.events = new MyEmitter();
 
 
-        this.bCanTick = false;
+        this.bCanTick = true;
 
         this.bSentMessageToDiscord = false;
 
@@ -65,28 +65,26 @@ class ServerResponse{
         const now = Date.now();
         const diff = now - this.lastPacket;
 
-        console.log(diff);
+        if(this.packetsReceived === 0){
 
-        const timeoutLimit = (this.packetsReceived === 0) ? this.initialTimeout : this.additionTimeout;
+            if(diff > this.initialTimeout){
 
+                this.bFinished = true;
+                this.events.emit("timeout");
+                return;
+            }
 
-        if(diff > timeoutLimit){
-            this.bFinished = true;
-            this.setTotalTeams();
-            this.events.emit("finished");
-            return;
-        }
-
-        if(diff > this.initialTimeout){ 
-            this.bFinished = true;
-            this.events.emit("timeout");
         }else{
-            this.bFinished = true;
-            this.setTotalTeams();
-            this.events.emit("finished");
-        }        
 
-        this.lastPacket = now;
+            if(diff > this.additionTimeout){
+
+                this.bFinished = true;
+                this.setTotalTeams();
+                this.events.emit("finished");
+                return;
+
+            }
+        }
 
     }
 
@@ -122,7 +120,7 @@ class ServerResponse{
 
     }
 
-    receivedPacket(responseId){
+    receivedPacket(){
 
         const now = Date.now();
 
@@ -140,10 +138,22 @@ class ServerResponse{
 
     async sendFullReply(){
 
-        const fullReply = new serverQueryMessage(this);
-        await fullReply.send();
-        this.bSentMessageToDiscord = true;
+        if(this.packetsReceived > 0){
 
+            const fullReply = new serverQueryMessage(this);
+            await fullReply.send();
+
+        }
+
+        this.bSentMessageToDiscord = true;
+    }
+
+    async sendFailedReply(){
+
+        console.log("failed");
+        const failedReply = new serverQueryMessage(this);
+        await failedReply.sendTimedOut();
+        this.bSentMessageToDiscord = true;
     }
 }
 

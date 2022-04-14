@@ -65,6 +65,10 @@ client.on("messageCreate", async message =>{
         // /109.230.224.189:6969
         testServer.fetchFullResponse("109.230.224.189", 6969 + 1, message.channel);
     }
+
+    if(message.content === "broken"){
+        testServer.fetchFullResponse("1.1.1.1", 7778, message.channel);
+    }
 });
                       
 // Login to Discord with your client"s token

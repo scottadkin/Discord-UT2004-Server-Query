@@ -189,6 +189,24 @@ class serverQueryMessage{
 
         await this.channel.send({"embeds": [exampleEmbed]});
     }
+
+    async sendTimedOut(){
+
+        const failedEmbed = new MessageEmbed().setColor('#0099ff')
+        .setTitle(`${this.ip}:${this.port}`)
+       // .setURL('https://discord.js.org/')
+        .setAuthor({ "name": `${this.ip}:${this.port}`, iconURL: 'https://i.imgur.com/ihsPMOD.png', url: 'https://github.com/scottadkin/Discord-UT2004-Server-Query' })
+        .setDescription(`:warning: Server TimedOut.`)
+        .setThumbnail('https://i.imgur.com/ihsPMOD.png')
+        //.addField(`Join Server`,`**<ut2004://${this.ip}:${this.port}>**`, false)
+        //.addField(`Join Server as Spectator`,`**<ut2004://${this.ip}:${this.port}?spectatorOnly=1>**`, false)
+       // .addField('Inline field title', 'Some value here', true)
+        //.setImage('https://i.imgur.com/ihsPMOD.png')
+        .setTimestamp()
+        .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
+
+        await this.channel.send({"embeds": [failedEmbed]});
+    }
 }
 
 module.exports = serverQueryMessage;

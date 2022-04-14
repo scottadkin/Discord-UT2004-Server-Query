@@ -85,8 +85,10 @@ class UT2K4Query{
             response.events.once("finished", async () =>{
                 console.log(Date.now());
                 console.log(`I finished`);
-                console.log(response);
+                //console.log(response);
                // response.bSentMessageToDiscord = true;
+
+                console.log("check");
 
                 if(response.type === "full"){
 
@@ -95,10 +97,10 @@ class UT2K4Query{
                 }
             });
 
-            response.events.once("timeout", () =>{
+            response.events.once("timeout", async () =>{
 
                 console.log("TIMED OUT");
-                response.bSentMessageToDiscord = true;
+                await response.sendFailedReply();
             });
 
             console.log(`Need to create new response`);
@@ -203,12 +205,21 @@ class UT2K4Query{
 
             const d = parseInt(data[i]);
 
+           // console.log(`${d} ${ String.fromCharCode(d)}`);
+
             if(d !== d || d === 0) break;
 
             if(d === 27){
                 i+=4;
                 continue;
             }
+
+            if(d < 32){
+                i++;
+                continue;
+            }
+
+            
    
             string += String.fromCharCode(d);
             i++;
@@ -217,7 +228,7 @@ class UT2K4Query{
 
         const newData = data.subarray(i + 1);
 
-        console.log(`string =============================================== ${string}`);
+       // console.log(`string =============================================== ${string}`);
 
         return {"string": string, "data": newData};
 
@@ -248,7 +259,7 @@ class UT2K4Query{
         content = this.removeJunkBasic(content);
 
         const info = serverResponse.serverInfo;
-        console.log(content);
+        //console.log(content);
         let currentStringResult = this.getNextString(content);
         info.name = currentStringResult.string;
 
@@ -352,7 +363,7 @@ class UT2K4Query{
 
     getPlayerTeam(bytes){
 
-        console.log(bytes);
+       // console.log(bytes);
 
         let teamValue = 0;
 
@@ -404,7 +415,7 @@ class UT2K4Query{
 
         content = result.data;
 
-        console.log(player);
+        //console.log(player);
 
         return {"data": content, "player": player};
         

@@ -37,6 +37,8 @@ class ServerResponseQueue{
 
         if(this.responses.length === 0) return;
 
+        //console.log("DLETE COMPLETE RESPONSE");
+
         const indexesToDelete = [];
 
         for(let i = 0; i < this.responses.length; i++){
@@ -66,11 +68,15 @@ class ServerResponseQueue{
 
     responseTick(){
 
+        //console.log(this.responses.length);
+
         if(this.responses.length === 0) return;
 
         for(let i = 0; i < this.responses.length; i++){
 
             const r = this.responses[i];
+
+            //console.log("tick");
 
             r.tick();
 
