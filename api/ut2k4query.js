@@ -74,25 +74,15 @@ class UT2K4Query{
 
         if(!this.bServerResponseActive(ip, port, type)){
 
-            //this.serverResponses[`${ip}:${port}`] = new ServerResponse(ip, port, type);
 
             const response = this.serverResponses.create(ip, port, type, messageChannel);
 
-           // const response = this.serverResponses[`${ip}:${port}`];
-
-            //console.log(Date.now());
-
             response.events.once("finished", async () =>{
-                console.log(Date.now());
+                
                 console.log(`I finished`);
-                //console.log(response);
-               // response.bSentMessageToDiscord = true;
-
-                console.log("check");
 
                 if(response.type === "full"){
 
-                    //new serverQueryMessage();
                     await response.sendFullReply();
                 }
             });

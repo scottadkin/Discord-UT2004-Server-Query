@@ -2,6 +2,7 @@ const { Client, Intents, MessageEmbed } = require("discord.js");
 const { token } = require("./config.json");
 const UT2K4Query = require("./api/ut2k4query");
 const serverQueryMessage = require("./api/serverQueryMessage");
+const Functions = require("./api/functions");
 //80.4.151.145
 //74.91.115.167
 
@@ -44,7 +45,24 @@ client.once("ready", () => {
 
 client.on("messageCreate", async message =>{
 
-    console.log(message);
+    //console.log(message);
+
+    
+
+    if(Functions.bValidIp(message.content)){
+
+        console.log("ok");
+
+        const parts = message.content.split(":");
+
+        console.log(parts);
+
+        testServer.fetchFullResponse(parts[0], parseInt(parts[1]) + 1, message.channel);
+
+        
+        
+        return;
+    }
 
     if(message.content === "test"){
 
