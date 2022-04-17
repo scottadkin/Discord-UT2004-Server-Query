@@ -74,8 +74,9 @@ class UT2K4Query{
 
         if(!this.bServerResponseActive(ip, port, type)){
 
-
             const response = this.serverResponses.create(ip, port, type, messageChannel);
+
+            console.log(`Need to create new response`);
 
             response.events.once("finished", async () =>{
                 
@@ -93,43 +94,51 @@ class UT2K4Query{
                 await response.sendFailedReply();
             });
 
-            console.log(`Need to create new response`);
+            return true;
+
         }else{
 
-            //const response = this.serverResponses.getResponse(ip, port, type);
-
             console.log(`Already processing`);
+           // return false;
         }
-        
+        return false;
     }
 
     fetchBasicInfo(ip, port){
 
-        this.createNewServerResponse(ip, port, "basic");
-        this.server.send(`\x80\x00\x00\x00`, port, ip);
+        if(this.createNewServerResponse(ip, port, "basic")){
+            this.server.send(`\x80\x00\x00\x00`, port, ip);
+        }
     }
 
     fetchGameInfo(ip, port){
-        this.createNewServerResponse(ip, port, "game");
-        this.server.send(`\x80\x00\x00\x01`, port, ip);
+
+        if(this.createNewServerResponse(ip, port, "game")){
+            this.server.send(`\x80\x00\x00\x01`, port, ip);
+        }
     }
 
     fetchPlayerInfo(ip, port){
-        this.createNewServerResponse(ip, port, "players");
-        this.server.send(`\x80\x00\x00\x02`, port, ip);
+
+        if(this.createNewServerResponse(ip, port, "players")){
+            this.server.send(`\x80\x00\x00\x02`, port, ip);
+        }
     }
 
     fetchServerInfoAndPlayerInfo(ip, port){
-        this.createNewServerResponse(ip, port, "sandp");
-        this.server.send(`\x80\x00\x00\x03`, port, ip);
+
+        if(this.createNewServerResponse(ip, port, "sandp")){
+            this.server.send(`\x80\x00\x00\x03`, port, ip);
+        }
     }
 
     fetchFullResponse(ip, port, messageChannel){
 
-        this.createNewServerResponse(ip, port, "full", messageChannel);
-        this.server.send(`\x80\x00\x00\x00`, port, ip);
-        this.server.send(`\x80\x00\x00\x01`, port, ip);
-        this.server.send(`\x80\x00\x00\x02`, port, ip);
+        if(this.createNewServerResponse(ip, port, "full", messageChannel)){
+            this.server.send(`\x80\x00\x00\x00`, port, ip);
+            this.server.send(`\x80\x00\x00\x01`, port, ip);
+            this.server.send(`\x80\x00\x00\x02`, port, ip);
+        }
     }
 
     removeServerResponse(data){

@@ -45,22 +45,13 @@ client.once("ready", () => {
 
 client.on("messageCreate", async message =>{
 
-    //console.log(message);
-
-    
 
     if(Functions.bValidIp(message.content)){
 
-        console.log("ok");
-
         const parts = message.content.split(":");
-
-        console.log(parts);
 
         testServer.fetchFullResponse(parts[0], parseInt(parts[1]) + 1, message.channel);
 
-        
-        
         return;
     }
 
