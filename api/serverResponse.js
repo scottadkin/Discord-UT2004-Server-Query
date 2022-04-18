@@ -13,6 +13,8 @@ class ServerResponse{
         this.receivedPlayers = false;
         this.messageChannel = messageChannel;
 
+        this.listResponse = false;
+
         this.ip = ip;
         this.port = port;
         this.type = type;

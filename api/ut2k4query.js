@@ -1,7 +1,6 @@
 
 const dgram = require("dgram");
 const { Buffer } = require("buffer");
-const ServerResponse = require("./serverResponse");
 const ServerResponseQueue = require("./serverResponseQueue");
 
 
@@ -31,6 +30,8 @@ class UT2K4Query{
             msg = this.removeServerResponse(msg);
             const responseId = msg[0];
 
+            console.log(msg);
+            console.log(`${msg}`);
 
             if(responseId === 0){
 
@@ -69,6 +70,19 @@ class UT2K4Query{
         return true;
     }
 
+
+    createNewListResponse(messageChannel){
+
+        const response = this.serverResponses.createList(messageChannel);
+
+        for(let i = 0; i < response.servers.length; i++){
+
+            const s = response.servers[i];
+
+            this.fetchBasicInfo(s.ip, s.port + 1, true);
+        }
+    }
+
  
     createNewServerResponse(ip, port, type, messageChannel){
 
@@ -104,9 +118,13 @@ class UT2K4Query{
         return false;
     }
 
-    fetchBasicInfo(ip, port){
+    fetchBasicInfo(ip, port, bListResponse){
 
-        if(this.createNewServerResponse(ip, port, "basic")){
+        if(bListResponse === undefined) bListResponse = false;
+
+        if(this.createNewServerResponse(ip, port, "basic") && !bListResponse){
+            this.server.send(`\x80\x00\x00\x00`, port, ip);
+        }else{
             this.server.send(`\x80\x00\x00\x00`, port, ip);
         }
     }
@@ -247,6 +265,8 @@ class UT2K4Query{
 
     parseBasicInfo(ip, port, content){
 
+        console.log(`${ip}:${port}`);
+
         const serverResponse = this.serverResponses.getResponse(ip, port);
 
         if(serverResponse === null){
@@ -257,7 +277,7 @@ class UT2K4Query{
 
         content = this.removeJunkBasic(content);
 
-        const info = serverResponse.serverInfo;
+        const info = serverResponse.serverInfo ?? {};
         //console.log(content);
         let currentStringResult = this.getNextString(content);
         info.name = currentStringResult.string;
@@ -280,10 +300,19 @@ class UT2K4Query{
 
         info.players = {"players": currentPlayers, "maxPlayers": maxPlayers};
 
-        serverResponse.enableTick();
-        serverResponse.receivedPacket(0);
-       
+        if(!serverResponse.listResponse){
 
+            serverResponse.enableTick();
+            serverResponse.receivedPacket(0);
+
+        }else{
+
+            serverResponse.bFinished = true;
+            serverResponse.data = info;
+
+            console.log("test");
+        }
+      
     }
 
     getNextKeyValuePair(content){

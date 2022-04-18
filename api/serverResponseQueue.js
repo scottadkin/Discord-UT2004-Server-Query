@@ -1,4 +1,5 @@
 const ServerResponse = require("./serverResponse");
+const ServerListResponse = require("./serverListResponse");
 
 class ServerResponseQueue{
 
@@ -12,8 +13,16 @@ class ServerResponseQueue{
     create(ip, port, type, messageChannel){
 
         const response = new ServerResponse(ip, port, type, messageChannel);
-
         this.responses.push(response);
+
+        return response;
+    }
+
+    createList(messageChannel){
+
+        const response = new ServerListResponse(messageChannel);
+        this.responses.push(response);
+
         return response;
     }
 
@@ -24,9 +33,24 @@ class ServerResponseQueue{
         for(let i = 0; i < this.responses.length; i++){
 
             const r = this.responses[i];
-            console.log(`${r.ip}:${r.port}`);
-            if(r.ip === ip && r.port === port){
-                return r;
+
+            if(r.servers === undefined){
+
+                if(r.ip === ip && r.port === port){
+                    return r;
+                }
+
+            }else{
+
+                console.log("SERVER LIST RESPONSE");
+                //for server list responses
+                for(let x = 0; x < r.servers.length; x++){
+
+                    if(r.servers[x].ip === ip && r.servers[x].port === port - 1){
+                        console.log(`RESPONSE INDEX IS ${x}`);
+                        return r.servers[x];
+                    }
+                }
             }
         }
 

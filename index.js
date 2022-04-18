@@ -55,6 +55,16 @@ client.on("messageCreate", async message =>{
         return;
     }
 
+    if(message.content === "list"){
+
+        testServer.createNewListResponse(message.channel);
+    }
+
+    if(message.content === "basic"){
+
+        testServer.fetchBasicInfo(testIp, testPort + 1);
+    }
+
     if(message.content === "test"){
 
         //testServer.fetchFullResponse(testIp, testPort + 1, message.channel);
