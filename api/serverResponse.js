@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
 class MyEmitter extends EventEmitter {}
-const serverQueryMessage = require("./serverQueryMessage");
+const ServerQueryMessage = require("./serverQueryMessage");
 
 class ServerResponse{
 
@@ -142,7 +142,7 @@ class ServerResponse{
 
         if(this.packetsReceived > 0){
 
-            const fullReply = new serverQueryMessage(this);
+            const fullReply = new ServerQueryMessage(this);
             await fullReply.send();
 
         }
@@ -153,7 +153,7 @@ class ServerResponse{
     async sendFailedReply(){
 
         console.log("failed");
-        const failedReply = new serverQueryMessage(this);
+        const failedReply = new ServerQueryMessage(this);
         await failedReply.sendTimedOut();
         this.bSentMessageToDiscord = true;
     }

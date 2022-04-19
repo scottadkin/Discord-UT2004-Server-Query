@@ -61,8 +61,6 @@ class ServerResponseQueue{
 
         if(this.responses.length === 0) return;
 
-        //console.log("DLETE COMPLETE RESPONSE");
-
         const indexesToDelete = [];
 
         for(let i = 0; i < this.responses.length; i++){
@@ -74,8 +72,6 @@ class ServerResponseQueue{
             }
 
         }
-   
-        //console.log(indexesToDelete);
 
         if(indexesToDelete.length > 0){
 
