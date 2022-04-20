@@ -1,5 +1,5 @@
 const { Client, Intents, MessageEmbed } = require("discord.js");
-const { token } = require("./config.json");
+const { token, avatarImage } = require("./config.json");
 const UT2K4Query = require("./api/ut2k4query");
 const serverQueryMessage = require("./api/serverQueryMessage");
 const Functions = require("./api/functions");
@@ -40,6 +40,8 @@ const client = new Client(discordOptions);
 // When the client is ready, run this code (only once)
 client.once("ready", () => {
 	console.log("Ready!");
+
+    client.user.setAvatar(avatarImage);
 });
 
 client.on("error", (err) =>{
