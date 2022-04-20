@@ -11,7 +11,7 @@ class ServerListResponse{
 
         this.created = Date.now();
 
-        //125.63.61.53:7775
+        //	8.6.77.145:7777
 
         this.servers = [
             {"ip": "80.4.151.145", "port": 7777, "data": null, "bFinished": false, "listResponse": true},
@@ -20,6 +20,11 @@ class ServerListResponse{
             {"ip": "81.30.148.30", "port": 32800, "data": null, "bFinished": false, "listResponse": true},
             {"ip": "125.63.61.53", "port": 7775, "data": null, "bFinished": false, "listResponse": true},
             {"ip": "1.1.1.1", "port": 7775, "data": null, "bFinished": false, "listResponse": true},
+            {"ip": "8.6.77.145", "port": 7777, "data": null, "bFinished": false, "listResponse": true},
+            {"ip": "72.249.10.36", "port": 7777, "data": null, "bFinished": false, "listResponse": true},
+            {"ip": "104.153.105.8", "port": 7777, "data": null, "bFinished": false, "listResponse": true},
+            {"ip": "8.3.6.15", "port": 7777, "data": null, "bFinished": false, "listResponse": true},
+            {"ip": "104.153.109.6", "port": 7777, "data": null, "bFinished": false, "listResponse": true},
         ];
 
         this.bSentMessageToDiscord = false;

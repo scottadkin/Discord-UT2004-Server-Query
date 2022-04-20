@@ -7,18 +7,22 @@ class ServerListMessage{
 
         this.response = response;
 
+        this.currentServerIndex = 0;
+        this.maxServersPerEmbed = 15;
+
         this.send();
     }
 
     fixString(input, maxLength){
 
-        if(input.length > maxLength){   
+        input = input.toString();
+
+        if(input.length >= maxLength){   
             return `${input.slice(0, maxLength)}`;
         }
 
         let missingChars = maxLength - input.length;
 
-        //return input;
         return `${input}${" ".repeat(missingChars)}`;
 
     }
@@ -27,20 +31,25 @@ class ServerListMessage{
 
         const servers = this.response.servers; 
 
-        const nameLength = 31;
+        const nameLength = 32;
         const mapLength = 20;
         const playersLength = 7;
         const idLength = 3;
 
         let string = "";
 
-        string += `\`${this.fixString("ID", idLength)} ${this.fixString("Server Name", nameLength)}\t${this.fixString("Map", mapLength)}\tPlayers\`\n`;
+        if(this.currentServerIndex === 0){
+            string += `\`${this.fixString("ID", idLength)} ${this.fixString("Server Name", nameLength)}\t${this.fixString("Map", mapLength)}\tPlayers\`\n`;
+        }
 
-        for(let i = 0; i < servers.length; i++){
+        const start = this.currentServerIndex;
+        const end = (this.currentServerIndex + this.maxServersPerEmbed > servers.length) ? servers.length : start + this.maxServersPerEmbed;
+
+        for(let i = start; i < end; this.currentServerIndex++, i++){
 
             const s = servers[i];
 
-            const id = this.fixString(i+1, idLength);
+            const id = this.fixString(i + 1, idLength);
 
             if(s.bFinished){
 
@@ -48,15 +57,14 @@ class ServerListMessage{
                 const serverName = this.fixString(s.data.name, nameLength);
                 const players = this.fixString(`${s.data.players.players}/${s.data.players.maxPlayers}`, playersLength);
 
-                string += `\`${id} - ${serverName}\t${map}\t${players}\`\n`;
+                string += `\`${id} ${serverName}\t${map}\t${players}\`\n`;
 
             }else{
 
-                const map = this.fixString(`${s.ip}:${s.port}`, mapLength);
-                const serverName = this.fixString("Server Timed out", nameLength);
+                const map = this.fixString("Server Timed out", mapLength);
+                const serverName = this.fixString(`${s.ip}:${s.port}`, nameLength);
              
-
-                string += `\`${id} - ${map}\t\t\t   ${serverName}\`\n`;
+                string += `\`${id} ${serverName}\t${map}\t${this.fixString("N/A", playersLength)}\`\n`;
             }
             
    
@@ -72,29 +80,48 @@ class ServerListMessage{
 
     async send(){
 
-        const embed = new MessageEmbed()
-        .setColor('#0099ff')
-        .setTitle("Unreal Tournament 2004 Server List")
-       // .setURL('https://discord.js.org/')
-        //.setAuthor({ "name": `Server List`, iconURL: 'https://i.imgur.com/ihsPMOD.png', url: 'https://github.com/scottadkin/Discord-UT2004-Server-Query' })
-        .setDescription(`${this.getInfo()}\n\n${this.createServerFields()}`)
-        //.setThumbnail('https://i.imgur.com/ihsPMOD.png')
-       // .addFields(this.createServerFields()
-            //{ name: 'Regular field title', value: 'Some value here' },
-           //{ name: '\u200B', value: '\u200B' },
-           // [{ name: 'Red Team', value: 'Some value here', inline: true },
-            //{ name: 'Blue Team', value: 'Some value here', inline: true },]
-            //{ name: '**Join as Player:** <ut2004://www.google.com>', value: '\u200B', inline: false },
-           // { name: '**Join as Spectator:** <ut2004://www.google.com>', value: '\u200B', inline: false },
-       // )
-        //.addField(`Join Server`,`**<ut2004://**`, false)
-        //.addField(`Join Server as Spectator`,`**<ut2004://**`, false)
-       // .addField('Inline field title', 'Some value here', true)
-        //.setImage('https://i.imgur.com/ihsPMOD.png')
-        .setTimestamp()
-        .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
+        try{
 
-        await this.response.channel.send({"embeds": [embed]});
+            const totalServers = this.response.servers.length;
+            const embeds = [];
+
+            while(this.currentServerIndex < totalServers){
+
+                let description = "";
+
+                if(embeds.length === 0){
+                    description += `${this.getInfo()}\n\n`;
+                }
+
+                description += this.createServerFields();
+
+                const embed = new MessageEmbed()
+                .setColor("0099ff")
+                .setDescription(description);
+
+                console.log(description.length);
+
+                if(this.currentServerIndex === 0){
+                    embed.setTitle("Unreal Tournament 2004 Server List");
+                }
+
+                if(this.currentServerIndex === totalServers){
+
+                    embed.setTimestamp()
+                    .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
+                }
+
+                embeds.push(embed);
+
+            }
+
+            await this.response.channel.send({"embeds": embeds});
+
+        }catch(err){
+
+            console.trace(err);
+        }
+        
         this.response.bSentMessageToDiscord = true;
     }
 }

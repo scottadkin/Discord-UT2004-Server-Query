@@ -42,6 +42,10 @@ client.once("ready", () => {
 	console.log("Ready!");
 });
 
+client.on("error", (err) =>{
+    console.trace(err);
+});
+
 
 client.on("messageCreate", async message =>{
 
