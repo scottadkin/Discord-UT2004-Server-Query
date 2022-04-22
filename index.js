@@ -1,8 +1,11 @@
 const { Client, Intents, MessageEmbed } = require("discord.js");
-const { token, avatarImage } = require("./config.json");
+const { token, avatarImage, queryPrefix } = require("./config.json");
 const UT2K4Query = require("./api/ut2k4query");
 const serverQueryMessage = require("./api/serverQueryMessage");
 const Functions = require("./api/functions");
+const Database = require("./api/database");
+
+
 //80.4.151.145
 //74.91.115.167
 
@@ -41,7 +44,7 @@ const client = new Client(discordOptions);
 client.once("ready", () => {
 	console.log("Ready!");
 
-    client.user.setAvatar(avatarImage);
+    //client.user.setAvatar(avatarImage);
 });
 
 client.on("error", (err) =>{
@@ -51,14 +54,32 @@ client.on("error", (err) =>{
 
 client.on("messageCreate", async message =>{
 
+    if(!message.content.startsWith(queryPrefix)) return;
 
-    if(Functions.bValidIp(message.content)){
+    const reg = new RegExp(`^${queryPrefix}(.+)$`,"i")
 
-        const parts = message.content.split(":");
+    const result = reg.exec(message.content);
 
-        testServer.fetchFullResponse(parts[0], parseInt(parts[1]) + 1, message.channel);
+    if(result === null) return;
 
-        return;
+    const command = result[1];
+    const commandLC = result[1].toLowerCase();
+
+    console.log(command);
+
+    if(commandLC.startsWith("q")){
+
+        const ipReg = /^q (.+)$/i;
+
+        const ipResult = ipReg.exec(command);
+
+        if(ipResult !== null){
+
+            const parts = ipResult[1].split(":");
+
+            testServer.fetchFullResponse(parts[0], parseInt(parts[1]) + 1, message.channel);
+        }
+
     }
 
     if(message.content === "list"){
@@ -73,9 +94,7 @@ client.on("messageCreate", async message =>{
 
     if(message.content === "test"){
 
-        //testServer.fetchFullResponse(testIp, testPort + 1, message.channel);
         testServer.fetchFullResponse(testIp, testPort + 1, message.channel);
-        //new serverQueryMessage(MessageEmbed, message.channel);
     }
 
     if(message.content === "test2"){
@@ -87,7 +106,6 @@ client.on("messageCreate", async message =>{
     }
 
     if(message.content === "test4"){
-        // /109.230.224.189:6969
         testServer.fetchFullResponse("109.230.224.189", 6969 + 1, message.channel);
     }
 
