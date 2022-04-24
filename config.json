@@ -1,5 +1,6 @@
 {
     "token": "",
     "queryPrefix": ".",
-    "avatarImage": "https://i.imgur.com/ihsPMOD.png"
+    "avatarImage": "https://i.imgur.com/ihsPMOD.png",
+    "defaultServerPort": 7777
 }

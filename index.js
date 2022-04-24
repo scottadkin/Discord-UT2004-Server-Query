@@ -1,13 +1,10 @@
 const { Client, Intents, MessageEmbed } = require("discord.js");
-const { token, avatarImage, queryPrefix } = require("./config.json");
+const { token, avatarImage, queryPrefix, defaultServerPort } = require("./config.json");
 const UT2K4Query = require("./api/ut2k4query");
 const serverQueryMessage = require("./api/serverQueryMessage");
 const Functions = require("./api/functions");
 const Database = require("./api/database");
-
-
-//80.4.151.145
-//74.91.115.167
+const Commands = require("./api/commands");
 
 const testIp = "80.4.151.145";
 const testPort = 7777;
@@ -24,23 +21,13 @@ const discordOptions = {
     } 
 }
 
+const commandsManager = new Commands();
+
 
 const testServer = new UT2K4Query();
 
-//testServer.fetchBasicInfo(testIp, testPort + 1);
-//testServer.fetchGameInfo(testIp, testPort + 1);
-//testServer.fetchPlayerInfo(testIp, testPort + 1);
-
-
-//setInterval(() =>{
- //   testServer.fetchBasicInfo(testIp, testPort + 1);
-//}, 500);
-
-
-// Create a new client instance
 const client = new Client(discordOptions);
 
-// When the client is ready, run this code (only once)
 client.once("ready", () => {
 	console.log("Ready!");
 
@@ -54,64 +41,25 @@ client.on("error", (err) =>{
 
 client.on("messageCreate", async message =>{
 
-    if(!message.content.startsWith(queryPrefix)) return;
+    if(message.author.bot) return;
 
-    const reg = new RegExp(`^${queryPrefix}(.+)$`,"i")
+    if(commandsManager.bIsCommand(message.content)){
 
-    const result = reg.exec(message.content);
+        const command = commandsManager.removePrefix(message.content);
 
-    if(result === null) return;
+        if(command.startsWith("q")){
 
-    const command = result[1];
-    const commandLC = result[1].toLowerCase();
+            await commandsManager.queryServer(message.channel, command, testServer);
+            return;
 
-    console.log(command);
-
-    if(commandLC.startsWith("q")){
-
-        const ipReg = /^q (.+)$/i;
-
-        const ipResult = ipReg.exec(command);
-
-        if(ipResult !== null){
-
-            const parts = ipResult[1].split(":");
-
-            testServer.fetchFullResponse(parts[0], parseInt(parts[1]) + 1, message.channel);
         }
 
+
+    }else{
+        console.log("Not a command");
+        return;
     }
 
-    if(message.content === "list"){
-
-        testServer.createNewListResponse(message.channel);
-    }
-
-    if(message.content === "basic"){
-
-        testServer.fetchBasicInfo(testIp, testPort + 1);
-    }
-
-    if(message.content === "test"){
-
-        testServer.fetchFullResponse(testIp, testPort + 1, message.channel);
-    }
-
-    if(message.content === "test2"){
-        testServer.fetchFullResponse(testIp2, testPort + 1, message.channel);
-    }
-
-    if(message.content === "test3"){
-        testServer.fetchFullResponse(testIp3, testPort2 + 1, message.channel);
-    }
-
-    if(message.content === "test4"){
-        testServer.fetchFullResponse("109.230.224.189", 6969 + 1, message.channel);
-    }
-
-    if(message.content === "broken"){
-        testServer.fetchFullResponse("1.1.1.1", 7778, message.channel);
-    }
 });
                       
 // Login to Discord with your client"s token
