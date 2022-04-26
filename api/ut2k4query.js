@@ -73,6 +73,12 @@ class UT2K4Query{
 
     createNewListResponse(messageChannel){
 
+        if(this.serverResponses.bProcessingList()){
+            //messageChannel.send("Already procress requrest");
+            console.log("Already procressing list command");
+            return;
+        }
+
         const response = this.serverResponses.createList(messageChannel);
 
         for(let i = 0; i < response.servers.length; i++){

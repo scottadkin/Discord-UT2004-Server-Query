@@ -46,8 +46,6 @@ class Command{
 
         try{
 
-            console.log(this.command);
-
             const command = this.command;
 
             if(this.ipReg.test(command)){

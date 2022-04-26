@@ -57,6 +57,18 @@ class ServerResponseQueue{
         return null;
     }
 
+    bProcessingList(){
+
+        for(let i = 0; i < this.responses.length; i++){
+
+            const r = this.responses[i];
+
+            if(r.servers !== undefined) return true;
+        }
+
+        return false;
+    }
+
     deleteCompletedResponses(){
 
         if(this.responses.length === 0) return;
