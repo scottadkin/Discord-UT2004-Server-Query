@@ -4,7 +4,7 @@ const UT2K4Query = require("./api/ut2k4query");
 const serverQueryMessage = require("./api/serverQueryMessage");
 const Functions = require("./api/functions");
 const Database = require("./api/database");
-const Commands = require("./api/commands");
+const Command = require("./api/command");
 
 const testIp = "80.4.151.145";
 const testPort = 7777;
@@ -21,10 +21,8 @@ const discordOptions = {
     } 
 }
 
-const commandsManager = new Commands();
 
-
-const testServer = new UT2K4Query();
+const utQuery = new UT2K4Query();
 
 const client = new Client(discordOptions);
 
@@ -43,22 +41,17 @@ client.on("messageCreate", async message =>{
 
     if(message.author.bot) return;
 
-    if(commandsManager.bIsCommand(message.content)){
+    if(!Command.bIsCommand(message.content)) return;
 
-        const command = commandsManager.removePrefix(message.content);
+    const command = new Command(message, utQuery);
 
-        if(command.startsWith("q")){
+    await command.processCommand();
 
-            await commandsManager.queryServer(message.channel, command, testServer);
-            return;
-
-        }
+    //const command = commandsManager.removePrefix(message.content);
 
 
-    }else{
-        console.log("Not a command");
-        return;
-    }
+
+  
 
 });
                       
