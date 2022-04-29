@@ -184,8 +184,8 @@ class serverQueryMessage{
         .addField(`Join Server as Spectator`,`**<ut2004://${this.ip}:${this.port}?spectatorOnly=1>**`, false)
        // .addField('Inline field title', 'Some value here', true)
         //.setImage('https://i.imgur.com/ihsPMOD.png')
-        .setTimestamp()
-        .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
+        .setTimestamp();
+        //.setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
 
         await this.channel.send({"embeds": [exampleEmbed]});
     }
@@ -202,8 +202,8 @@ class serverQueryMessage{
         //.addField(`Join Server as Spectator`,`**<ut2004://${this.ip}:${this.port}?spectatorOnly=1>**`, false)
        // .addField('Inline field title', 'Some value here', true)
         //.setImage('https://i.imgur.com/ihsPMOD.png')
-        .setTimestamp()
-        .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
+        .setTimestamp();
+        //.setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
 
         await this.channel.send({"embeds": [failedEmbed]});
     }

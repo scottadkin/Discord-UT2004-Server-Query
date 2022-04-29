@@ -107,8 +107,8 @@ class ServerListMessage{
 
                 if(this.currentServerIndex === totalServers){
 
-                    embed.setTimestamp()
-                    .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
+                    embed.setTimestamp();
+                    //.setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/ihsPMOD.png' });
                 }
 
                 embeds.push(embed);

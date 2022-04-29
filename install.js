@@ -4,7 +4,6 @@ const queries = [
 
     `CREATE TABLE IF NOT EXISTS servers(
         name TEXT NOT NULL,
-        display_name TEXT NOT NULL,
         ip TEXT NOT NULL,
         port INTEGER NOT NULL,
         added INTEGER NOT NULL,

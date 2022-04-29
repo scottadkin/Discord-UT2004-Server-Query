@@ -5,6 +5,7 @@ const serverQueryMessage = require("./api/serverQueryMessage");
 const Functions = require("./api/functions");
 const Database = require("./api/database");
 const Command = require("./api/command");
+const Servers = require("./api/servers");
 
 const testIp = "80.4.151.145";
 const testPort = 7777;
@@ -23,6 +24,7 @@ const discordOptions = {
 
 
 const utQuery = new UT2K4Query();
+const serverManager = new Servers();
 
 const client = new Client(discordOptions);
 
@@ -43,7 +45,7 @@ client.on("messageCreate", async message =>{
 
     if(!Command.bIsCommand(message.content)) return;
 
-    const command = new Command(message, utQuery);
+    const command = new Command(message, utQuery, serverManager);
 
     await command.processCommand();
 

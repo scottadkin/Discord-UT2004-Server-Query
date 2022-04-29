@@ -1,14 +1,16 @@
 const { queryPrefix, defaultServerPort } = require("../config.json");
 const Functions = require("./functions");
+const db = require("./database");
 
 class Command{
 
-    constructor(message, ut2k4Query){
+    constructor(message, ut2k4Query, serverManager){
 
         this.message = message;
         this.channel = message.channel;
         this.command = this.removePrefix();
         this.ut2k4Query = ut2k4Query;
+        this.serverManager = serverManager;
         //console.log(this);
 
         this.ipReg = /^q (.+)$/i;
@@ -51,11 +53,19 @@ class Command{
             if(this.ipReg.test(command)){
 
                 await this.queryServer();
+                return;
             }
 
             if(/^list$/i.test(command)){
 
                 await this.ut2k4Query.createNewListResponse(this.channel);
+                return;
+            }
+
+            if(command.startsWith("addserver")){
+
+                this.serverManager.addServer(command, this.ut2k4Query);
+                //console.log(command);
             }
 
         }catch(err){
