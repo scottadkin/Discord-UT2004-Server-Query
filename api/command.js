@@ -68,6 +68,10 @@ class Command{
                 //console.log(command);
             }
 
+            if(command.startsWith("debuglist")){
+                this.serverManager.debugDisplayDatabase();
+            }
+
         }catch(err){
             console.trace(err);
         }

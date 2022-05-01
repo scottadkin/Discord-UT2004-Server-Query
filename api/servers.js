@@ -61,7 +61,7 @@ class Servers{
 
         const now = Math.floor(Date.now() * 0.001);
 
-        const stmt = db.prepare(`INSERT INTO servers VALUES(?,?,?,?,0,0)`, (err) =>{
+        const stmt = db.prepare(`INSERT INTO servers VALUES(NULL,?,?,?,?,0,0)`, (err) =>{
 
             if(err){
                 console.trace(err);
@@ -72,6 +72,28 @@ class Servers{
         });
 
         stmt.run([serverName, ip, port, now]);
+
+    }
+
+
+    debugDisplayDatabase(){
+
+        const query = "SELECT * FROM servers ORDER BY added ASC";
+
+        const rows = [];
+
+        db.all(query, (err, result) =>{
+
+            if(err){
+                console.trace(err);
+                return;
+            }
+
+            console.table(result);
+
+        });
+
+        //console.table(rows);
 
     }
 }

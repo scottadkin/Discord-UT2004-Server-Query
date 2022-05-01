@@ -3,6 +3,7 @@ const Database = require("./api/database");
 const queries = [
 
     `CREATE TABLE IF NOT EXISTS servers(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         ip TEXT NOT NULL,
         port INTEGER NOT NULL,
