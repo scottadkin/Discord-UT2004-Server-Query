@@ -2,5 +2,6 @@
     "token": "",
     "queryPrefix": ".",
     "avatarImage": "https://i.imgur.com/ihsPMOD.png",
-    "defaultServerPort": 7777
+    "defaultServerPort": 7777,
+    "regErrorMessage": ":white_small_square: Regular expression failed to match, in other words **Scott is an imbecile**."
 }

@@ -49,6 +49,7 @@ class Command{
         try{
 
             const command = this.command;
+            const lCommand = this.command.toLowerCase();
 
             if(this.ipReg.test(command)){
 
@@ -62,13 +63,18 @@ class Command{
                 return;
             }
 
-            if(command.startsWith("addserver")){
+            if(lCommand.startsWith("addserver")){
 
                 this.serverManager.addServer(command, this.channel, this.ut2k4Query);
                 //console.log(command);
             }
 
-            if(command.startsWith("debuglist")){
+            if(lCommand.startsWith("deleteserver")){
+
+                this.serverManager.deleteServer(command, this.channel);
+            }
+
+            if(lCommand.startsWith("debuglist")){
                 this.serverManager.debugDisplayDatabase();
             }
 

@@ -1,4 +1,4 @@
-const { defaultServerPort, queryPrefix } = require("../config.json");
+const { defaultServerPort, queryPrefix, regErrorMessage } = require("../config.json");
 const db = require("./database");
 const Functions = require("./functions");
 const ErrorMessage = require("./errorMessage");
@@ -35,21 +35,17 @@ class Servers{
     async addServer(command, discordChannel, ut2k4Query){
 
         try{
-            
-            let bUseServerName = false;
+        
 
             let port = defaultServerPort;
 
             const reg = /^addserver (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:(\d{1,5})|.*?)(| (.*))$/i;
 
             const result = reg.exec(command);
-            
-            console.log(result);
-
 
             if(result === null){
                 
-                const text = `:white_small_square: Regular expression failed to match, in other words **Scott is an imbecile**.`;
+                const text = regErrorMessage;
                 const errorMessage = new ErrorMessage(discordChannel, "Failed to update server list.", text);
                 await errorMessage.send();
                 return;
@@ -66,11 +62,7 @@ class Servers{
             let serverName = "";
 
             //no name
-            if(result[5] === undefined){
-
-                bUseServerName = true;
-
-            }else{
+            if(result[5] !== undefined){
 
                 serverName = result[5];
             }
@@ -132,13 +124,114 @@ class Servers{
                 resolve(results);
             });
         });
-   
+    }
+
+
+    getServerByIndex(id){
+
+
+        return new Promise((resolve, reject) =>{
+
+            id = id - 1;
+
+            const query = `SELECT ip,port,added FROM servers ORDER BY added ASC`;
+
+            db.all(query, (err, result) =>{
+
+                if(err){
+                    reject(err);
+                    return;
+                }
+
+                if(id >= result.length || id < 0){
+                    reject(`Server with the index of ${id + 1} does not exist.`);
+                    return;
+                }
+
+                console.table(result);
+                resolve(result[id]);
+
+            });
+
+        });
+    }
+
+
+    deleteServerQuery(ip, port, added){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "DELETE FROM servers WHERE ip=? AND port=? AND added=?";
+
+            db.run(query, [ip, port, added], function(err){
+
+                if(err){
+                    reject(err);
+                    return;
+                }
+
+                if(this.changes > 0){
+
+                    resolve(true);
+                    return;
+
+                }else{
+                    resolve(false);
+                    return;
+                }
+            });
+        });
+    }
+
+    async deleteServer(command, discordChannel){
+
+        const errorTitle = "Failed to delete server.";
+        let errorText= "";
+
+        try{
+
+            const reg = /^deleteserver (\d+)$/i;
+
+            const result = reg.exec(command);
+
+            if(result === null){
+
+                errorText = `:white_small_square: Incorect syntax, required is **${queryPrefix}deleteserver <serverid>**.
+                :white_small_square: Use **${queryPrefix}list** to find a server's id.`;
+                
+            }else{
+
+                const id = parseInt(result[1]);
+
+                const serverDetails = await this.getServerByIndex(id);
+
+                console.log(serverDetails);
+
+                if(await this.deleteServerQuery(serverDetails.ip, serverDetails.port, serverDetails.added)){
+
+                    await discordChannel.send("Deleted mkay");
+                }else{
+
+                    errorText = `:white_small_square: No servers were deleted from the table.`;
+                }
+            }
+
+
+            if(errorText !== ""){
+                const errorMessage = new ErrorMessage(discordChannel, errorTitle, errorText);
+                await errorMessage.send();
+            }
+
+        }catch(err){
+            
+            const errorMessage = new ErrorMessage(discordChannel, errorTitle, err.message ?? err);
+            await errorMessage.send()
+        }
     }
 
     debugDisplayDatabase(){
 
         const query = "SELECT * FROM servers ORDER BY added ASC";
-
 
         db.all(query, (err, result) =>{
 
@@ -150,9 +243,6 @@ class Servers{
             console.table(result);
 
         });
-
-        //console.table(rows);
-
     }
 }
 
