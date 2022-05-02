@@ -1,77 +1,117 @@
-const { defaultServerPort } = require("../config.json");
+const { defaultServerPort, queryPrefix } = require("../config.json");
 const db = require("./database");
 const Functions = require("./functions");
+const ErrorMessage = require("./errorMessage");
 
 class Servers{
 
     constructor(){}
 
-    addServer(command, ut2k4Query){
 
-        let bUseServerName = false;
+    bServerAlreadyAdded(ip, port){
 
-        let port = defaultServerPort;
+        return new Promise((resolve, reject) =>{
 
-        const reg = /^addserver (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:(\d{1,5})|.*?)(| (.*))$/i;
+            const query = "SELECT COUNT(*) as total_servers FROM servers WHERE ip=? AND port=?";
 
-        const result = reg.exec(command);
-        console.log(result);
-        console.log(`Command is ${command}`);
+            db.get(query, [ip, port], (err, result) =>{
 
-        if(result === null) return;
+                if(err){
+                    reject(err);
+                    return;
+                }
 
-        let ip = result[1];
+                if(result.total_servers > 0){
+                    resolve(true);
+                }else{
+                    resolve(false);
+                }
 
-        //no port
-        if(result[3] !== undefined){
+                return;
+            });
+        });
+    }
 
-            port = parseInt(result[3]);
-        }
+    async addServer(command, discordChannel, ut2k4Query){
 
-        let serverName = "";
+        try{
+            
+            let bUseServerName = false;
 
-        //no name
-        if(result[5] === undefined){
+            let port = defaultServerPort;
 
-            bUseServerName = true;
+            const reg = /^addserver (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:(\d{1,5})|.*?)(| (.*))$/i;
 
-        }else{
+            const result = reg.exec(command);
+            
+            console.log(result);
 
-            serverName = result[5];
-        }
 
-        if(Functions.bValidIp(`${ip}:${port}`)){
-
-            console.log("Good ip");
-
-        }else{
-            console.log("Bad ip");
-        }
-
-        console.log(`${ip}:${port} = ${serverName}`);
-
-        /**
-         * name TEXT NOT NULL,
-        ip TEXT NOT NULL,
-        port INTEGER NOT NULL,
-        added INTEGER NOT NULL,
-        edited INTEGER NOT NULL,
-        times_edited INTEGER NOT NULL
-         */
-
-        const now = Math.floor(Date.now() * 0.001);
-
-        const stmt = db.prepare(`INSERT INTO servers VALUES(?,?,?,?,0,0)`, (err) =>{
-
-            if(err){
-                console.trace(err);
+            if(result === null){
+                
+                const text = `:white_small_square: Regular expression failed to match, in other words **Scott is an imbecile**.`;
+                const errorMessage = new ErrorMessage(discordChannel, "Failed to update server list.", text);
+                await errorMessage.send();
                 return;
             }
 
-            console.log("OK");
-        });
+            let ip = result[1];
 
-        stmt.run([serverName, ip, port, now]);
+            //no port
+            if(result[3] !== undefined){
+
+                port = parseInt(result[3]);
+            }
+
+            let serverName = "";
+
+            //no name
+            if(result[5] === undefined){
+
+                bUseServerName = true;
+
+            }else{
+
+                serverName = result[5];
+            }
+
+            if(!Functions.bValidIp(`${ip}:${port}`)){
+
+                const text = `:white_small_square: You have not specified a valid ip:port combination. If you have not specified a port a default value of ${defaultServerPort} is used.`;
+                const errorMessage = new ErrorMessage(discordChannel, "Failed to update server list.", text);
+                await errorMessage.send();
+                return;
+            }
+
+
+            if(await this.bServerAlreadyAdded(ip, port)){
+
+                const text = `:white_small_square: A server with the ip:port combination of ${ip}:${port} is already in the database.
+                :white_small_square: You can delete the entry with the **${queryPrefix}delete <serverId>** command then replace it.
+                :white_small_square: You can edit the entry with the **${queryPrefix}edit <serverId> <ip:port> <serverName>** command.`;
+                const errorMessage = new ErrorMessage(discordChannel, "Failed to update server list.", text);
+                await errorMessage.send();
+                return;
+            }
+
+            const now = Math.floor(Date.now() * 0.001);
+
+            const stmt = db.prepare(`INSERT INTO servers VALUES(?,?,?,?,0,0)`, (err) =>{
+
+                if(err){
+                    console.trace(err);
+                    return;
+                }
+
+                console.log("OK");
+            });
+
+            stmt.run([serverName, ip, port, now]);
+
+        }catch(err){
+
+            console.trace(err);
+        }
 
     }
 

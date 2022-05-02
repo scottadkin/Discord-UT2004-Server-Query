@@ -64,7 +64,7 @@ class Command{
 
             if(command.startsWith("addserver")){
 
-                this.serverManager.addServer(command, this.ut2k4Query);
+                this.serverManager.addServer(command, this.channel, this.ut2k4Query);
                 //console.log(command);
             }
 
@@ -74,6 +74,7 @@ class Command{
 
         }catch(err){
             console.trace(err);
+
         }
     }
 
