@@ -18,9 +18,12 @@ class ServerResponseQueue{
         return response;
     }
 
-    createList(messageChannel){
+    async createList(messageChannel){
 
         const response = new ServerListResponse(messageChannel);
+
+        await response.init();
+        
         this.responses.push(response);
 
         return response;

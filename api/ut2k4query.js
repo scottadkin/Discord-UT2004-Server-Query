@@ -2,6 +2,7 @@
 const dgram = require("dgram");
 const { Buffer } = require("buffer");
 const ServerResponseQueue = require("./serverResponseQueue");
+const db = require("./database");
 
 
 
@@ -71,7 +72,7 @@ class UT2K4Query{
     }
 
 
-    createNewListResponse(messageChannel){
+    async createNewListResponse(messageChannel){
 
         if(this.serverResponses.bProcessingList()){
             //messageChannel.send("Already procress requrest");
@@ -79,7 +80,10 @@ class UT2K4Query{
             return;
         }
 
-        const response = this.serverResponses.createList(messageChannel);
+
+        const response = await this.serverResponses.createList(messageChannel);
+
+        console.log(response);
 
         for(let i = 0; i < response.servers.length; i++){
 
@@ -306,7 +310,7 @@ class UT2K4Query{
 
         info.players = {"players": currentPlayers, "maxPlayers": maxPlayers};
 
-        if(!serverResponse.listResponse){
+        if(!serverResponse.bListResponse){
 
             serverResponse.enableTick();
             serverResponse.receivedPacket(0);
