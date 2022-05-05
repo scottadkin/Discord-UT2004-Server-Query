@@ -75,7 +75,7 @@ class ServerListMessage{
 
     getInfo(){
 
-        return `Query a server by using **${queryPrefix}q <serverId>** for more details.`;
+        return `:white_small_square: Query a server by using **${queryPrefix}q <serverId>** for more details.`;
     }
 
     async send(){

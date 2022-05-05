@@ -2,6 +2,7 @@ const { defaultServerPort, queryPrefix, regErrorMessage } = require("../config.j
 const db = require("./database");
 const Functions = require("./functions");
 const ErrorMessage = require("./errorMessage");
+const PassMessage = require("./passMessage");
 
 class Servers{
 
@@ -88,14 +89,17 @@ class Servers{
 
             const now = Math.floor(Date.now() * 0.001);
 
-            const stmt = db.prepare(`INSERT INTO servers VALUES(?,?,?,?,0,0)`, (err) =>{
+            const stmt = db.prepare(`INSERT INTO servers VALUES(?,?,?,?,0,0)`, async (err) =>{
 
                 if(err){
                     console.trace(err);
                     return;
                 }
 
-                console.log("OK");
+                const passText = `:white_small_square: Added server ${ip}:${port} to server list.`;
+                const passMessage = new PassMessage(discordChannel, "Added server successfully", passText);
+
+                await passMessage.send();
             });
 
             stmt.run([serverName, ip, port, now]);
@@ -206,13 +210,14 @@ class Servers{
 
                 const serverDetails = await this.getServerByIndex(id);
 
-                console.log(serverDetails);
-
                 if(await this.deleteServerQuery(serverDetails.ip, serverDetails.port, serverDetails.added)){
 
-                    await discordChannel.send("Deleted mkay");
-                }else{
+                    const passText = `:white_small_square: Removed server ${serverDetails.ip}:${serverDetails.port} from the server list.`;
 
+                    const passMessage = new PassMessage(discordChannel, "Server deleted successfully", passText);
+                    await passMessage.send();
+
+                }else{
                     errorText = `:white_small_square: No servers were deleted from the table.`;
                 }
             }
