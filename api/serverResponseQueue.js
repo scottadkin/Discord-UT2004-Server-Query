@@ -31,7 +31,7 @@ class ServerResponseQueue{
 
     getResponse(ip, port, type){
 
-        console.log(`${ip}:${port}`);
+       // console.log(`${ip}:${port}`);
 
         for(let i = 0; i < this.responses.length; i++){
 
@@ -45,12 +45,12 @@ class ServerResponseQueue{
 
             }else{
 
-                console.log("SERVER LIST RESPONSE");
+               // console.log("SERVER LIST RESPONSE");
                 //for server list responses
                 for(let x = 0; x < r.servers.length; x++){
 
                     if(r.servers[x].ip === ip && r.servers[x].port === port - 1){
-                        console.log(`RESPONSE INDEX IS ${x}`);
+                       // console.log(`RESPONSE INDEX IS ${x}`);
                         return r.servers[x];
                     }
                 }

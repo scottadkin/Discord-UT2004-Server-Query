@@ -31,8 +31,8 @@ class UT2K4Query{
             msg = this.removeServerResponse(msg);
             const responseId = msg[0];
 
-            console.log(msg);
-            console.log(`${msg}`);
+            //console.log(msg);
+            //console.log(`${msg}`);
 
             if(responseId === 0){
 
@@ -83,7 +83,7 @@ class UT2K4Query{
 
         const response = await this.serverResponses.createList(messageChannel);
 
-        console.log(response);
+        //console.log(response);
 
         for(let i = 0; i < response.servers.length; i++){
 
@@ -100,12 +100,10 @@ class UT2K4Query{
 
             const response = this.serverResponses.create(ip, port, type, messageChannel);
 
-            console.log(`Need to create new response`);
+            //console.log(`Need to create new response`);
 
             response.events.once("finished", async () =>{
                 
-                console.log(`I finished`);
-
                 if(response.type === "full"){
 
                     await response.sendFullReply();
@@ -120,11 +118,8 @@ class UT2K4Query{
 
             return true;
 
-        }else{
-
-            console.log(`Already processing`);
-           // return false;
         }
+        
         return false;
     }
 
@@ -211,28 +206,20 @@ class UT2K4Query{
             }
         }
         
- 
-
         return data;
     }
 
 
     getNextString(data){
 
-
-        const length = parseInt(data[0]);
-
         let string = "";
         let i = 1;
-
         let d = 1;
 
 
         while(d !== 0){
 
             const d = parseInt(data[i]);
-
-           // console.log(`${d} ${ String.fromCharCode(d)}`);
 
             if(d !== d || d === 0) break;
 
@@ -246,16 +233,12 @@ class UT2K4Query{
                 continue;
             }
 
-            
-   
             string += String.fromCharCode(d);
             i++;
         }
 
 
         const newData = data.subarray(i + 1);
-
-       // console.log(`string =============================================== ${string}`);
 
         return {"string": string, "data": newData};
 
@@ -274,8 +257,6 @@ class UT2K4Query{
     }
 
     parseBasicInfo(ip, port, content){
-
-        console.log(`${ip}:${port}`);
 
         const serverResponse = this.serverResponses.getResponse(ip, port);
 
@@ -319,8 +300,6 @@ class UT2K4Query{
 
             serverResponse.bFinished = true;
             serverResponse.data = info;
-
-            console.log("test");
         }
       
     }

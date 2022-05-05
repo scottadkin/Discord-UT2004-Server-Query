@@ -139,8 +139,6 @@ class Servers{
 
             const query = `SELECT ip,port,added FROM servers ORDER BY added ASC LIMIT ?, 1`;
 
-            console.log(`SELECT ip,port,added FROM servers ORDER BY added ASC LIMIT ${id}, 1`);
-
             db.all(query, [id], (err, result) =>{
 
                 if(err){
@@ -153,7 +151,6 @@ class Servers{
                     return;
                 }
 
-                console.table(result);
                 resolve(result[0]);
 
             });
@@ -249,7 +246,6 @@ class Servers{
                     return;
                 }
 
-                console.table(result);
                 resolve();
 
             });
@@ -297,10 +293,7 @@ class Servers{
 
             if(result !== null){
 
-
-                await this.debugDisplayDatabase();
                 const serverDetails = await this.getServerByIndex(parseInt(result[1]));
-
                 ut2k4Query.fetchFullResponse(serverDetails.ip, serverDetails.port + 1, discordChannel);
 
             }else{

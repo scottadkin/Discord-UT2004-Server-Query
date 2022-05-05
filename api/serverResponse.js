@@ -61,9 +61,6 @@ class ServerResponse{
 
         if(this.bFinished) return;
 
-
-        console.log(`I received ${this.packetsReceived} packets`);
-
         const now = Date.now();
         const diff = now - this.lastPacket;
 
@@ -152,7 +149,6 @@ class ServerResponse{
 
     async sendFailedReply(){
 
-        console.log("failed");
         const failedReply = new ServerQueryMessage(this);
         await failedReply.sendTimedOut();
         this.bSentMessageToDiscord = true;

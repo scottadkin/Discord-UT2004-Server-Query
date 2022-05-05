@@ -99,7 +99,6 @@ class ServerListMessage{
                 .setColor("0099ff")
                 .setDescription(description);
 
-                console.log(description.length);
 
                 if(this.currentServerIndex === 0){
                     embed.setTitle("Unreal Tournament 2004 Server List");
