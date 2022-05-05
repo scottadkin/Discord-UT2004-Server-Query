@@ -129,27 +129,28 @@ class Servers{
 
     getServerByIndex(id){
 
-
         return new Promise((resolve, reject) =>{
 
             id = id - 1;
 
-            const query = `SELECT ip,port,added FROM servers ORDER BY added ASC`;
+            const query = `SELECT ip,port,added FROM servers ORDER BY added ASC LIMIT ?, 1`;
 
-            db.all(query, (err, result) =>{
+            console.log(`SELECT ip,port,added FROM servers ORDER BY added ASC LIMIT ${id}, 1`);
+
+            db.all(query, [id], (err, result) =>{
 
                 if(err){
                     reject(err);
                     return;
                 }
 
-                if(id >= result.length || id < 0){
-                    reject(`Server with the index of ${id + 1} does not exist.`);
+                if(result.length === 0){
+                    reject(`:white_small_square: There is no server with the index of ${id + 1}.`);
                     return;
                 }
 
                 console.table(result);
-                resolve(result[id]);
+                resolve(result[0]);
 
             });
 
@@ -231,18 +232,83 @@ class Servers{
 
     debugDisplayDatabase(){
 
-        const query = "SELECT * FROM servers ORDER BY added ASC";
+        return new Promise((resolve, reject) =>{
 
-        db.all(query, (err, result) =>{
+            const query = "SELECT * FROM servers ORDER BY added ASC";
 
-            if(err){
-                console.trace(err);
-                return;
-            }
+            db.all(query, (err, result) =>{
 
-            console.table(result);
+                if(err){
+                    console.trace(err);
+                    reject(err);
+                    return;
+                }
+
+                console.table(result);
+                resolve();
+
+            });
 
         });
+        
+    }
+
+    queryByIP(command, discordChannel, ut2k4Query){
+
+        const ipReg = /^q (.+)$/i;
+
+        const ipResult = ipReg.exec(command);
+
+        if(ipResult !== null){
+
+            if(Functions.bValidIp(ipResult[1])){
+
+                const parts = ipResult[1].split(":");
+
+                const port = (parts.length < 2) ? defaultServerPort : parseInt(parts[1]);
+                const ip = parts[0];
+
+                ut2k4Query.fetchFullResponse(ip, port + 1, discordChannel);
+                
+            }else{
+
+                throw new Error("Not a valid server ip:port combination.");
+            }
+            
+        }else{
+            throw new Error("Not a valid server query.");
+        }
+
+    }
+
+
+    async queryServer(command, discordChannel, ut2k4Query){
+
+        try{
+
+            const indexReg = /^q(\d+)$/i;
+
+            const result = indexReg.exec(command);
+
+            if(result !== null){
+
+
+                await this.debugDisplayDatabase();
+                const serverDetails = await this.getServerByIndex(parseInt(result[1]));
+
+                ut2k4Query.fetchFullResponse(serverDetails.ip, serverDetails.port + 1, discordChannel);
+
+            }else{
+
+                this.queryByIP(command, discordChannel, ut2k4Query);
+            }
+
+        }catch(err){
+
+            const errorMessage = new ErrorMessage(discordChannel, "Failed to query server.", err.message ?? err);
+            await errorMessage.send();
+            //console.trace(err);
+        }
     }
 }
 

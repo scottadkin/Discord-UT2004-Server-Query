@@ -51,11 +51,13 @@ class Command{
             const command = this.command;
             const lCommand = this.command.toLowerCase();
 
-            if(this.ipReg.test(command)){
+
+
+           /* if(this.ipReg.test(command)){
 
                 await this.queryServer();
                 return;
-            }
+            }*/
 
             if(/^list$/i.test(command)){
 
@@ -77,6 +79,10 @@ class Command{
             if(lCommand.startsWith("debuglist")){
                 this.serverManager.debugDisplayDatabase();
             }
+            
+            if(lCommand.startsWith("q")){
+                this.serverManager.queryServer(command, this.channel, this.ut2k4Query);
+            }
 
         }catch(err){
             console.trace(err);
@@ -84,7 +90,7 @@ class Command{
         }
     }
 
-    async queryServer(){
+    /*async queryServer(){
   
         const ipResult = this.ipReg.exec(this.command);
 
@@ -96,9 +102,9 @@ class Command{
             this.ut2k4Query.fetchFullResponse(parts[0], port + 1, this.channel);
 
         }else{
-            await message.reply("Not a valid ip:port combination");
+            await this.message.reply("Not a valid ip:port combination");
         }
-    }
+    }*/
     
 }
 
