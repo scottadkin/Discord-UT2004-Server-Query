@@ -7,7 +7,7 @@ class ServerListResponse{
     constructor(channel){
 
         this.channel = channel;
-        this.timeoutLimit = 1500;
+        this.timeoutLimit = 1000;
         this.serverManager = new Servers();
         this.servers = [];
         this.bSentMessageToDiscord = false;

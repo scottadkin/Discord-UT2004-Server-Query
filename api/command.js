@@ -1,17 +1,21 @@
 const { queryPrefix, defaultServerPort } = require("../config.json");
 const Functions = require("./functions");
 const db = require("./database");
+const Servers = require("./servers");
+const Permissions = require("./permissions");
 
 class Command{
 
-    constructor(message, ut2k4Query, serverManager){
+    constructor(message, ut2k4Query){
 
         this.message = message;
         this.channel = message.channel;
         this.command = this.removePrefix();
         this.ut2k4Query = ut2k4Query;
-        this.serverManager = serverManager;
+        this.serverManager = new Servers();
         //console.log(this);
+
+        this.permissionManager = new Permissions(message);
 
         this.ipReg = /^q (.+)$/i;
         
@@ -82,6 +86,11 @@ class Command{
             
             if(lCommand.startsWith("q")){
                 this.serverManager.queryServer(command, this.channel, this.ut2k4Query);
+            }
+
+            if(lCommand.startsWith("giveadmin")){
+
+                await this.permissionManager.addRole(command);
             }
 
         }catch(err){

@@ -9,6 +9,11 @@ const queries = [
         added INTEGER NOT NULL,
         edited INTEGER NOT NULL,
         times_edited INTEGER NOT NULL
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS roles(
+        id TEXT NOT NULL,
+        ADDED INTEGER NOT NULL
     )`
 
 ];
