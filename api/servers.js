@@ -1,8 +1,7 @@
 const { defaultServerPort, queryPrefix, regErrorMessage } = require("../config.json");
 const db = require("./database");
 const Functions = require("./functions");
-const ErrorMessage = require("./errorMessage");
-const PassMessage = require("./passMessage");
+const Message = require("./message");
 
 class Servers{
 
@@ -46,8 +45,8 @@ class Servers{
 
             if(result === null){
                 
-                const text = regErrorMessage;
-                const errorMessage = new ErrorMessage(discordChannel, "Failed to update server list.", text);
+                const text = "Incorrect syntax for addserver command.";
+                const errorMessage = new Message("error", discordChannel, "Failed to update server list.", text);
                 await errorMessage.send();
                 return;
             }
@@ -71,7 +70,7 @@ class Servers{
             if(!Functions.bValidIp(`${ip}:${port}`)){
 
                 const text = `:white_small_square: You have not specified a valid ip:port combination. If you have not specified a port a default value of ${defaultServerPort} is used.`;
-                const errorMessage = new ErrorMessage(discordChannel, "Failed to update server list.", text);
+                const errorMessage = new Message("error", discordChannel, "Failed to update server list.", text);
                 await errorMessage.send();
                 return;
             }
@@ -82,7 +81,7 @@ class Servers{
                 const text = `:white_small_square: A server with the ip:port combination of ${ip}:${port} is already in the database.
                 :white_small_square: You can delete the entry with the **${queryPrefix}delete <serverId>** command then replace it.
                 :white_small_square: You can edit the entry with the **${queryPrefix}edit <serverId> <ip:port> <serverName>** command.`;
-                const errorMessage = new ErrorMessage(discordChannel, "Failed to update server list.", text);
+                const errorMessage = new Message("error", discordChannel, "Failed to update server list.", text);
                 await errorMessage.send();
                 return;
             }
@@ -97,9 +96,9 @@ class Servers{
                 }
 
                 const passText = `:white_small_square: Added server ${ip}:${port} to server list.`;
-                const passMessage = new PassMessage(discordChannel, "Added server successfully", passText);
-
+                const passMessage = new Message("pass", discordChannel, "Added server successfully", passText);
                 await passMessage.send();
+
             });
 
             stmt.run([serverName, ip, port, now]);
@@ -211,7 +210,7 @@ class Servers{
 
                     const passText = `:white_small_square: Removed server ${serverDetails.ip}:${serverDetails.port} from the server list.`;
 
-                    const passMessage = new PassMessage(discordChannel, "Server deleted successfully", passText);
+                    const passMessage = new Message("pass", discordChannel, "Server deleted successfully", passText);
                     await passMessage.send();
 
                 }else{
@@ -221,13 +220,13 @@ class Servers{
 
 
             if(errorText !== ""){
-                const errorMessage = new ErrorMessage(discordChannel, errorTitle, errorText);
+                const errorMessage = new Message("error", discordChannel, errorTitle, errorText);
                 await errorMessage.send();
             }
 
         }catch(err){
             
-            const errorMessage = new ErrorMessage(discordChannel, errorTitle, err.message ?? err);
+            const errorMessage = new Message("error", discordChannel, errorTitle, err.message ?? err);
             await errorMessage.send()
         }
     }
@@ -303,7 +302,7 @@ class Servers{
 
         }catch(err){
 
-            const errorMessage = new ErrorMessage(discordChannel, "Failed to query server.", err.message ?? err);
+            const errorMessage = new Message("error", discordChannel, "Failed to query server.", err.message ?? err);
             await errorMessage.send();
             //console.trace(err);
         }

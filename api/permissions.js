@@ -1,6 +1,5 @@
 const db = require("./database");
-const ErrorMessage = require("./errorMessage");
-const PassMessage = require("./passMessage");
+const Message = require("./message");
 
 class Permissions{
 
@@ -22,14 +21,6 @@ class Permissions{
         return this.message.guild.roles.cache.find(r => r.name.toLowerCase() === roleName.toLowerCase());
     }
 
-
-    async sendEmbedReply(type, channel, title, content){
-
-        const embed = (type === "pass") ? new PassMessage(channel, title, content) : new ErrorMessage(channel, title, content);
-
-        await embed.send();
-    }
-
     async addRole(message){
   
         const result = this.splitDefaultCommand(message);
@@ -45,7 +36,7 @@ class Permissions{
             if(role === undefined){
 
                 const text = `:white_small_square: There is no role called **${roleName}**.`;
-                const eMessage = new ErrorMessage(this.message.channel, errorTitle, text);
+                const eMessage = new Message("error", this.message.channel, errorTitle, text);
                 await eMessage.send();
                 return;
 
@@ -56,7 +47,7 @@ class Permissions{
                 if(insertResult === null){
 
                     const text = `:white_small_square: Users with the role **${roleName}** now have admin permission for this bot.`;
-                    const pMessage = new PassMessage(this.message.channel, "Admin permissions successfully given", text);
+                    const pMessage = new Message("pass", this.message.channel, "Admin permissions successfully given", text);
                     await pMessage.send();
                     return;
 
@@ -70,7 +61,7 @@ class Permissions{
                         text = `:white_small_square: Nothing was inserted into the table **roles**.`;
                     }
 
-                    const eMessage = new ErrorMessage(this.message.channel, errorTitle, text);
+                    const eMessage = new Message("error", this.message.channel, errorTitle, text);
                     await eMessage.send();
                     return;
                 }
@@ -159,7 +150,9 @@ class Permissions{
 
                 const text = `:white_small_square: There is no role in this server called **${roleName}**.`;
 
-                await this.sendEmbedReply("error", this.message.channel, "Failed to remove admin permissions", text);
+                const message = new Message("error", this.message.channel, "Failed to remove admin permissions", text);
+                await message.send();
+
                 return;
             }
 
