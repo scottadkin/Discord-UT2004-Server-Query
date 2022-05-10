@@ -10,16 +10,35 @@ class Permissions{
 
     }
 
+    splitDefaultCommand(message){
+
+        const reg = /^.+? (.+)$/i;
+
+        return reg.exec(message);
+    }
+
+    getDiscordRole(roleName){
+
+        return this.message.guild.roles.cache.find(r => r.name.toLowerCase() === roleName.toLowerCase());
+    }
+
+
+    async sendEmbedReply(type, channel, title, content){
+
+        const embed = (type === "pass") ? new PassMessage(channel, title, content) : new ErrorMessage(channel, title, content);
+
+        await embed.send();
+    }
+
     async addRole(message){
   
-        const reg = /^giveadmin (.+)$/i;
-        const result = reg.exec(message);
+        const result = this.splitDefaultCommand(message);
 
         if(result !== null){
 
             const roleName = result[1];
 
-            const role = this.message.guild.roles.cache.find(r => r.name.toLowerCase() === roleName.toLowerCase());
+            const role = this.getDiscordRole(roleName);
 
             const errorTitle = "Failed to give role admin permissions";
 
@@ -122,6 +141,30 @@ class Permissions{
             
         }else{
             return 0;
+        }
+    }
+
+
+    async removeRole(message){
+
+        const result = this.splitDefaultCommand(message);
+
+        if(result !== null){
+
+            const roleName = result[1];
+            console.log(result);
+            const role = this.getDiscordRole(roleName);
+
+            if(role === undefined){
+
+                const text = `:white_small_square: There is no role in this server called **${roleName}**.`;
+
+                await this.sendEmbedReply("error", this.message.channel, "Failed to remove admin permissions", text);
+                return;
+            }
+
+        }else{
+
         }
     }
 }

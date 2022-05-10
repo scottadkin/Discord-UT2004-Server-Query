@@ -93,6 +93,11 @@ class Command{
                 await this.permissionManager.addRole(command);
             }
 
+            if(lCommand.startsWith("removeadmin")){
+
+                await this.permissionManager.removeRole(command);
+            }
+
         }catch(err){
             console.trace(err);
 
