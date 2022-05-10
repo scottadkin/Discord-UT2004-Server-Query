@@ -1,5 +1,6 @@
 const db = require("./database");
 const Message = require("./message");
+const {queryPrefix} = require("../config.json");
 
 class Permissions{
 
@@ -136,6 +137,29 @@ class Permissions{
     }
 
 
+    removeRoleQuery(id){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "DELETE FROM roles WHERE id=?";
+
+            db.run(query, [id], function(err){
+
+                if(err){
+                    reject(err);
+                    return;
+                }
+
+                if(this.changes > 0){
+                    resolve(true);
+                }
+
+                resolve(false);
+            });
+        });
+    }
+
+
     async removeRole(message){
 
         const result = this.splitDefaultCommand(message);
@@ -143,7 +167,7 @@ class Permissions{
         if(result !== null){
 
             const roleName = result[1];
-            console.log(result);
+
             const role = this.getDiscordRole(roleName);
 
             if(role === undefined){
@@ -152,11 +176,41 @@ class Permissions{
 
                 const message = new Message("error", this.message.channel, "Failed to remove admin permissions", text);
                 await message.send();
-
                 return;
+
+            }else{
+
+                if(!await this.bRoleAlreadyAdded(role.id)){
+
+                    const text = `:white_small_square: The role **${roleName}** doesn't have admin permissions.`;
+                    const message = new Message("error", this.message.channel, "Failed to remove admin permissions", text);
+                    await message.send();
+                    return;
+                }
+
+                if(await this.removeRoleQuery(role.id)){
+
+                    const text = `:white_small_square: The role **${roleName}** no longer has admin permissions.`;
+                    const message = new Message("pass", this.message.channel, "Admin roles successfully removed", text);
+                    await message.send();
+                    return;
+
+                }
+
+                const text = `:white_small_square: No rows were updated in the table roles.`;
+                const message = new Message("error", this.message.channel, "Failed to remove admin permissions", text);
+                await message.send();
+                return;
+
+
             }
 
         }else{
+
+            const text = `:white_small_square: Incorrect syntax for the command ${queryPrefix}removeadmin.`;
+            const message = new Message("error", this.message.channel, "Failed to remove admin permissions", text);
+            await message.send();
+            return;
 
         }
     }
