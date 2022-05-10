@@ -1,8 +1,7 @@
-const { queryPrefix, defaultServerPort } = require("../config.json");
-const Functions = require("./functions");
-const db = require("./database");
+const { queryPrefix } = require("../config.json");
 const Servers = require("./servers");
 const Permissions = require("./permissions");
+const Message = require("./message");
 
 class Command{
 
@@ -55,7 +54,52 @@ class Command{
             const command = this.command;
             const lCommand = this.command.toLowerCase();
 
+            const bHasAdmin = await this.permissionManager.bUserHaveAdmin();
 
+
+            if(bHasAdmin){
+
+                console.log(`User has admin permission`);
+
+                if(lCommand.startsWith("giveadmin")){
+
+                    await this.permissionManager.addRole(command);
+                }
+    
+                if(lCommand.startsWith("removeadmin")){
+    
+                    await this.permissionManager.removeRole(command);
+                }
+
+                if(lCommand.startsWith("addserver")){
+
+                    this.serverManager.addServer(command, this.channel, this.ut2k4Query);
+                    //console.log(command);
+                }
+    
+                if(lCommand.startsWith("deleteserver")){
+    
+                    this.serverManager.deleteServer(command, this.channel);
+                }
+
+            }else{
+
+                const notAllowed = ["giveadmin","removeadmin","addserver","deleteserver"];
+
+                for(let i = 0; i < notAllowed.length; i++){
+
+                    if(lCommand.startsWith(notAllowed[i])){
+
+                        const text = `You do not have permission to use the command **${queryPrefix}${notAllowed[i]}**`;
+                        const eMessage = new Message("error", this.channel, `Access Denied`, text);
+                        await eMessage.send();
+                        return;
+
+                    }
+                }
+                
+
+            }
 
            /* if(this.ipReg.test(command)){
 
@@ -69,17 +113,6 @@ class Command{
                 return;
             }
 
-            if(lCommand.startsWith("addserver")){
-
-                this.serverManager.addServer(command, this.channel, this.ut2k4Query);
-                //console.log(command);
-            }
-
-            if(lCommand.startsWith("deleteserver")){
-
-                this.serverManager.deleteServer(command, this.channel);
-            }
-
             if(lCommand.startsWith("debuglist")){
                 this.serverManager.debugDisplayDatabase();
             }
@@ -88,38 +121,13 @@ class Command{
                 this.serverManager.queryServer(command, this.channel, this.ut2k4Query);
             }
 
-            if(lCommand.startsWith("giveadmin")){
-
-                await this.permissionManager.addRole(command);
-            }
-
-            if(lCommand.startsWith("removeadmin")){
-
-                await this.permissionManager.removeRole(command);
-            }
+            
 
         }catch(err){
             console.trace(err);
 
         }
-    }
-
-    /*async queryServer(){
-  
-        const ipResult = this.ipReg.exec(this.command);
-
-        const parts = ipResult[1].split(":");
-
-        if(Functions.bValidIp(ipResult[1])){
-
-            const port = (parts.length > 1) ? parseInt(parts[1]) : defaultServerPort;
-            this.ut2k4Query.fetchFullResponse(parts[0], port + 1, this.channel);
-
-        }else{
-            await this.message.reply("Not a valid ip:port combination");
-        }
-    }*/
-    
+    }    
 }
 
 module.exports = Command;

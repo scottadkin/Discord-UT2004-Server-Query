@@ -36,7 +36,7 @@ class Permissions{
 
             if(role === undefined){
 
-                const text = `:white_small_square: There is no role called **${roleName}**.`;
+                const text = `:white_small_square: There is no role called **${roleName}** in this server.`;
                 const eMessage = new Message("error", this.message.channel, errorTitle, text);
                 await eMessage.send();
                 return;
@@ -213,6 +213,54 @@ class Permissions{
             return;
 
         }
+    }
+
+
+    getAdminRoleIds(){
+
+        return new Promise((resolve, reject) =>{
+
+            const query = "SELECT id FROM roles";
+
+            db.all(query, (err, rows) =>{
+
+                if(err){
+                    reject(err);
+                    return;
+                }
+
+                const ids = [];
+
+                for(let i = 0; i < rows.length; i++){
+                    ids.push(rows[i].id);
+                }
+
+                resolve(ids);
+            });
+        });
+    }
+
+    async bUserHaveAdmin(){
+    
+        //console.log(this.message.member.roles.cache);
+
+        const userRoles = this.message.member.roles.cache;
+
+        const adminRoles = await this.getAdminRoleIds();
+
+        //if no roles have admin allow anyone to use it for easier installation.
+        if(adminRoles.length === 0) return true;
+
+        for(let i = 0; i < adminRoles.length; i++){
+
+            const a = adminRoles[i];
+
+            if(userRoles.has(a)){
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
