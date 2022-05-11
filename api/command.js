@@ -71,6 +71,11 @@ class Command{
                     await this.permissionManager.removeRole(command);
                 }
 
+                if(lCommand.startsWith("adminlist")){
+
+                    await this.permissionManager.listAdminRoles();
+                }
+
                 if(lCommand.startsWith("addserver")){
 
                     this.serverManager.addServer(command, this.channel, this.ut2k4Query);

@@ -1,5 +1,6 @@
 const db = require("./database");
 const Message = require("./message");
+const AdminRolesListMessage = require("./adminRolesListMessage");
 const {queryPrefix} = require("../config.json");
 
 class Permissions{
@@ -261,6 +262,27 @@ class Permissions{
         }
 
         return false;
+    }
+
+    async listAdminRoles(){
+
+        const adminRoles = await this.getAdminRoleIds();
+
+        const roles = this.message.guild.roles.cache;
+        const names = [];
+
+        roles.forEach((value, key, roles) =>{
+
+            const index = adminRoles.indexOf(key);
+            
+            if(index !== -1){
+                names.push({"name": value.name, "id": key});
+            }
+            
+        });
+
+        const message = new AdminRolesListMessage(this.message.channel, names);
+        await message.send();
     }
 }
 
