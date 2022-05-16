@@ -2,6 +2,7 @@ const { queryPrefix } = require("../config.json");
 const Servers = require("./servers");
 const Permissions = require("./permissions");
 const Message = require("./message");
+const HelpMessage = require("./helpMessage");
 
 class Command{
 
@@ -102,8 +103,13 @@ class Command{
 
                     }
                 }
-                
+            }
 
+            if(lCommand.startsWith("help")){
+
+                const message = new HelpMessage(this.channel, lCommand, false);
+                await message.send();
+                return;
             }
 
            /* if(this.ipReg.test(command)){
