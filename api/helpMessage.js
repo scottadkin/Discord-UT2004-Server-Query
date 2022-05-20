@@ -24,6 +24,26 @@ class HelpMessage{
 
     }
 
+    createEmbedData(title, messages){
+
+        let string = ``;
+
+        for(let i = 0; i < messages.length; i++){
+
+            const m = messages[i];
+
+            //all help command array
+            if(m.length === 2){
+                string += `${icon} **${queryPrefix}${m[0]}** ${m[1]}\n`;
+            }else{
+                string += `${icon} ${m}\n`;
+            }
+
+        }
+
+        return {"title": title, "text": string};
+    }
+
     getAllHelp(){
 
         const messages = [
@@ -38,22 +58,11 @@ class HelpMessage{
         ];
 
 
-        let string = ``;
-
-        for(let i = 0; i < messages.length; i++){
-
-            const m = messages[i];
-
-            string += `${icon} **${queryPrefix}${m[0]}** ${m[1]}\n`;
-        }
-
-        string += `\n${icon} Type **${queryPrefix}help <command>** for more detailed information about a command.`
-
-        return {"title": "General Help", "text":string};
+        return this.createEmbedData("General Help", messages);
 
     }
 
-    addServerHelp(){
+    getServerHelp(){
 
 
         const messages = [
@@ -69,17 +78,12 @@ class HelpMessage{
        
         ];
 
-        let text = "";
+        return this.createEmbedData("Add Server Help", messages);
+    }
 
-        for(let i = 0; i < messages.length; i++){
-
-            const m = messages[i];
-
-            text += `${icon} ${m}\n`;
-        }
+    getListHelp(){
 
 
-        return {"title": "Add server help", "text": text};
     }
 
     getResponse(){
@@ -88,10 +92,9 @@ class HelpMessage{
             return this.getAllHelp();
         }
 
-        if(this.helpCommand === "addserver"){
-
-            return this.addServerHelp();
-        }
+        if(this.helpCommand === "addserver") return this.getServerHelp();
+        if(this.helpCommand === "list") return this.getListHelp();
+        
 
         return {"title": "Unknown help command" ,"text": `${icon} Unknown command: **${this.helpCommand}**.`};
     }
