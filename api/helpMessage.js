@@ -1,5 +1,5 @@
 const { MessageEmbed } = require("discord.js");
-const { queryPrefix, icon } = require("../config.json");
+const { queryPrefix, icon, defaultServerPort } = require("../config.json");
 
 class HelpMessage{
 
@@ -31,7 +31,7 @@ class HelpMessage{
             ["list", "Shows all servers added to the database."],
             ["q<ServerID>", "Pings selected server in database and displays the info."],
             ["q <IP>:<Port>", "Pings the server and displays the info."],
-            ["addserver <Server IP & Port>", `Type **${queryPrefix}help addserver** for more info.`],
+            ["addserver <Server IP & Port>", `Adds a server to the databaser.`],
             ["deleteserver <ServerID>","Delete selected server from the database."],
             ["giveadmin <Discord Role>","Give users with the discord role admin privileges."],
             ["removeadmin <Discord Role>","Remove admin privileges for users with the discord role."],
@@ -47,6 +47,8 @@ class HelpMessage{
             string += `${icon} **${queryPrefix}${m[0]}** ${m[1]}\n`;
         }
 
+        string += `\n${icon} Type **${queryPrefix}help <command>** for more detailed information about a command.`
+
         return {"title": "General Help", "text":string};
 
     }
@@ -54,7 +56,18 @@ class HelpMessage{
     addServerHelp(){
 
 
-        const messages = ["test"];
+        const messages = [
+            `Adds a server to the database.`,
+            `A full command is as follows: **${queryPrefix}addserver <ip>:<port> server name**.`,
+            `You can skip the port and a default of port **${defaultServerPort}** will be used.`,
+            `You can skip the server name and it will use the server's name from the pinged data.\n`,
+            `**Valid examples:**
+            ${queryPrefix}addserver 12.34.56.78:7777 A ut2004 server
+            ${queryPrefix}addserver 12.34.56.78:7777
+            ${queryPrefix}addserver 12.34.56.78 A ut2004 server
+            ${queryPrefix}addserver 12.34.56.78`
+       
+        ];
 
         let text = "";
 
@@ -80,7 +93,7 @@ class HelpMessage{
             return this.addServerHelp();
         }
 
-        return {"title": "Unknown help command" ,"text": `${icon} Unknown help command.`};
+        return {"title": "Unknown help command" ,"text": `${icon} Unknown command: **${this.helpCommand}**.`};
     }
 
     async send(){
