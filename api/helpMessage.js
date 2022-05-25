@@ -70,7 +70,7 @@ class HelpMessage{
             `A full command is as follows: **${queryPrefix}addserver <ip>:<port> server name**.`,
             `You can skip the port and a default of port **${defaultServerPort}** will be used.`,
             `You can skip the server name and it will use the server's name from the pinged data.\n`,
-            `**Valid examples:**
+            `**Valid Examples:**
             ${queryPrefix}addserver 12.34.56.78:7777 A ut2004 server
             ${queryPrefix}addserver 12.34.56.78:7777
             ${queryPrefix}addserver 12.34.56.78 A ut2004 server
@@ -83,7 +83,29 @@ class HelpMessage{
 
     getListHelp(){
 
+        const messages = [
+            `Displays a list of servers added to the database.`,
+            `Use **${queryPrefix}addserver** to add a server to the list.`,
+            `Use **${queryPrefix}deleteserver** to remove a server from the list.`
+        ];
 
+        return this.createEmbedData("List Servers Help", messages);
+
+    }
+
+    getQHelp(){
+
+        const messages = [
+            `Queries a server a UT2004 server and posts the response to a Discord channel.`,
+            `**${queryPrefix}q <serverID>** Will query a server from the ${queryPrefix}list database.`,
+            `**${queryPrefix}q <ip:port>** Will query that ip and port.\n`,
+            `**Valid Examples:**
+            **${queryPrefix}q 1** Will query the first server in the **${queryPrefix}list**.
+            **${queryPrefix}q 12.34.56.78:7777** Will query that ip and port.
+            **${queryPrefix}q 12.34.56.78** Will query that ip and the default port of ${defaultServerPort}.`
+        ];
+
+        return this.createEmbedData("Query Server Help", messages);
     }
 
     getResponse(){
@@ -94,6 +116,7 @@ class HelpMessage{
 
         if(this.helpCommand === "addserver") return this.getServerHelp();
         if(this.helpCommand === "list") return this.getListHelp();
+        if(this.helpCommand === "q") return this.getQHelp();
         
 
         return {"title": "Unknown help command" ,"text": `${icon} Unknown command: **${this.helpCommand}**.`};
