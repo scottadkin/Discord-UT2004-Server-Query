@@ -49,16 +49,18 @@ class HelpMessage{
         const messages = [
             ["help", "Shows this command."],
             ["list", "Shows all servers added to the database."],
-            ["q<ServerID>", "Pings selected server in database and displays the info."],
+            ["q<ServerID>", "Pings a server in the database and displays the info."],
             ["q <IP>:<Port>", "Pings the server and displays the info."],
-            ["addserver <Server IP & Port>", `Adds a server to the databaser.`],
+            ["addserver <Server IP & Port>", `Adds a server to the database.`],
             ["deleteserver <ServerID>","Delete selected server from the database."],
             ["giveadmin <Discord Role>","Give users with the discord role admin privileges."],
-            ["removeadmin <Discord Role>","Remove admin privileges for users with the discord role."],
+            ["removeadmin <Discord Role>","Remove admin privileges for users with the discord role."]
         ];
 
 
-        return this.createEmbedData("General Help", messages);
+        const data = this.createEmbedData("General Help", messages);
+        data.text += `\n${icon} Type **${queryPrefix}help <command>** for more detailed help about a command.`;
+        return data;
 
     }
 
@@ -96,7 +98,7 @@ class HelpMessage{
     getQHelp(){
 
         const messages = [
-            `Queries a server a UT2004 server and posts the response to a Discord channel.`,
+            `Queries a UT2004 server and posts the response to a Discord channel.`,
             `**${queryPrefix}q <serverID>** Will query a server from the ${queryPrefix}list database.`,
             `**${queryPrefix}q <ip:port>** Will query that ip and port.\n`,
             `**Valid Examples:**
@@ -108,6 +110,11 @@ class HelpMessage{
         return this.createEmbedData("Query Server Help", messages);
     }
 
+    facepalm(){
+
+        return {"title": "Are you ok?", "text": `What did you think was going to happen?`};
+    }
+
     getResponse(){
 
         if(this.helpCommand === undefined){
@@ -117,6 +124,7 @@ class HelpMessage{
         if(this.helpCommand === "addserver") return this.getServerHelp();
         if(this.helpCommand === "list") return this.getListHelp();
         if(this.helpCommand === "q") return this.getQHelp();
+        if(this.helpCommand === "help") return this.facepalm();
         
 
         return {"title": "Unknown help command" ,"text": `${icon} Unknown command: **${this.helpCommand}**.`};
@@ -128,8 +136,8 @@ class HelpMessage{
 
         const message = new MessageEmbed().setColor('#0099ff')
         .setTitle(title)
-        .setDescription(text);
-
+        .setDescription(text);   
+        
         await this.channel.send({"embeds": [message]});
     }
 }

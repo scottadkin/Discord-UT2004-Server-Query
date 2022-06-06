@@ -51,10 +51,12 @@ class ServerListMessage{
 
             const id = this.fixString(i + 1, idLength);
 
+            console.log(s);
+
             if(s.bFinished){
 
                 const map = this.fixString(s.data.map, mapLength);
-                const serverName = this.fixString(s.data.name, nameLength);
+                const serverName = this.fixString((s.displayName !== "") ? s.displayName : s.data.name, nameLength);
                 const players = this.fixString(`${s.data.players.players}/${s.data.players.maxPlayers}`, playersLength);
 
                 string += `\`${id} ${serverName}\t${map}\t${players}\`\n`;

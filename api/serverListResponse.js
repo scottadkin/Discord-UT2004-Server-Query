@@ -29,7 +29,8 @@ class ServerListResponse{
                     "port": s.port,
                     "data": null,
                     "bFinished": false,
-                    "bListResponse": true
+                    "bListResponse": true,
+                    "displayName": s.name
                 });
             }
 
