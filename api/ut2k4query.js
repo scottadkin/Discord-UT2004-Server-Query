@@ -5,7 +5,6 @@ const ServerResponseQueue = require("./serverResponseQueue");
 const db = require("./database");
 
 
-
 class UT2K4Query{
 
     constructor(){

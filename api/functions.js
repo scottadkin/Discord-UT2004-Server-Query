@@ -39,6 +39,23 @@ class Functions{
             return false;
         }
     }
+
+    static splitDomainPort(domain, defaultPort){
+
+        const reg = /^(.+?):(.+)$/i;
+        
+        const result = reg.exec(domain);
+
+        if(result === null){
+            return {"domain": domain, "port": defaultPort};
+        }
+
+        let port = parseInt(result[2]);
+
+        if(port !== port) port = defaultPort;
+
+        return {"domain": result[1], "port": port};
+    }
 }
 
 

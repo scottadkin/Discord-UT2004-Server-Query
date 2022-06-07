@@ -6,6 +6,7 @@ class ServerResponse{
 
     constructor(ip, port, type, messageChannel){
 
+
         this.bSinglePacketOnly = (type === "basic") ? true : false;
 
         this.receivedBasic = false;

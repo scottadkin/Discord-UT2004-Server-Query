@@ -3,6 +3,8 @@ const db = require("./database");
 const Functions = require("./functions");
 const Message = require("./message");
 
+const dns = require("node:dns").promises;
+
 class Servers{
 
     constructor(){}
@@ -249,35 +251,66 @@ class Servers{
 
             });
 
-        });
-        
+        });   
     }
 
     queryByIP(command, discordChannel, ut2k4Query){
 
-        const ipReg = /^q (.+)$/i;
 
-        const ipResult = ipReg.exec(command);
+        return new Promise(async (resolve, reject) =>{
 
-        if(ipResult !== null){
+            const ipReg = /^q (.+)$/i;
 
-            if(Functions.bValidIp(ipResult[1])){
+            const regResult = ipReg.exec(command);
 
-                const parts = ipResult[1].split(":");
+            if(regResult !== null){
 
-                const port = (parts.length < 2) ? defaultServerPort : parseInt(parts[1]);
-                const ip = parts[0];
+                if(Functions.bValidIp(regResult[1])){
 
-                ut2k4Query.fetchFullResponse(ip, port + 1, discordChannel);
+                    const parts = regResult[1].split(":");
+
+                    const port = (parts.length < 2) ? defaultServerPort : parseInt(parts[1]);
+                    const ip = parts[0];
+
+                    ut2k4Query.fetchFullResponse(ip, port + 1, discordChannel);
+                    resolve();
+                    
+                }else{
+
+
+                    try{
+
+                        const domainParts = Functions.splitDomainPort(regResult[1], defaultServerPort);
+
+                        const test = await dns.lookup(domainParts.domain);
+
+                        ut2k4Query.fetchFullResponse(test.address, domainParts.port + 1, discordChannel);
+                        resolve();
+
+                        //reject("test");
+                        return;
+
+                    }catch(err){
+
+                        console.trace(err);
+                        reject(`Not a valid IP:PORT combination, or domain.`);
+                        return;
+                    }
+                   
+
+
+                    //reject("Not a valid server ip:port combination.");
+                    //return;
+                }
                 
             }else{
-
-                throw new Error("Not a valid server ip:port combination.");
+                reject("Not a valid server query.");
+                return;
             }
-            
-        }else{
-            throw new Error("Not a valid server query.");
-        }
+
+        });
+
+        
 
     }
 
@@ -297,7 +330,7 @@ class Servers{
 
             }else{
 
-                this.queryByIP(command, discordChannel, ut2k4Query);
+                await this.queryByIP(command, discordChannel, ut2k4Query);
             }
 
         }catch(err){
