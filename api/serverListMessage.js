@@ -51,8 +51,6 @@ class ServerListMessage{
 
             const id = this.fixString(i + 1, idLength);
 
-            console.log(s);
-
             if(s.bFinished){
 
                 const map = this.fixString(s.data.map, mapLength);

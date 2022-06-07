@@ -112,12 +112,6 @@ class Command{
                 return;
             }
 
-           /* if(this.ipReg.test(command)){
-
-                await this.queryServer();
-                return;
-            }*/
-
             if(/^list$/i.test(command)){
 
                 await this.ut2k4Query.createNewListResponse(this.channel);

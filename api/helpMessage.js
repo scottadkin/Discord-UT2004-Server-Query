@@ -68,15 +68,15 @@ class HelpMessage{
 
 
         const messages = [
-            `Adds a server to the database.`,
+            `Adds a server to ${queryPrefix}list.`,
             `A full command is as follows: **${queryPrefix}addserver <ip>:<port> server name**.`,
             `You can skip the port and a default of port **${defaultServerPort}** will be used.`,
             `You can skip the server name and it will use the server's name from the pinged data.\n`,
             `**Valid Examples:**
-            ${queryPrefix}addserver 12.34.56.78:7777 A ut2004 server
+            **${queryPrefix}addserver 12.34.56.78:7777 A ut2004 server
             ${queryPrefix}addserver 12.34.56.78:7777
             ${queryPrefix}addserver 12.34.56.78 A ut2004 server
-            ${queryPrefix}addserver 12.34.56.78`
+            ${queryPrefix}addserver 12.34.56.78**`
        
         ];
 
@@ -112,7 +112,47 @@ class HelpMessage{
 
     facepalm(){
 
-        return {"title": "Are you ok?", "text": `What did you think was going to happen?`};
+        return {"title": "Really...", "text": `What did you think was going to happen?`};
+    }
+
+    deleteServerHelp(){
+
+        const messages = [
+            `Delete a server from **${queryPrefix}list**.`,
+            `Use **${queryPrefix}list** to get the server's id.\n`,
+            `**Valid Examples**
+            **${queryPrefix}deleteserver 3** Deletes the 3rd server that is in the list.
+            **${queryPrefix}deleteserver 69** Deletes the 69th server that is in the list.`
+        ];
+
+        return this.createEmbedData("Delete Server Help", messages);
+    }
+
+    giveAdminHelp(){
+
+        const messages = [
+            `Give a Discord Role admin privileges.`,
+            `If no roles have been given admin privileges everyone in the server can use them.`,
+            `Role names are case insensitive.\n`,
+            `**Valid Examples**
+            **${queryPrefix}giveadmin UT2k4Players**
+            **${queryPrefix}giveadmin Potatoes**`,
+        ];
+
+        return this.createEmbedData("Give Admin Help", messages);
+    }
+
+    removeAdminHelp(){
+
+        const messages = [
+            `Removes a Discord Role's admin privileges.`,
+            `Role names are case insensitive.\n`,
+            `**Valid Examples**
+            **${queryPrefix}removeadmin UT2k4Players**
+            **${queryPrefix}removeadmin Potatoes**`,
+        ];
+
+        return this.createEmbedData("Remove Admin Help", messages);
     }
 
     getResponse(){
@@ -122,6 +162,9 @@ class HelpMessage{
         }
 
         if(this.helpCommand === "addserver") return this.getServerHelp();
+        if(this.helpCommand === "deleteserver") return this.deleteServerHelp();
+        if(this.helpCommand === "giveadmin") return this.giveAdminHelp();
+        if(this.helpCommand === "removeadmin") return this.removeAdminHelp();
         if(this.helpCommand === "list") return this.getListHelp();
         if(this.helpCommand === "q") return this.getQHelp();
         if(this.helpCommand === "help") return this.facepalm();
