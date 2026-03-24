@@ -1,10 +1,10 @@
-const dns = require('dns');
-const config = require('./config.json');
-const Discord = require('discord.js');
-const Database = require('./database');
+import dns from "dns";
+import config from "./config.json" with {"type": "json"};
+import { EmbedBuilder } from "discord.js";
+import Database from "./database.js";
 
 
-class Servers{
+export default class Servers{
 
     constructor(){    
 
@@ -351,18 +351,18 @@ class Servers{
             for(let i = 0; i < messages.length; i++){
 
                 if(i === 0){
-                    response = new Discord.MessageEmbed()
+                    response = new EmbedBuilder()
                     .setColor(config.embedColor)
                     .setTitle(title)
                     .setDescription(`Type **${config.commandPrefix}qID** to get more information about a server.`)
-                    .addField(this.createServerString(), messages[i]);
+                    .addFields({"name": this.createServerString(), "value": messages[i]});
                 }else{
-                    response = new Discord.MessageEmbed()
+                    response = new EmbedBuilder()
                     .setColor(config.embedColor)
                     .setDescription(messages[i])
                 }
 
-                await channel.send(response);
+                await channel.send({"embeds": [response]});
             }
 
         }catch(err){
@@ -511,7 +511,4 @@ class Servers{
             });
         });
     }
-
 }
-
-module.exports = Servers;

@@ -1,14 +1,13 @@
-const sqlite3 = require('sqlite3').verbose();
-const config = require('./config.json');
+import sqlite3 from "sqlite3";
+const sVerbose = sqlite3.verbose();
+import config from "./config.json" with {"type": "json"};
 
 
-class Database{
+export default class Database{
 
     constructor(){
 
-        this.sqlite = new sqlite3.Database(`${config.dbFile}`);
+        this.sqlite = new sVerbose.Database(`${config.dbFile}`);
     }
 }
 
-
-module.exports = Database;

@@ -1,9 +1,9 @@
-const config = require('./config.json');
-const Discord = require('discord.js');
-const Database = require('./database');
+import config from "./config.json" with {"type": "json"};
+import { EmbedBuilder } from "discord.js";
+import Database from "./database.js";
 
 
-class Channels{
+export default class Channels{
 
     constructor(servers){
 
@@ -277,7 +277,7 @@ class Channels{
 
                 for(let i = 0; i < addedServers.length; i++){
 
-                    currentEmbed = new Discord.MessageEmbed().setDescription(`Waiting for data for **${addedServers[i].name}** id ${i + 1}`);
+                    currentEmbed = new EmbedBuilder().setDescription(`Waiting for data for **${addedServers[i].name}** id ${i + 1}`);
 
                     await channel.send(currentEmbed).then(async (message) =>{
                         
@@ -329,6 +329,3 @@ class Channels{
     }
 
 }
-
-
-module.exports = Channels;

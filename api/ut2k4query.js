@@ -1,13 +1,10 @@
-const dgram = require('dgram');
-const config = require('./config.json');
-const ServerResponse = require('./serverresponse');
-const dns = require('dns');
-const Discord = require('discord.js');
-const { EmbedBuilder } = require('discord.js')
+import dgram from "dgram";
+import config from "./config.json" with {"type": "json"};
+import ServerResponse  from "./serverresponse.js";
+import dns from "dns";
+import { EmbedBuilder } from "discord.js";
 
-
-
-class UT2k4Query{
+export default class UT2k4Query{
 
     constructor(discordClient, servers, channels){
 
@@ -571,5 +568,3 @@ class UT2k4Query{
         }, config.autoQueryInterval * 1000);*/
     }
 }
-
-module.exports = UT2k4Query;

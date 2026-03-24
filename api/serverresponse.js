@@ -1,4 +1,4 @@
-class ServerResponse{
+export default class ServerResponse{
 
     constructor(ip, port, type, channel, domain, bAuto, servers){
 
@@ -400,5 +400,3 @@ class ServerResponse{
         
     }
 }
-
-module.exports = ServerResponse;

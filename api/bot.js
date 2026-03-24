@@ -1,15 +1,15 @@
-const config = require('./config.json');
-const Database = require('./database');
-const UT2k4Query = require('./ut2k4query');
-const {Client, Events, GatewayIntentBits, EmbedBuilder} = require('discord.js');
-const Servers = require('./servers');
-const dns = require('dns');
-const Roles = require('./roles');
-const Channels = require('./channels');
+import config from "./config.json" with {"type": "json"};
+import Database from "./database.js";
+import UT2k4Query from "./ut2k4query.js";
+import {Client, Events, GatewayIntentBits, EmbedBuilder} from "discord.js";
+import Servers from "./servers.js";
+import dns from "dns";
+import Roles from "./roles.js";
+import Channels from "./channels.js";
 
 
 
-class Bot{
+export default class Bot{
 
     constructor(){
 
@@ -606,7 +606,7 @@ class Bot{
 
                 if(this.roles.bRoleExists(result[1], message)){
 
-                    const roleId = this.roles.getRoleId(result[1], message.channel);
+                    const roleId = await this.roles.getRoleId(result[1], message.guild);
 
                     if(roleId !== null){
 
@@ -640,7 +640,7 @@ class Bot{
 
             if(result !== null){
 
-                const roleId = this.roles.getRoleId(result[1], message.channel);
+                const roleId = this.roles.getRoleId(result[1], message.guild);
 
                 if(roleId !== null){
 
@@ -662,6 +662,3 @@ class Bot{
     }
 
 }
-
-
-module.exports = Bot;

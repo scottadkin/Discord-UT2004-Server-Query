@@ -1,8 +1,8 @@
-const config = require('./config.json');
-const Database = require('./database');
+import config from "./config.json" with {"type": "json"};
+import Database from "./database.js";
 
 
-class Roles{
+export default class Roles{
 
     constructor(){
 
@@ -131,26 +131,23 @@ class Roles{
         return false;
     }
 
-    getRoleId(name, channel){
-
-        const roles = channel.guild.roles.cache.array();
+    async getRoleId(name, guild){
 
         name = name.toLowerCase();
 
-        for(let i = 0; i < roles.length; i++){
+        const roles = await guild.roles.fetch();
 
-            if(roles[i].name.toLowerCase() === name){
-                return roles[i].id;
-            }
+        for(const [id, role] of roles){
+            if(role.name.toLowerCase() === name) return id;
         }
 
         return null;
 
     }
 
-    getRoleName(id, channel){
+    async getRoleName(id, guild){
 
-        const roles = channel.guild.roles.cache.array();
+        const roles = await guild.roles.fetch(id);
 
         for(let i = 0; i < roles.length; i++){
 
@@ -176,10 +173,10 @@ class Roles{
 
             for(let i = 0; i < roles.length; i++){
 
-                currentRoleName = this.getRoleName(roles[i].id, channel);
+                currentRoleName = await this.getRoleName(roles[i].id, channel.guild);
 
                 if(currentRoleName === null){
-                    currentRoleName = `:warning: Deleted Role`;
+                    currentRoleName = `:warning: Deleted Role (${roles[i].id})`;
                 }
 
                 string += `**,** ${currentRoleName}`;
@@ -192,5 +189,3 @@ class Roles{
         }
     }
 }
-
-module.exports = Roles;
