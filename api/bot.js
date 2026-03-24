@@ -1,5 +1,4 @@
 import config from "./config.json" with {"type": "json"};
-import Database from "./database.js";
 import UT2k4Query from "./ut2k4query.js";
 import {Client, Events, GatewayIntentBits, EmbedBuilder, Options} from "discord.js";
 import Servers from "./servers.js";
@@ -13,7 +12,6 @@ export default class Bot{
 
     constructor(){
 
-        this.db = new Database().sqlite;
         this.servers = new Servers();
         this.roles = new Roles();
         this.channels = new Channels(this.servers);
@@ -567,7 +565,8 @@ export default class Bot{
 
 
         normalString += `:keyboard: **Github Repo** <https://github.com/scottadkin/Discord-UT2004-Server-Query>\n`;
-        normalString += `**UT2004 URL Registry Fix** <https://github.com/serverlinkdev/shoNuff>`;
+        normalString += `OldUnreal UT2004 Full Game Installer <https://www.oldunreal.com/downloads/ut2004/full-game-installers/>\n`;
+        normalString += `OldUnreal UT2004 Patches <https://github.com/OldUnreal/UT2004Patches/releases>`;
 
         channel.send(normalString);
     }

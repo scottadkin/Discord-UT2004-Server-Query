@@ -1,12 +1,11 @@
 import config from "./config.json" with {"type": "json"};
-import Database from "./database.js";
+import {simpleQuery} from "./database.js";
 
 
 export default class Roles{
 
     constructor(){
 
-        this.db = new Database().sqlite;
     }
 
 

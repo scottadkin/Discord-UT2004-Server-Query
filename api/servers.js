@@ -1,14 +1,12 @@
 import dns from "dns";
 import config from "./config.json" with {"type": "json"};
 import { EmbedBuilder } from "discord.js";
-import Database from "./database.js";
+import {simpleQuery} from "./database.js";
 
 
 export default class Servers{
 
     constructor(){    
-
-        this.db = new Database().sqlite;
 
     }
 
@@ -102,12 +100,16 @@ export default class Servers{
 
             const vars = [alias, ip, port, now, now];
 
+            /*
             this.db.run(query, vars, (err) =>{
 
                 if(err) reject(err);
 
                 resolve();
-            });
+            });*/
+
+            simpleQuery(query, [alias, ip, port, now, now]);
+            resolve();
         });
     }
 
@@ -372,24 +374,12 @@ export default class Servers{
 
     updateServerInfo(ip, port, data){
 
-        return new Promise((resolve, reject) =>{
 
-            //console.log(`updateServerInfo ${ip}:${port}`);
-           // console.log(data);
+        const now = Math.floor(Date.now() * 0.001);
 
-            const query = `UPDATE servers SET name=?,players=?,max_players=?,map=?,gametype=?,modified=? WHERE ip=? AND port=?`;
+        const query = `UPDATE servers SET name=?,players=?,max_players=?,map=?,gametype=?,modified=? WHERE ip=? AND port=?`;
 
-            const now = Math.floor(Date.now() * 0.001);
-
-            //const vars = [data.name, data.currentPlayers, data.maxPlayers, data.map, data.gametype, now, ip, port];
-
-            this.db.run(query, [data.name, data.currentPlayers, data.maxPlayers, data.map, data.gametype, now, ip, port], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            }); 
-        });
+        simpleQuery(query, [data.name, data.currentPlayers, data.maxPlayers, data.map, data.gametype, now, ip, port]);
     }
 
     edit(server, type, value){
@@ -470,25 +460,9 @@ export default class Servers{
 
     getAllIpPorts(){
 
-        return new Promise((resolve, reject) =>{
+        const query = "SELECT ip,port FROM servers";
 
-            const servers = [];
-
-            const query = "SELECT ip,port FROM servers";
-
-            this.db.each(query, (err, result) =>{
-
-                if(err) reject(err);
-
-                servers.push(result);
-
-            }, (err) =>{
-
-                if(err) reject(err);
-
-                resolve(servers);
-            });
-        });
+        return simpleQuery(query);
     }
 
 

@@ -86,13 +86,13 @@ export default class UT2k4Query{
         return total;
     }
 
-    async pingInterval(){
+    pingInterval(){
 
         try{
 
             if(this.getBasicCount() <= 0){
 
-                const servers = await this.servers.getAllIpPorts();
+                const servers = this.servers.getAllIpPorts();
 
                 for(let i = 0; i < servers.length; i++){
 
@@ -511,9 +511,9 @@ export default class UT2k4Query{
 
             this.lastAutoInterval = now;
 
-            const servers = await this.servers.getAllIpPorts();
+            const servers = this.servers.getAllIpPorts();
 
-            const autoChannelId = await this.channels.getAutoQueryChannel();
+            const autoChannelId = this.channels.getAutoQueryChannel();
 
             if(autoChannelId !== null){
 

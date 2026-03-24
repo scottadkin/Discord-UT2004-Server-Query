@@ -1,49 +1,35 @@
 import config from "./config.json" with {"type": "json"};
 import { EmbedBuilder } from "discord.js";
-import Database from "./database.js";
+import {simpleQuery} from "./database.js";
 
 
 export default class Channels{
 
     constructor(servers){
 
-        this.db = new Database().sqlite;
         this.servers = servers;
 
     }
 
     getAllChannels(bOnlyIds){
 
-        return new Promise((resolve, reject) =>{
+        if(bOnlyIds === undefined) bOnlyIds = false;
 
-            const query = "SELECT * FROM channels";
+        const query = "SELECT * FROM channels";
+        const result = simpleQuery(query);
 
-            const channels = [];
+        if(!bOnlyIds) return result;
 
-            this.db.each(query, (err, result) =>{
-
-                if(err) reject(err);
-
-                if(bOnlyIds === undefined){
-                    channels.push(result);
-                }else{
-                    channels.push(result.id);
-                }
-
-            },(err) =>{
-
-                if(err) reject(err);
-
-                resolve(channels);
-            });
+        return result.map((r) =>{
+            return r.id;
         });
     }
 
-    async bAlreadyAdded(id){
+    bAlreadyAdded(id){
 
         try{
 
-            const channels = await this.getAllChannels(id);
+            const channels = this.getAllChannels(id);
 
             if(channels.indexOf(id) !== -1){
                 return true;
@@ -96,7 +82,7 @@ export default class Channels{
 
         try{
 
-            if(await this.bAlreadyAdded(channel.id)){
+            if(this.bAlreadyAdded(channel.id)){
 
                 channel.send(`${config.failIcon} The channel **${channel.name}** is already enabled for bot usage.`);
                 return;
@@ -116,7 +102,7 @@ export default class Channels{
 
         try{
 
-            if(await this.bAlreadyAdded(channel.id)){
+            if(this.bAlreadyAdded(channel.id)){
 
                 await this.deleteChannel(channel.id);
                 channel.send(`${config.passIcon} The bot is now disabled in this channel.`);
@@ -175,15 +161,13 @@ export default class Channels{
 
         try{
 
-            const activeChannels = await this.getAllChannels();
+            const activeChannels = this.getAllChannels();
 
             let string = `**:floppy_disk: Channels enabled for bot use.**\n`;
 
             let channelsString = '';
 
             const aCIds = activeChannels.map((c) => c.id);
-
-            aCIds.push("123456789012345");
 
             const {channels, missing} = await this.fetchChannels(guild, aCIds);
 
@@ -258,7 +242,7 @@ export default class Channels{
 
         try{
 
-            if(await this.bAlreadyAdded(channel.id)){
+            if(this.bAlreadyAdded(channel.id)){
 
                 await this.disableAutoChannel();
 
@@ -309,23 +293,14 @@ export default class Channels{
 
     getAutoQueryChannel(){
 
-        return new Promise((resolve, reject) =>{
+        const query = "SELECT id FROM channels WHERE auto_channel=1";
 
-            const query = "SELECT id FROM channels WHERE auto_channel=1";
+        const result = simpleQuery(query);
 
-            this.db.get(query, (err, result) =>{
+        if(result.length === 0) return null;
 
-                if(err) reject(err);
-
-                if(result !== undefined){
-
-                    resolve(result.id);
-                }
-
-                resolve(null);
-            });
-        });
-
+        return result[0].id;
+     
     }
 
 }

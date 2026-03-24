@@ -1,13 +1,17 @@
-import sqlite3 from "sqlite3";
-const sVerbose = sqlite3.verbose();
 import config from "./config.json" with {"type": "json"};
+import {DatabaseSync} from 'node:sqlite';
 
+const database = new DatabaseSync(`${config.dbFile}`);
 
-export default class Database{
+export function simpleQuery(query, vars){
 
-    constructor(){
+    const prepare = database.prepare(query);
 
-        this.sqlite = new sVerbose.Database(`${config.dbFile}`);
+    if(vars !== undefined){
+        return prepare.all(...vars);
+    }else{
+        return prepare.all();
     }
 }
+
 

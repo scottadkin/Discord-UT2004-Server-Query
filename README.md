@@ -11,7 +11,7 @@
 - Now run the command **node install** to create the database tables.
 - Now open the config file /api/config.js.
 - Add your Discord bot token, if this is not done correctly the bot can't join your server. <https://discordpy.readthedocs.io/en/latest/discord.html>
-- Make sure adminRole is a role in your discord server that you have access to, to be able to use admin commands.
+- Make sure adminRole is a role in your discord server that you have access to, otherwise admin commands will needed to setup the bot will be unavailable to you.
 - The config file is also where you can set the command prefix, by default it's dot(.)
 
 # Running the bot
