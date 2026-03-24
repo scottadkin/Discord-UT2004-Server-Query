@@ -2,7 +2,7 @@
  A discord bot that communicates with Unreal Tournament 2004 servers and displays their responses.
 
 # Requirements
-- Node.js Version 12 or later.
+- Node.js Version 22.12.0 or later.
 
 # Installing
 - Extract the contents of the archive into a directory.
