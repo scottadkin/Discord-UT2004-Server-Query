@@ -3,6 +3,7 @@ const config = require('./config.json');
 const ServerResponse = require('./serverresponse');
 const dns = require('dns');
 const Discord = require('discord.js');
+const { EmbedBuilder } = require('discord.js')
 
 
 
@@ -352,7 +353,7 @@ class UT2k4Query{
        // console.log(response);
 
        //memory leak after
-        response.finishedStep(Discord, config.embedColor);
+        response.finishedStep(EmbedBuilder, config.embedColor);
 
 
     }
@@ -475,7 +476,7 @@ class UT2k4Query{
 
         response.setValue('players', players);
 
-        response.finishedStep(Discord, config.embedColor);
+        response.finishedStep(EmbedBuilder, config.embedColor);
 
     }
 

@@ -241,7 +241,7 @@ class ServerResponse{
         }
     }
 
-    async sendFullResponse(Discord,embedColor){
+    async sendFullResponse(MessageEmbed,embedColor){
 
         try{
 
@@ -264,22 +264,22 @@ class ServerResponse{
                 address = this.domain;
             }
 
-            const response = new Discord.MessageEmbed()
+            const response = new MessageEmbed()
             .setColor(embedColor)
             .setTitle(this.data.name)
             .setDescription(description)
             .addFields(teamFields)
-            .addField(`Join Server`,`**<ut2004://${address}:${this.port}>**`)
-            .addField(`Join Server as Spectator`,`**<ut2004://${address}:${this.port}?spectatorOnly=1>**`)
+            .addFields({"name":`Join Server`, "value": `**<ut2004://${address}:${this.port}>**`})
+            .addFields({"name": `Join Server as Spectator`, "value": `**<ut2004://${address}:${this.port}?spectatorOnly=1>**`})
             .setTimestamp();
 
-            this.response = response;
+            const replyContent = {"embeds": [response]};
             this.address = address;
 
             if(!this.bAuto){
 
                // console.log(`Not auto message id`);
-                await this.channel.send(response);
+                await this.channel.send(replyContent);
                 this.channel = null;
 
             }else{
@@ -292,7 +292,7 @@ class ServerResponse{
 
                     const message = await this.channel.messages.fetch(editMessageId);
 
-                    await message.edit(response)
+                    await message.edit(replyContent)
                     .then(() =>{
                        // console.log('edit message');
                     })
@@ -341,7 +341,7 @@ class ServerResponse{
     }
 
 
-     async finishedStep(Discord, embedColor){
+     async finishedStep(MessageEmbed, embedColor){
 
         
         try{
@@ -373,7 +373,7 @@ class ServerResponse{
                     if(this.data.currentPlayers == 0){
 
                         this.bGotAllData = true;
-                        this.sendFullResponse(Discord, embedColor);
+                        this.sendFullResponse(MessageEmbed, embedColor);
                         
                     }
 
@@ -386,7 +386,7 @@ class ServerResponse{
                     if(this.data.players.length >= this.data.currentPlayers - 1 || this.playerPacketsReceived >= 2){
 
                         this.bGotAllData = true;
-                        this.sendFullResponse(Discord, embedColor);
+                        this.sendFullResponse(MessageEmbed, embedColor);
 
                        // return;
 

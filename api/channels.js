@@ -1,4 +1,3 @@
-const Promise = require('promise');
 const config = require('./config.json');
 const Discord = require('discord.js');
 const Database = require('./database');
@@ -141,31 +140,68 @@ class Channels{
         return 'Not Found!';
     }
 
-    async displayAllChannels(channel){
+    async fetchChannels(guild, channelIds){
+
+        const promises = [];
+
+        for(let i = 0; i < channelIds.length; i++){
+            promises.push(guild.channels.fetch(channelIds[i]).catch(() => null));
+        }
+    
+        //text channels are type 0, dm 1, voice 2
+        const responses = await Promise.all(promises);
+
+        //channels are null if not found
+
+        const missing = [...channelIds];
+
+        const channels = [];
+
+        for(let i = 0; i < responses.length; i++){
+
+            const r = responses[i];
+            if(r === null) continue;
+            
+            const index = missing.indexOf(r.id);
+            if(index !== -1) missing.splice(index, 1);
+            channels.push(r);
+
+        }
+
+        return {channels, missing};
+    }
+
+    async displayAllChannels(client, messageChannel, guild){
 
         try{
 
-            const channels = await this.getAllChannels();
+            const activeChannels = await this.getAllChannels();
 
             let string = `**:floppy_disk: Channels enabled for bot use.**\n`;
 
-
-            this.getChannelName(channel);
-
             let channelsString = '';
 
-            const dChannels = channel.guild.channels.cache.array();
+            const aCIds = activeChannels.map((c) => c.id);
 
-            for(let i = 0; i < channels.length; i++){
+            aCIds.push("123456789012345");
 
-                channelsString += `**${this.getChannelName(dChannels, channels[i].id)}** enabled ${new Date(channels[i].added * 1000).toString()}\n`;
+            const {channels, missing} = await this.fetchChannels(guild, aCIds);
+
+            for(let i = 0; i < activeChannels.length; i++){
+
+                channelsString += `**${this.getChannelName(channels, activeChannels[i].id)}** enabled ${new Date(activeChannels[i].added * 1000).toString()}\n`;
+            }
+
+            for(let i = 0; i < missing.length; i++){
+
+                channelsString += `**Error:** Unable to find text channel with the ID of ${missing[i]}`;
             }
 
             if(channelsString == ''){
                 channelsString = `There are currently no channels enabled for bot use.`;
             }
 
-            channel.send(string + channelsString);
+            messageChannel.send(string + channelsString);
 
         }catch(err){
             console.trace(err);

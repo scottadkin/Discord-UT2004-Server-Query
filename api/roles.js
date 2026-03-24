@@ -1,4 +1,3 @@
-const Promise = require('promise');
 const config = require('./config.json');
 const Database = require('./database');
 

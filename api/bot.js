@@ -1,7 +1,7 @@
 const config = require('./config.json');
 const Database = require('./database');
 const UT2k4Query = require('./ut2k4query');
-const Discord = require('discord.js');
+const {Client, Events, GatewayIntentBits, EmbedBuilder} = require('discord.js');
 const Servers = require('./servers');
 const dns = require('dns');
 const Roles = require('./roles');
@@ -25,14 +25,32 @@ class Bot{
 
     createClient(){
 
-        this.client = new Discord.Client({
+        /*this.client = new Discord.Client({
+            messageEditHistoryMaxSize: 0,
+            messageCacheLifetime: 1,
+            messageCacheMaxSize: 0,
+            messageSweepInterval: 30
+        });*/
+
+        this.client = new Client({
+            intents: [
+                GatewayIntentBits.Guilds,
+                GatewayIntentBits.GuildMessages,
+                GatewayIntentBits.MessageContent
+            ],
             messageEditHistoryMaxSize: 0,
             messageCacheLifetime: 1,
             messageCacheMaxSize: 0,
             messageSweepInterval: 30
         });
 
-        this.client.on('ready', () =>{
+        this.client.once(Events.ClientReady, (readyClient) =>{
+            console.log("test");
+            this.query = new UT2k4Query(this.client, this.servers, this.channels);
+
+        });
+
+        /*this.client.on('ready', () =>{
 
             console.log(`Who said that?!`);
 
@@ -44,8 +62,8 @@ class Bot{
 
             console.trace(err);
         });
-
-        this.client.on('message', (message) =>{
+    */
+        this.client.on('messageCreate', (message) =>{
 
             this.parseCommand(message);
 
@@ -217,7 +235,7 @@ class Bot{
 
                     }else if(adminRegs[8].test(text)){
 
-                        this.channels.displayAllChannels(message.channel);
+                        this.channels.displayAllChannels(this.client, message.channel, message.guild);
                         return;
 
                     }else if(adminRegs[9].test(text)){
