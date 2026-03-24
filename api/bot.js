@@ -1,7 +1,7 @@
 import config from "./config.json" with {"type": "json"};
 import Database from "./database.js";
 import UT2k4Query from "./ut2k4query.js";
-import {Client, Events, GatewayIntentBits, EmbedBuilder} from "discord.js";
+import {Client, Events, GatewayIntentBits, EmbedBuilder, Options} from "discord.js";
 import Servers from "./servers.js";
 import dns from "dns";
 import Roles from "./roles.js";
@@ -25,48 +25,27 @@ export default class Bot{
 
     createClient(){
 
-        /*this.client = new Discord.Client({
-            messageEditHistoryMaxSize: 0,
-            messageCacheLifetime: 1,
-            messageCacheMaxSize: 0,
-            messageSweepInterval: 30
-        });*/
-
         this.client = new Client({
             intents: [
                 GatewayIntentBits.Guilds,
                 GatewayIntentBits.GuildMessages,
                 GatewayIntentBits.MessageContent
             ],
-            messageEditHistoryMaxSize: 0,
-            messageCacheLifetime: 1,
-            messageCacheMaxSize: 0,
-            messageSweepInterval: 30
+            makeCache: Options.cacheWithLimits(Options.DefaultMakeCacheSettings)
         });
 
         this.client.once(Events.ClientReady, (readyClient) =>{
-            console.log("test");
             this.query = new UT2k4Query(this.client, this.servers, this.channels);
 
         });
 
-        /*this.client.on('ready', () =>{
-
-            console.log(`Who said that?!`);
-
-            this.query = new UT2k4Query(this.client, this.servers, this.channels);
-
-        });
-
+    
         this.client.on('error', (err) =>{
-
             console.trace(err);
         });
-    */
+        
         this.client.on('messageCreate', (message) =>{
-
             this.parseCommand(message);
-
         });
 
         this.client.login(config.discordToken);
