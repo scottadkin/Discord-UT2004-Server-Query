@@ -40,24 +40,25 @@ When the bot has joined the server only people with the role "adminRole" can use
 # Bot commands
 
 ## adminCommands
-**.addserver alias ip:port** Add a server to the database with the specified alias ip and port, if port is not specified 7777 is used.
-**.deleteserver serverID** Deletes the specified server matching the IP:PORT of the ID.
-**.editserver serverID type value** Edits the specified server's type with the new value, valid types are **IP, Port, Alias**.
-**.roles** Displays all user roles that can use admin commands.
-**.allowrole Name** Allows users with said role to use admin commands.
-**.removerole Name** Disables users with said role from using admin commands.
-**.allowchannel** Allows the bot to be used in the current channel.
-**.removechannel** Disables the bot to be used in the current channel.
-**.channels** Displays all channels that are enabled for bot usage.
-**.setauto** Sets the channel as the auto query channel where the latest messages are updated in intervals.
+- **.addserver alias ip:port** Add a server to the database with the specified alias ip and port, if port is not specified 7777 is used.
+- **.deleteserver serverID** Deletes the specified server matching the IP:PORT of the ID.
+- **.editserver serverID type value** Edits the specified server's type with the new value, valid types are **IP, Port, Alias**.
+- **.roles** Displays all user roles that can use admin commands.
+- **.allowrole Name** Allows users with said role to use admin commands.
+- **.removerole Name** Disables users with said role from using admin commands.
+- **.allowchannel** Allows the bot to be used in the current channel.
+- **.removechannel** Disables the bot to be used in the current channel.
+- **.channels** Displays all channels that are enabled for bot usage.
+- **.setauto** Sets the channel as the auto query channel where the latest messages are updated in intervals.
+- **.disableauto** Disables the auto query channel updates.
 
 ## Normal Commands
-**.help** Displays this command.
-**.servers** Displays all the servers added to the database.
-**.active** Displays all the servers added to the database that has at least 1 player in it.
-**.qID** Queries the specified server ip:port matching that server ID in the database.
-**.q ip:port** Queries a UT2004 server with the specified ip:port, if port is not provided 7777 is used.
-**.ipID** Displays the name and ip:port of the server added to the database.
+- **.help** Displays this command.
+- **.servers** Displays all the servers added to the database.
+- **.active** Displays all the servers added to the database that has at least 1 player in it.
+- **.qID** Queries the specified server ip:port matching that server ID in the database.
+- **.q ip:port** Queries a UT2004 server with the specified ip:port, if port is not provided 7777 is used.
+- **.ipID** Displays the name and ip:port of the server added to the database.
         
 `
 Updated .q and .ip commands with join as spectator added

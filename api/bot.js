@@ -16,6 +16,20 @@ export default class Bot{
 
         this.bDisabled = false;
 
+        this.adminRegs = {
+            "addServer": /^.addserver .+$/i,
+            "deleteServer": /^.deleteserver \d+$/i,
+            "editServer": /^.editserver \d+ .+? .+?$/i,
+            "allowRole": /^.allowrole .+$/i,
+            "removeRole": /^.removerole .+$/i,
+            "roles": /^.roles$/i,
+            "allowChannel": /^.allowchannel$/i,
+            "removeChannel": /^.removechannel$/i,
+            "channels": /^.channels$/i,
+            "setAuto": /^.setauto$/i,
+            "disableAuto": /^.disableauto$/i
+        };
+
         this.createClient();
     }
 
@@ -117,6 +131,78 @@ export default class Bot{
         }
     }
 
+    parseAdminCommand(message){
+
+        const regs = this.adminRegs;
+        const text = message.content;
+
+        if(regs.addServer.test(text)){
+
+            this.servers.addServer(message);
+            return;
+
+        }else if(regs.deleteServer.test(text)){
+
+            this.servers.deleteServer(message);
+            return;
+
+        }else if(regs.editServer.test(text)){
+            
+            this.editServer(message);
+            return;
+
+        }else if(regs.allowRole.test(text)){
+            
+            this.addRole(message);
+            return;
+
+        }else if(regs.removeRole.test(text)){
+
+            this.deleteRole(message);
+            return;
+
+        }else if(regs.roles.test(text)){
+
+            this.roles.displayAddedRoles(message.channel);
+            return;
+
+        }else if(regs.allowChannel.test(text)){
+
+            this.channels.addChannel(message.channel);
+            return;
+
+        }else if(regs.removeChannel.test(text)){
+
+            this.channels.removeChannel(message.channel);
+            return;
+
+        }else if(regs.channels.test(text)){
+
+            this.channels.displayAllChannels(this.client, message.channel, message.guild);
+            return;
+
+        }else if(regs.setAuto.test(text)){
+
+            this.channels.setAutoChannel(message.channel);
+            return;
+
+        }else if(regs.disableAuto.test(text)){
+
+            this.channels.disableAutoChannel();
+            message.channel.send(`${passIcon} Auto query is now disabled.`);
+            return;
+        }    
+    }
+
+    bTryingToUseAdminCommand(text){
+
+        for(const reg of Object.values(this.adminRegs)){
+
+            if(reg.test(text)) return true;
+        }
+
+        return false;
+    }
 
     parseCommand(message){
 
@@ -124,141 +210,66 @@ export default class Bot{
 
             const text = message.content;
 
-            if(text.startsWith(commandPrefix) && text.length > 1){
+            if(text.length <= 1) return;
+            if(!text.startsWith(commandPrefix)) return;
 
-                if(text[1] === commandPrefix) return; //ignore to prevent false positives
+            if(text[1] === commandPrefix) return; //ignore to prevent false positives
 
-                const serversReg = /^.servers$/i;
-                const activeReg = /^.active$/i;
-                const queryReg = /^.q .+$/i;
-                const shortQueryReg = /^.q\d+$/i;
-                const ipQueryReg = /^.ip\d+$/i;
-                const helpReg = /^.help$/i;
+            const serversReg = /^.servers$/i;
+            const activeReg = /^.active$/i;
+            const queryReg = /^.q .+$/i;
+            const shortQueryReg = /^.q\d+$/i;
+            const ipQueryReg = /^.ip\d+$/i;
+            const helpReg = /^.help$/i;
 
-                const adminRegs = [
-                    /^.addserver .+$/i,
-                    /^.deleteserver \d+$/i,
-                    /^.editserver \d+ .+? .+?$/i,
-                    /^.allowrole .+$/i,
-                    /^.removerole .+$/i,
-                    /^.roles$/i,
-                    /^.allowchannel$/i,
-                    /^.removechannel$/i,
-                    /^.channels$/i,
-                    /^.setauto$/i,
-                    /^.disableauto$/i
+            const bAdmin = this.bUserAdmin(message);
+            const bAdminOnlyCommand = this.bTryingToUseAdminCommand(text);
 
-                ];
+            if(!bAdmin && bAdminOnlyCommand){
 
-                const bAdmin = this.bUserAdmin(message);
-
-                if(!bAdmin){
-
-                    for(let i = 0; i < adminRegs.length; i++){
-
-                        if(adminRegs[i].test(text)){
-
-                            message.channel.send(`${failIcon} You do not have permission to use this command.`);
-                            return;
-                        }
-                    }
-                }
-                
-                if(bAdmin){
-
-                    if(adminRegs[0].test(text)){
-
-                        this.servers.addServer(message);
-                        return;
-        
-                    }else if(adminRegs[1].test(text)){
-        
-                        this.servers.deleteServer(message);
-                        return;
-        
-                    }else if(adminRegs[2].test(text)){
-                        
-                        this.editServer(message);
-                        return;
-        
-                    }else if(adminRegs[3].test(text)){
-                        
-                        this.addRole(message);
-                        return;
-
-                    }else if(adminRegs[4].test(text)){
-
-                        this.deleteRole(message);
-                        return;
-
-                    }else if(adminRegs[5].test(text)){
-
-                        this.roles.displayAddedRoles(message.channel);
-                        return;
-
-                    }else if(adminRegs[6].test(text)){
-
-                        this.channels.addChannel(message.channel);
-                        return;
-
-                    }else if(adminRegs[7].test(text)){
-
-                        this.channels.removeChannel(message.channel);
-                        return;
-
-                    }else if(adminRegs[8].test(text)){
-
-                        this.channels.displayAllChannels(this.client, message.channel, message.guild);
-                        return;
-
-                    }else if(adminRegs[9].test(text)){
-
-                        this.channels.setAutoChannel(message.channel);
-                        return;
-
-                    }else if(adminRegs[10].test(text)){
-
-                        this.channels.disableAutoChannel();
-                        message.channel.send(`${passIcon} Auto query is now disabled.`);
-                        return;
-                    }
-                }
-
-                if(!this.bBotEnabledInChannel(message.channel.id)){
-
-                    if(bDisplayNotEnabled){
-                        message.channel.send(`${failIcon} The bot is not enabled in this channel.`);
-                    }
-                    return;
-
-                }
-
-                if(serversReg.test(text)){
-
-                    this.servers.displayAllServers(message.channel, false);
-
-                }else if(activeReg.test(text)){
-                
-                    this.servers.displayAllServers(message.channel, true);
-
-                }else if(shortQueryReg.test(text)){
-                    
-                    this.queryServerShort(text, message.channel);
-
-                }else if(queryReg.test(text)){
-                    
-                    this.queryServer(text, message.channel);
-                    
-                }else if(ipQueryReg.test(text)){
-                    
-                    this.ipQueryReg(text, message.channel);
-
-                }else if(helpReg.test(text)){
-
-                    this.helpCommand(message.channel);
-
-                }
+                message.channel.send(`${failIcon} You do not have permission to use this command.`);
+                return;
             }
+
+            if(bAdmin && bAdminOnlyCommand){
+                return this.parseAdminCommand(message);
+            }
+
+            if(!this.bBotEnabledInChannel(message.channel.id)){
+
+                if(bDisplayNotEnabled){
+                    message.channel.send(`${failIcon} The bot is not enabled in this channel.`);
+                }
+                return;
+
+            }
+
+            if(serversReg.test(text)){
+
+                this.servers.displayAllServers(message.channel, false);
+
+            }else if(activeReg.test(text)){
+            
+                this.servers.displayAllServers(message.channel, true);
+
+            }else if(shortQueryReg.test(text)){
+                
+                this.queryServerShort(text, message.channel);
+
+            }else if(queryReg.test(text)){
+                
+                this.queryServer(text, message.channel);
+                
+            }else if(ipQueryReg.test(text)){
+                
+                this.ipQueryReg(text, message.channel);
+
+            }else if(helpReg.test(text)){
+
+                this.helpCommand(message.channel);
+
+            }
+            
         }catch(err){
             console.trace(err);
         }
@@ -268,8 +279,9 @@ export default class Bot{
 
         input = parseInt(input);
 
-        if(input === input)
-            if(input > 0 && input <= 65535) return true;
+        if(input !== input) return false;
+
+        if(input > 0 && input <= 65535) return true;
             
         return false;
     }
@@ -390,82 +402,81 @@ export default class Bot{
 
             const result = reg.exec(message.content);
 
-            if(result !== null){
+            if(result === null){
+                message.channel.send(`${failIcon} Incorrect edit server syntax.`);
+                return;
+            }
 
-                const editType = result[2].toLowerCase();
+            const editType = result[2].toLowerCase();
 
-                if(validServerEditTypes.indexOf(editType) === -1){
-                    message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);
+            if(validServerEditTypes.indexOf(editType) === -1){
+                message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);
+                return;
+            }
+
+            let ip = -1;
+            let port = -1;
+
+            if(editType === 'ip'){
+
+                if(await this.bValidIp(result[3])){
+
+                    ip = result[3];
+
+                }else{
+                    message.channel.send(`${failIcon} Not a valid IP/Domain.`);
                     return;
                 }
 
-                let ip = -1;
-                let port = -1;
+            }else if(editType === 'port'){
 
-                if(editType === 'ip'){
+                port = result[3];
 
-                    if(await this.bValidIp(result[3])){
-
-                        ip = result[3];
-
-                        console.log('valid ip/domain');
-
-                    }else{
-                        message.channel.send(`${failIcon} Not a valid IP/Domain.`);
-                        return;
-                    }
-
-                }else if(editType === 'port'){
-
-                    port = result[3];
-
-                }else if(editType === 'country'){
+            }else if(editType === 'country'){
 
 
+            }
+
+
+            const server = this.servers.getServerById(result[1]);
+
+            if(server !== null){
+
+                if(ip === -1){
+                    ip = server.ip;
+                }
+
+                if(port === -1){
+                    port = server.port;
                 }
 
 
-                const server = await this.servers.getServerById(result[1]);
+                if(editType === 'ip' || editType === 'port'){
 
-                if(server !== null){
-
-                    if(ip === -1){
-                        ip = server.ip;
-                    }
-
-                    if(port === -1){
-                        port = server.port;
-                    }
-
-
-                    if(editType === 'ip' || editType === 'port'){
-
-                        if(!this.servers.bServerAlreadyAdded(ip, port)){
-
-                            this.servers.edit(server, editType, result[3]);
-
-                            message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
-                        
-                        }else{
-
-                            message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
-                        }
-
-                    }else{
+                    if(!this.servers.bServerAlreadyAdded(ip, port)){
 
                         this.servers.edit(server, editType, result[3]);
 
                         message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
-                        
+                    
+                    }else{
+
+                        message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
                     }
 
                 }else{
-                    message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);
+
+                    this.servers.edit(server, editType, result[3]);
+
+                    message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
+                    
                 }
 
             }else{
-                message.channel.send(`${failIcon} Incorrect edit server syntax.`);
+                message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);
             }
+
+            
 
         }catch(err){
             console.trace(err);
@@ -482,9 +493,7 @@ export default class Bot{
 
             if(result !== null){
 
-                //console.log(result);
-
-                const server = await this.servers.getServerById(result[1]);
+                const server = this.servers.getServerById(result[1]);
 
                 if(server !== null){
 
@@ -622,5 +631,4 @@ export default class Bot{
             console.trace(err);
         }
     }
-
 }
