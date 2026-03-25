@@ -1,5 +1,5 @@
 import dgram from "dgram";
-import config from "./config.json" with {"type": "json"};
+import { failIcon, embedColor, responseTimeout, serverInfoInterval, autoQueryInterval, udpPort, bLabelAsTAM } from "../config.js";
 import ServerResponse  from "./serverresponse.js";
 import dns from "dns";
 import { EmbedBuilder } from "discord.js";
@@ -34,20 +34,20 @@ export default class UT2k4Query{
 
     tick(){
 
-        this.tickLoop = setInterval( () =>{
+        this.tickLoop = setInterval(() =>{
 
-           const now = Math.floor(Date.now() * 0.001);
+            const now = Math.floor(Date.now() * 0.001);
             
             let newResponses = [];
 
             for(let i = 0; i < this.responses.length; i++){
 
-                if(now - this.responses[i].timeStamp > config.responseTimeout){
+                if(now - this.responses[i].timeStamp > responseTimeout){
 
                     if(!this.responses[i].bGotAllData){
 
                         if(this.responses[i].type == "full" && this.responses[i].channel !== null && !this.responses[i].bAuto){
-                            this.responses[i].channel.send(`${config.failIcon} Server **${this.responses[i].ip}:${this.responses[i].port}** has Timed Out :timer:.`);
+                            this.responses[i].channel.send(`${failIcon} Server **${this.responses[i].ip}:${this.responses[i].port}** has Timed Out :timer:.`);
                         }
                     }
 
@@ -61,11 +61,11 @@ export default class UT2k4Query{
             this.responses = null;
             this.responses = newResponses;
             
-            if(this.lastPingInterval === null || now - this.lastPingInterval >= config.serverInfoInterval){
+            if(this.lastPingInterval === null || now - this.lastPingInterval >= serverInfoInterval){
                 this.pingInterval();
             }
 
-            if(this.lastAutoInterval === null || now - this.lastAutoInterval >= config.autoQueryInterval){
+            if(this.lastAutoInterval === null || now - this.lastAutoInterval >= autoQueryInterval){
                 this.autoQueryInterval();
             }
 
@@ -124,7 +124,7 @@ export default class UT2k4Query{
                 dns.lookup(ip,(err, address) =>{
     
                     if(err){
-                        channel.message.send(`${config.failIcon} Not a valid domain!`);
+                        channel.message.send(`${failIcon} Not a valid domain!`);
                         
                     }else{
     
@@ -160,7 +160,7 @@ export default class UT2k4Query{
 
                     if(err){
                         console.log(err);
-                        channel.send(`${config.failIcon} Not a valid domain!`);
+                        channel.send(`${failIcon} Not a valid domain!`);
                     }else{
 
                         this.responses.push(new ServerResponse(address, port, "full", channel, ip, bAuto, this.servers));
@@ -189,7 +189,7 @@ export default class UT2k4Query{
 
         this.server.on('listening', () =>{
 
-            console.log(`UT2k4Query is listening on port ${config.udpPort}`);
+            console.log(`UT2k4Query is listening on port ${udpPort}`);
 
         });
 
@@ -206,7 +206,7 @@ export default class UT2k4Query{
         });
 
 
-        this.server.bind(config.udpPort);
+        this.server.bind(udpPort);
     }
 
 
@@ -321,7 +321,7 @@ export default class UT2k4Query{
         
         response.setValue('gametype', gametype.string);
 
-        if(config.labelAsTAM){
+        if(bLabelAsTAM){
 
             if(this.bDMMap(mapName.string)){
 
@@ -342,7 +342,7 @@ export default class UT2k4Query{
         response.setValue('maxPlayers', maxPlayers);
         byteOffset += 4;
 
-        response.finishedStep(EmbedBuilder, config.embedColor);
+        response.finishedStep(EmbedBuilder, embedColor);
 
     }
 
@@ -454,7 +454,7 @@ export default class UT2k4Query{
 
         response.setValue('players', players);
 
-        response.finishedStep(EmbedBuilder, config.embedColor);
+        response.finishedStep(EmbedBuilder, embedColor);
 
     }
 

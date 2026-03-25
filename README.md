@@ -16,21 +16,14 @@ The bot will still work without this permission you will just get an error messa
 - Open command prompt in the same directory.
 - Run the command **npm install** to install the required dependencies.
 - Now run the command **node install** to create the database tables.
-- Now open the config file /api/config.js.
+- Now open the config file **/config.js**.
 - Add your Discord bot token, if this is not done correctly the bot can't join your server. <https://discordpy.readthedocs.io/en/latest/discord.html>
 - Make sure adminRole is a role in your discord server that you have access to, otherwise admin commands needed to setup the bot will be unavailable to you.
 - The config file is also where you can set the command prefix, by default it's dot(.)
 
-
-
 # Running the bot
 - Open command prompt in the directory you installed the files.
 - Run the command **node app**
-
-
-
-
-
 
 # First time use
 When the bot has joined the server only people with the role "adminRole" can use the bot, to change this:
@@ -56,6 +49,7 @@ When the bot has joined the server only people with the role "adminRole" can use
 **.allowchannel** Allows the bot to be used in the current channel.
 **.removechannel** Disables the bot to be used in the current channel.
 **.channels** Displays all channels that are enabled for bot usage.
+**.setauto** Sets the channel as the auto query channel where the latest messages are updated in intervals.
 
 ## Normal Commands
 **.help** Displays this command.

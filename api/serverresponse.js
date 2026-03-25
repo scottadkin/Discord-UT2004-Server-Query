@@ -195,11 +195,9 @@ export default class ServerResponse{
 
         let total = 0;
 
-        let p = 0;
-
         for(let i = 0; i < this.data.players.length; i++){
 
-            p = this.data.players[i];
+            const p = this.data.players[i];
 
             if(totalTeams > 1){
 
@@ -217,10 +215,9 @@ export default class ServerResponse{
 
     setTeamScores(){
 
-        let p = 0;
         for(let i = 0; i < this.data.players.length; i++){
 
-            p = this.data.players[i];
+            const p = this.data.players[i];
 
             if(p.id === 0){
 

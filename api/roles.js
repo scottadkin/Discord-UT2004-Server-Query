@@ -1,13 +1,10 @@
-import config from "./config.json" with {"type": "json"};
+import { passIcon, failIcon, defaultAdminRole } from "../config.js";
 import {simpleQuery} from "./database.js";
 
 
 export default class Roles{
 
-    constructor(){
-
-    }
-
+    constructor(){}
 
     getAllAddedRoles(){
 
@@ -44,10 +41,10 @@ export default class Roles{
 
                 this.insertRow(id);
 
-                channel.send(`${config.passIcon} Users with the role **${name}** can now use admin commands.`);
+                channel.send(`${passIcon} Users with the role **${name}** can now use admin commands.`);
 
             }else{
-                channel.send(`${config.failIcon} That role already has admin privileges.`);
+                channel.send(`${failIcon} That role already has admin privileges.`);
             }
 
         }catch(err){
@@ -115,7 +112,7 @@ export default class Roles{
 
             let string = `**Roles that have admin privileges:**\n`;
 
-            string += `${config.defaultAdminRole}`;
+            string += `${defaultAdminRole}`;
 
             let currentRoleName = '';
 

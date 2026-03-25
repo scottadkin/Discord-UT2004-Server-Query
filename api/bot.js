@@ -1,4 +1,4 @@
-import config from "./config.json" with {"type": "json"};
+import { discordToken, defaultAdminRole, commandPrefix, failIcon, passIcon, bDisplayNotEnabled, validServerEditTypes } from "../config.js";
 import UT2k4Query from "./ut2k4query.js";
 import {Client, Events, GatewayIntentBits, Options} from "discord.js";
 import Servers from "./servers.js";
@@ -44,7 +44,7 @@ export default class Bot{
             this.parseCommand(message);
         });
 
-        this.client.login(config.discordToken);
+        this.client.login(discordToken);
     }
 
     disconnect(){
@@ -65,7 +65,7 @@ export default class Bot{
 
             const bDefaultAdmin = (elem) =>{
 
-                if(elem.name.toLowerCase() === config.defaultAdminRole.toLowerCase()) return true;
+                if(elem.name.toLowerCase() === defaultAdminRole.toLowerCase()) return true;
                 return false;
             }
 
@@ -124,9 +124,9 @@ export default class Bot{
 
             const text = message.content;
 
-            if(text.startsWith(config.commandPrefix) && text.length > 1){
+            if(text.startsWith(commandPrefix) && text.length > 1){
 
-                if(text[1] === config.commandPrefix) return; //ignore to prevent false positives
+                if(text[1] === commandPrefix) return; //ignore to prevent false positives
 
                 const serversReg = /^.servers$/i;
                 const activeReg = /^.active$/i;
@@ -158,7 +158,7 @@ export default class Bot{
 
                         if(adminRegs[i].test(text)){
 
-                            message.channel.send(`${config.failIcon} You do not have permission to use this command.`);
+                            message.channel.send(`${failIcon} You do not have permission to use this command.`);
                             return;
                         }
                     }
@@ -219,15 +219,15 @@ export default class Bot{
                     }else if(adminRegs[10].test(text)){
 
                         this.channels.disableAutoChannel();
-                        message.channel.send(`${config.passIcon} Auto query is now disabled.`);
+                        message.channel.send(`${passIcon} Auto query is now disabled.`);
                         return;
                     }
                 }
 
                 if(!this.bBotEnabledInChannel(message.channel.id)){
 
-                    if(config.bDisplayNotEnabled){
-                        message.channel.send(`${config.failIcon} The bot is not enabled in this channel.`);
+                    if(bDisplayNotEnabled){
+                        message.channel.send(`${failIcon} The bot is not enabled in this channel.`);
                     }
                     return;
 
@@ -295,7 +295,7 @@ export default class Bot{
 
                     if(!this.bValidPort(port)){
 
-                        channel.send(`${config.failIcon} Port must be between 1 and 65535`);
+                        channel.send(`${failIcon} Port must be between 1 and 65535`);
                         return;
                     }
                 }
@@ -315,13 +315,13 @@ export default class Bot{
                     this.query.getFullServer(ip, port, channel);
 
                 }else{
-                    channel.send(`${config.failIcon} Port must be between 1 and 65535`);
+                    channel.send(`${failIcon} Port must be between 1 and 65535`);
                     return;
                 }
             }
 
         }else{
-            channel.send(`${config.failIcon} Incorrect syntax for query server.`);
+            channel.send(`${failIcon} Incorrect syntax for query server.`);
         }
     }
 
@@ -342,11 +342,11 @@ export default class Bot{
                     this.query.getFullServer(server.ip, server.port, channel);
 
                 }else{
-                    channel.send(`${config.failIcon} A server with id **${result[1]}** does not exist.`);
+                    channel.send(`${failIcon} A server with id **${result[1]}** does not exist.`);
                 }
 
             }else{
-                channel.send(`${config.failIcon} Incorrect syntax for short query server.`);
+                channel.send(`${failIcon} Incorrect syntax for short query server.`);
             }
 
         }catch(err){
@@ -394,8 +394,8 @@ export default class Bot{
 
                 const editType = result[2].toLowerCase();
 
-                if(config.validServerEditTypes.indexOf(editType) === -1){
-                    message.channel.send(`${config.failIcon} **${result[2]}** is not a valid edit server type.`);
+                if(validServerEditTypes.indexOf(editType) === -1){
+                    message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);
                     return;
                 }
 
@@ -411,7 +411,7 @@ export default class Bot{
                         console.log('valid ip/domain');
 
                     }else{
-                        message.channel.send(`${config.failIcon} Not a valid IP/Domain.`);
+                        message.channel.send(`${failIcon} Not a valid IP/Domain.`);
                         return;
                     }
 
@@ -444,27 +444,27 @@ export default class Bot{
 
                             this.servers.edit(server, editType, result[3]);
 
-                            message.channel.send(`${config.passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
+                            message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
                         
                         }else{
 
-                            message.channel.send(`${config.failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
+                            message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
                         }
 
                     }else{
 
                         this.servers.edit(server, editType, result[3]);
 
-                        message.channel.send(`${config.passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
+                        message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
                         
                     }
 
                 }else{
-                    message.channel.send(`${config.failIcon} A server with the id **${result[1]}** does not exist.`);
+                    message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);
                 }
 
             }else{
-                message.channel.send(`${config.failIcon} Incorrect edit server syntax.`);
+                message.channel.send(`${failIcon} Incorrect edit server syntax.`);
             }
 
         }catch(err){
@@ -495,12 +495,12 @@ export default class Bot{
                     channel.send(string);
                     
                 }else{
-                    channel.send(`${config.failIcon} There is no server with the id **${result[1]}**.`);
+                    channel.send(`${failIcon} There is no server with the id **${result[1]}**.`);
                 }
 
             }else{
 
-                channel.send(`${config.failIcon} Incorrect ${config.commandPrefix}ip command syntax.`);
+                channel.send(`${failIcon} Incorrect ${commandPrefix}ip command syntax.`);
             }
 
         }catch(err){
@@ -508,7 +508,7 @@ export default class Bot{
         }
     }
 
-    helpCommand(channel){
+    async helpCommand(channel){
 
         const adminCommands = [
             {"command": "addserver alias ip:port", "text": "Add a server to the database with the specified alias ip and port, if port is not specified 7777 is used."},
@@ -519,7 +519,9 @@ export default class Bot{
             {"command": "removerole Name", "text": "Disables users with said role from using admin commands."},
             {"command": "allowchannel", "text": "Allows the bot to be used in the current channel."},
             {"command": "removechannel", "text": "Disables the bot to be used in the current channel."},
-            {"command": "channels", "text": "Displays all channels that are enabled for bot usage."}
+            {"command": "channels", "text": "Displays all channels that are enabled for bot usage."},
+            {"command": "setauto", "text": "Sets the current channel as the auto query update channel, the server info posts created will be updated in intervals."},
+            {"command": "disableauto", "text": "Disables auto query channel updates."},
         ];
 
         const normalCommands = [
@@ -535,25 +537,25 @@ export default class Bot{
 
         for(let i = 0; i < adminCommands.length; i++){
 
-            adminString += `**${config.commandPrefix}${adminCommands[i].command}** ${adminCommands[i].text}\n`;
+            adminString += `**${commandPrefix}${adminCommands[i].command}** ${adminCommands[i].text}\n`;
         }
 
 
-        channel.send(adminString);
+        await channel.send(adminString);
 
         let normalString = `\n:adult:**User Commands**\n`;
 
         for(let i = 0; i < normalCommands.length; i++){
 
-            normalString += `**${config.commandPrefix}${normalCommands[i].command}** ${normalCommands[i].text}\n`;
+            normalString += `**${commandPrefix}${normalCommands[i].command}** ${normalCommands[i].text}\n`;
         }
 
 
         normalString += `:keyboard: **Github Repo** <https://github.com/scottadkin/Discord-UT2004-Server-Query>\n`;
-        normalString += `OldUnreal UT2004 Full Game Installer <https://www.oldunreal.com/downloads/ut2004/full-game-installers/>\n`;
-        normalString += `OldUnreal UT2004 Patches <https://github.com/OldUnreal/UT2004Patches/releases>`;
+        normalString += `**OldUnreal UT2004 Full Game Installer** <https://www.oldunreal.com/downloads/ut2004/full-game-installers/>\n`;
+        normalString += `**OldUnreal UT2004 Patches** <https://github.com/OldUnreal/UT2004Patches/releases>`;
 
-        channel.send(normalString);
+        await channel.send(normalString);
     }
 
 
@@ -578,11 +580,11 @@ export default class Bot{
                     }
 
                 }else{
-                    message.channel.send(`${config.failIcon} There is no role called **${result[1]}** on this Discord server.`);
+                    message.channel.send(`${failIcon} There is no role called **${result[1]}** on this Discord server.`);
                 }
 
             }else{
-                message.channel.send(`${config.failIcon} Incorrect syntax for add role.`);
+                message.channel.send(`${failIcon} Incorrect syntax for add role.`);
             }
 
         }catch(err){
@@ -606,14 +608,14 @@ export default class Bot{
 
                     await this.roles.deleteRole(roleId);
 
-                    message.channel.send(`${config.passIcon} Users with role **${result[1]}** can no longer use admin commands.`);
+                    message.channel.send(`${passIcon} Users with role **${result[1]}** can no longer use admin commands.`);
 
                 }else{
-                    message.channel.send(`${config.failIcon} There is no role called **${result[1]}** on this Discord server.`);
+                    message.channel.send(`${failIcon} There is no role called **${result[1]}** on this Discord server.`);
                 }
 
             }else{
-                message.channel.send(`${config.failIcon} Incorrect delete role syntax.`);
+                message.channel.send(`${failIcon} Incorrect delete role syntax.`);
             }
 
         }catch(err){

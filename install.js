@@ -1,7 +1,4 @@
-const Database = require('./api/database');
-
-const db = new Database().sqlite;
-
+import { simpleQuery } from "./api/database.js";
 
 const queries = [
     `CREATE TABLE IF NOT EXISTS servers(
@@ -34,10 +31,11 @@ const queries = [
 
 for(let i = 0; i < queries.length; i++){
 
-    db.run(queries[i], (err) =>{
-
-        if(err) console.log(err);
-    })
+    try{
+        simpleQuery(queries[i]);
+    }catch(err){
+        console.trace(err);
+    }
 }
 
 console.log("Database Install completed.");

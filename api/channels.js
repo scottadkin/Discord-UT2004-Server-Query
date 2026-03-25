@@ -1,4 +1,4 @@
-import config from "./config.json" with {"type": "json"};
+import { failIcon, passIcon, commandPrefix } from "../config.js";
 import { EmbedBuilder } from "discord.js";
 import {simpleQuery} from "./database.js";
 
@@ -68,13 +68,13 @@ export default class Channels{
 
             if(this.bAlreadyAdded(channel.id)){
 
-                channel.send(`${config.failIcon} The channel **${channel.name}** is already enabled for bot usage.`);
+                channel.send(`${failIcon} The channel **${channel.name}** is already enabled for bot usage.`);
                 return;
             }
 
             this.insertChannel(channel.id);
 
-            channel.send(`${config.passIcon} The bot is now enabled in this channel.`);
+            channel.send(`${passIcon} The bot is now enabled in this channel.`);
 
         }catch(err){
             console.trace(err);
@@ -89,11 +89,11 @@ export default class Channels{
             if(this.bAlreadyAdded(channel.id)){
 
                 this.deleteChannel(channel.id);
-                channel.send(`${config.passIcon} The bot is now disabled in this channel.`);
+                channel.send(`${passIcon} The bot is now disabled in this channel.`);
                 return;
             }
 
-            channel.send(`${config.failIcon} The bot was already not enabled in this channel.`);
+            channel.send(`${failIcon} The bot was already not enabled in this channel.`);
 
         }catch(err){
             console.trace(err);
@@ -186,21 +186,6 @@ export default class Channels{
         return simpleQuery("UPDATE channels SET auto_channel=1 WHERE id=?", [channelId]);
     }
 
-    async deleteNonBotMessages(channel){
-
-        try{
-            const messages = await channel.messages.fetch();
-
-           // console.log(`Delete non bot messages`);
-            //console.log(`Found ${messages.array().length} messages to delete!`);
-
-            await channel.bulkDelete(messages);
-            
-        }catch(err){
-            console.trace(err);
-        }
-    }
-
     async setTopicTitle(channel){
 
         try{
@@ -209,7 +194,7 @@ export default class Channels{
         }catch(err){
 
             if(err.rawError.code === 50013){
-                await channel.send(`${config.failIcon} The bot does not have the needed permissions to set the topic title.`);
+                await channel.send(`${failIcon} The bot does not have the needed permissions to set the topic title.`);
             }
         }
     }
@@ -227,12 +212,10 @@ export default class Channels{
                 let string = `**Welcome to the auto server query channel, the posts here will be updated with the latest UT2004 server information for each server added to the database.**`;
 
                 await channel.send(`${string}`);
-                
+
                 await this.setTopicTitle(channel);
 
                 const addedServers = this.servers.getAllServers();
-
-                console.log(addedServers);
 
                 let currentEmbed = 0;
 
@@ -252,12 +235,12 @@ export default class Channels{
 
             }else{
 
-                await channel.send(`${config.failIcon} You must enable this channel first with the **${config.commandPrefix}allowchannel**, before being able to enable auto query.`);
+                await channel.send(`${failIcon} You must enable this channel first with the **${commandPrefix}allowchannel**, before being able to enable auto query.`);
 
             }
 
         }catch(err){
-            await channel.send(`${config.failIcon} There was an error setting up the auto query channel, please make sure the bot has the right permissions to manage a text channel.`);
+            await channel.send(`${failIcon} There was an error setting up the auto query channel, please make sure the bot has the right permissions to manage a text channel.`);
 
             console.trace(err);
         }

@@ -1,5 +1,5 @@
 import dns from "dns";
-import config from "./config.json" with {"type": "json"};
+import { failIcon, passIcon, commandPrefix, serverInfoInterval, serversPerMessage, embedColor } from "../config.js";
 import { EmbedBuilder } from "discord.js";
 import {simpleQuery} from "./database.js";
 
@@ -41,7 +41,7 @@ export default class Servers{
                         try{
 
                             if(err){
-                                message.channel.send(`${config.failIcon} Ip address for that domain does not exist!`);
+                                message.channel.send(`${failIcon} Ip address for that domain does not exist!`);
                                 throw new Error(err);
                             }
 
@@ -62,7 +62,7 @@ export default class Servers{
                 }        
 
             }else{
-                message.channel.send(`${config.failIcon} Incorrect syntax for ${config.commandPrefix}addserver.`);
+                message.channel.send(`${failIcon} Incorrect syntax for ${commandPrefix}addserver.`);
             }
 
         }catch(err){
@@ -78,10 +78,10 @@ export default class Servers{
 
                 this.insertServerQuery(alias, ip, port);
 
-                message.channel.send(`${config.passIcon} Server **${alias} (${ip}:${port})** added successfully.`);
+                message.channel.send(`${passIcon} Server **${alias} (${ip}:${port})** added successfully.`);
 
             }else{
-                message.channel.send(`${config.failIcon} A server with that IP and Port has already been added.`);
+                message.channel.send(`${failIcon} A server with that IP and Port has already been added.`);
             }
 
         }catch(err){
@@ -105,7 +105,6 @@ export default class Servers{
 
         const query = "SELECT COUNT(*) as total_servers FROM servers WHERE ip=? AND port=?";
         const result = simpleQuery(query, [ip, port]);
-        console.log(result);
 
         return result[0].total_servers > 0;
 
@@ -170,16 +169,16 @@ export default class Servers{
                     //console.log(server);
 
                     await this.deleteServerQuery(server.ip, server.port);
-                    message.channel.send(`${config.passIcon} Server deleted.`);
+                    message.channel.send(`${passIcon} Server deleted.`);
 
                 }else{
 
-                    message.channel.send(`${config.failIcon} There is no server with the id ${id}`);
+                    message.channel.send(`${failIcon} There is no server with the id ${id}`);
                 }
 
             }else{
 
-                message.channel.send(`${config.failIcon} Incorrect syntax for ${config.commandPrefix}deleteserver.`);
+                message.channel.send(`${failIcon} Incorrect syntax for ${commandPrefix}deleteserver.`);
             }
 
         }catch(err){
@@ -220,7 +219,7 @@ export default class Servers{
 
             const now = Math.floor(Date.now() * 0.001);
 
-            if(now - server.modified <= config.serverInfoInterval * 2){
+            if(now - server.modified <= serverInfoInterval * 2){
 
                 let playersString = `${server.players}/${server.max_players}`;
 
@@ -257,14 +256,14 @@ export default class Servers{
 
             const messages = [];
 
-            const servers = await this.getAllServers();
+            const servers = this.getAllServers();
 
             let string = ``;
             let currentServers = 0;
 
             for(let i = 0; i < servers.length; i++){
 
-                if(currentServers % config.serversPerMessage === 0 && currentServers !== 0){
+                if(currentServers % serversPerMessage === 0 && currentServers !== 0){
                     messages.push(string);
                     currentServers = 0;
                     string = '';
@@ -307,13 +306,13 @@ export default class Servers{
 
                 if(i === 0){
                     response = new EmbedBuilder()
-                    .setColor(config.embedColor)
+                    .setColor(embedColor)
                     .setTitle(title)
-                    .setDescription(`Type **${config.commandPrefix}qID** to get more information about a server.`)
+                    .setDescription(`Type **${commandPrefix}qID** to get more information about a server.`)
                     .addFields({"name": this.createServerString(), "value": messages[i]});
                 }else{
                     response = new EmbedBuilder()
-                    .setColor(config.embedColor)
+                    .setColor(embedColor)
                     .setDescription(messages[i])
                 }
 

@@ -1,7 +1,7 @@
-import config from "./config.json" with {"type": "json"};
+import { dbFile } from "../config.js";
 import {DatabaseSync} from 'node:sqlite';
 
-const database = new DatabaseSync(`${config.dbFile}`);
+const database = new DatabaseSync(`${dbFile}`);
 
 export function simpleQuery(query, vars){
 
