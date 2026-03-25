@@ -55,7 +55,12 @@ export default class Bot{
         });
         
         this.client.on('messageCreate', (message) =>{
-            this.parseCommand(message);
+
+            try{
+                this.parseCommand(message);
+            }catch(err){
+                console.trace(err);
+            }
         });
 
         this.client.login(discordToken);
@@ -71,64 +76,51 @@ export default class Bot{
 
     bUserAdmin(message){
 
-        try{
+        const user = message.member;
 
-            const user = message.member;
+        const userRoles = user.roles.cache;
 
-            const userRoles = user.roles.cache;
+        const bDefaultAdmin = (elem) =>{
 
-            const bDefaultAdmin = (elem) =>{
+            if(elem.name.toLowerCase() === defaultAdminRole.toLowerCase()) return true;
+            return false;
+        }
 
-                if(elem.name.toLowerCase() === defaultAdminRole.toLowerCase()) return true;
-                return false;
-            }
+        if(userRoles.some(bDefaultAdmin)){
+            return true;
+        }
 
-            if(userRoles.some(bDefaultAdmin)){
-               // console.log(`User is default admin role`);
-                return true;
-            }
+        const addedRolesFull = this.roles.getAllAddedRoles();
 
-            const addedRolesFull = this.roles.getAllAddedRoles();
+        const addedRoles = addedRolesFull.map((elem) =>{
+            return elem.id;
+        });
 
-            const addedRoles = addedRolesFull.map((elem) =>{
-                return elem.id;
-            });
+        const bAddedRole = (elem) =>{
 
-            const bAddedRole = (elem) =>{
-
-                if(addedRoles.indexOf(elem.id) !== -1) return true;
-
-                return false;
-            }
-
-            if(userRoles.some(bAddedRole)){
-                //console.log(`User is an added admin role`);
-                return true;
-            }
+            if(addedRoles.indexOf(elem.id) !== -1) return true;
 
             return false;
-
-        }catch(err){
-            console.trace(err);
         }
+
+        if(userRoles.some(bAddedRole)){
+            return true;
+        }
+
+        return false;
+
     }
 
 
     async bBotEnabledInChannel(channelId){
 
-        try{
+        const channels = this.channels.getAllChannels(true);
 
-            const channels = this.channels.getAllChannels(true);
-
-            if(channels.indexOf(channelId) !== -1){
-                return true;
-            }
-
-            return false;
-
-        }catch(err){
-            console.trace(err);
+        if(channels.indexOf(channelId) !== -1){
+            return true;
         }
+
+        return false;  
     }
 
     parseAdminCommand(message){
@@ -206,73 +198,67 @@ export default class Bot{
 
     parseCommand(message){
 
-        try{
+        const text = message.content;
 
-            const text = message.content;
+        if(text.length <= 1) return;
+        if(!text.startsWith(commandPrefix)) return;
 
-            if(text.length <= 1) return;
-            if(!text.startsWith(commandPrefix)) return;
+        if(text[1] === commandPrefix) return; //ignore to prevent false positives
 
-            if(text[1] === commandPrefix) return; //ignore to prevent false positives
+        const serversReg = /^.servers$/i;
+        const activeReg = /^.active$/i;
+        const queryReg = /^.q .+$/i;
+        const shortQueryReg = /^.q\d+$/i;
+        const ipQueryReg = /^.ip\d+$/i;
+        const helpReg = /^.help$/i;
 
-            const serversReg = /^.servers$/i;
-            const activeReg = /^.active$/i;
-            const queryReg = /^.q .+$/i;
-            const shortQueryReg = /^.q\d+$/i;
-            const ipQueryReg = /^.ip\d+$/i;
-            const helpReg = /^.help$/i;
+        const bAdmin = this.bUserAdmin(message);
+        const bAdminOnlyCommand = this.bTryingToUseAdminCommand(text);
 
-            const bAdmin = this.bUserAdmin(message);
-            const bAdminOnlyCommand = this.bTryingToUseAdminCommand(text);
+        if(!bAdmin && bAdminOnlyCommand){
 
-            if(!bAdmin && bAdminOnlyCommand){
-
-                message.channel.send(`${failIcon} You do not have permission to use this command.`);
-                return;
-            }
-
-            if(bAdmin && bAdminOnlyCommand){
-                return this.parseAdminCommand(message);
-            }
-
-            if(!this.bBotEnabledInChannel(message.channel.id)){
-
-                if(bDisplayNotEnabled){
-                    message.channel.send(`${failIcon} The bot is not enabled in this channel.`);
-                }
-                return;
-
-            }
-
-            if(serversReg.test(text)){
-
-                this.servers.displayAllServers(message.channel, false);
-
-            }else if(activeReg.test(text)){
-            
-                this.servers.displayAllServers(message.channel, true);
-
-            }else if(shortQueryReg.test(text)){
-                
-                this.queryServerShort(text, message.channel);
-
-            }else if(queryReg.test(text)){
-                
-                this.queryServer(text, message.channel);
-                
-            }else if(ipQueryReg.test(text)){
-                
-                this.ipQueryReg(text, message.channel);
-
-            }else if(helpReg.test(text)){
-
-                this.helpCommand(message.channel);
-
-            }
-            
-        }catch(err){
-            console.trace(err);
+            message.channel.send(`${failIcon} You do not have permission to use this command.`);
+            return;
         }
+
+        if(bAdmin && bAdminOnlyCommand){
+            return this.parseAdminCommand(message);
+        }
+
+        if(!this.bBotEnabledInChannel(message.channel.id)){
+
+            if(bDisplayNotEnabled){
+                message.channel.send(`${failIcon} The bot is not enabled in this channel.`);
+            }
+            return;
+
+        }
+
+        if(serversReg.test(text)){
+
+            this.servers.displayAllServers(message.channel, false);
+
+        }else if(activeReg.test(text)){
+        
+            this.servers.displayAllServers(message.channel, true);
+
+        }else if(shortQueryReg.test(text)){
+            
+            this.queryServerShort(text, message.channel);
+
+        }else if(queryReg.test(text)){
+            
+            this.queryServer(text, message.channel);
+            
+        }else if(ipQueryReg.test(text)){
+            
+            this.ipQueryReg(text, message.channel);
+
+        }else if(helpReg.test(text)){
+
+            this.helpCommand(message.channel);
+        }
+     
     }
 
     bValidPort(input){
@@ -292,79 +278,68 @@ export default class Bot{
 
         const result = reg.exec(message);
 
-        if(result !== null){
+        if(result === null){
+            return channel.send(`${failIcon} Incorrect syntax for query server.`);
+        }
 
-            let port = 7777;
-            let ip = '';
+        let port = 7777;
+        let ip = '';
 
-            if(result[2] !== undefined){
+        if(result[2] !== undefined){
 
-                ip = result[2];
+            ip = result[2];
 
-                if(result[3] !== ''){
+            if(result[3] !== ''){
 
-                    port = parseInt(result[3].replace(':',''));
+                port = parseInt(result[3].replace(':',''));
 
-                    if(!this.bValidPort(port)){
+                if(!this.bValidPort(port)){
 
-                        channel.send(`${failIcon} Port must be between 1 and 65535`);
-                        return;
-                    }
-                }
-
-                this.query.getFullServer(ip, port, channel);
-
-            }else{
-
-                ip = result[5];
-
-                if(result[6] !== ''){
-                    port = parseInt(result[6].replace(':',''));
-                }
-
-                if(this.bValidPort(port)){
-
-                    this.query.getFullServer(ip, port, channel);
-
-                }else{
                     channel.send(`${failIcon} Port must be between 1 and 65535`);
                     return;
                 }
             }
 
+            this.query.getFullServer(ip, port, channel);
+
         }else{
-            channel.send(`${failIcon} Incorrect syntax for query server.`);
+
+            ip = result[5];
+
+            if(result[6] !== ''){
+                port = parseInt(result[6].replace(':',''));
+            }
+
+            if(this.bValidPort(port)){
+
+                this.query.getFullServer(ip, port, channel);
+
+            }else{
+                channel.send(`${failIcon} Port must be between 1 and 65535`);
+                return;
+            }
         }
+
+       
     }
 
     async queryServerShort(message, channel){
 
-        try{
+        const reg = /^.q(\d+)$/i;
 
-            const reg = /^.q(\d+)$/i;
+        const result = reg.exec(message);
 
-            const result = reg.exec(message);
-
-            if(result !== null){
-
-                const server = await this.servers.getServerById(result[1]); 
-                
-                if(server !== null){
-
-                    this.query.getFullServer(server.ip, server.port, channel);
-
-                }else{
-                    channel.send(`${failIcon} A server with id **${result[1]}** does not exist.`);
-                }
-
-            }else{
-                channel.send(`${failIcon} Incorrect syntax for short query server.`);
-            }
-
-        }catch(err){
-            console.trace(err);
+        if(result === null){
+            return channel.send(`${failIcon} Incorrect syntax for short query server.`);
         }
 
+        const server = this.servers.getServerById(result[1]); 
+
+        if(server === null){
+            return channel.send(`${failIcon} A server with id **${result[1]}** does not exist.`);
+        }    
+
+        this.query.getFullServer(server.ip, server.port, channel);
     }
 
 
@@ -485,35 +460,28 @@ export default class Bot{
 
     async ipQueryReg(text, channel){
 
-        try{
+        const reg = /^.ip(\d+)$/i;
 
-            const reg = /^.ip(\d+)$/i;
+        const result = reg.exec(text);
 
-            const result = reg.exec(text);
+        if(result !== null){
 
-            if(result !== null){
+            const server = this.servers.getServerById(result[1]);
 
-                const server = this.servers.getServerById(result[1]);
+            if(server !== null){
 
-                if(server !== null){
+                let string = `:desktop: **${server.name}**\n`;
+                string += `:wrestling: Join as Player **<ut2004://${server.ip}:${server.port}>**\n`;
+                string += `:eyes: Join as Spectator **<ut2004://${server.ip}:${server.port}?spectatorOnly=1>**\n`;
 
-                    let string = `:desktop: **${server.name}**\n`;
-                    string += `:wrestling: Join as Player **<ut2004://${server.ip}:${server.port}>**\n`;
-                    string += `:eyes: Join as Spectator **<ut2004://${server.ip}:${server.port}?spectatorOnly=1>**\n`;
-
-                    channel.send(string);
-                    
-                }else{
-                    channel.send(`${failIcon} There is no server with the id **${result[1]}**.`);
-                }
-
+                channel.send(string);
+                
             }else{
-
-                channel.send(`${failIcon} Incorrect ${commandPrefix}ip command syntax.`);
+                channel.send(`${failIcon} There is no server with the id **${result[1]}**.`);
             }
 
-        }catch(err){
-            console.trace(err);
+        }else{
+            channel.send(`${failIcon} Incorrect ${commandPrefix}ip command syntax.`);
         }
     }
 
@@ -576,25 +544,21 @@ export default class Bot{
 
             const result = reg.exec(message.content);
 
-            if(result !== null){
+            if(result === null){
+                return message.channel.send(`${failIcon} Incorrect syntax for add role.`);
+            }
 
-                if(this.roles.bRoleExists(result[1], message)){
+            if(this.roles.bRoleExists(result[1], message)){
 
-                    const roleId = await this.roles.getRoleId(result[1], message.guild);
+                const roleId = await this.roles.getRoleId(result[1], message.guild);
 
-                    if(roleId !== null){
-
-                        this.roles.addRole(roleId, result[1], message.channel);
-                        
-                    }
-
-                }else{
-                    message.channel.send(`${failIcon} There is no role called **${result[1]}** on this Discord server.`);
+                if(roleId !== null){
+                    this.roles.addRole(roleId, result[1], message.channel);     
                 }
 
             }else{
-                message.channel.send(`${failIcon} Incorrect syntax for add role.`);
-            }
+                message.channel.send(`${failIcon} There are no roles called **${result[1]}** on this Discord server.`);
+            }    
 
         }catch(err){
             console.trace(err);
@@ -609,23 +573,19 @@ export default class Bot{
 
             const result = reg.exec(message.content);
 
-            if(result !== null){
-
-                const roleId = this.roles.getRoleId(result[1], message.guild);
-
-                if(roleId !== null){
-
-                    await this.roles.deleteRole(roleId);
-
-                    message.channel.send(`${passIcon} Users with role **${result[1]}** can no longer use admin commands.`);
-
-                }else{
-                    message.channel.send(`${failIcon} There is no role called **${result[1]}** on this Discord server.`);
-                }
-
-            }else{
+            if(result === null){
                 message.channel.send(`${failIcon} Incorrect delete role syntax.`);
             }
+
+            const roleId = this.roles.getRoleId(result[1], message.guild);
+
+            if(roleId === null){
+                return message.channel.send(`${failIcon} There are no roles called **${result[1]}** on this Discord server.`);
+            }
+
+            this.roles.deleteRole(roleId);
+
+            message.channel.send(`${passIcon} Users with role **${result[1]}** can no longer use admin commands.`);
 
         }catch(err){
             console.trace(err);

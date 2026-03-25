@@ -250,78 +250,70 @@ export default class Servers{
 
     async displayAllServers(channel, bOnlyActive){
 
-        try{
+        const messages = [];
 
+        const servers = this.getAllServers();
 
+        let string = ``;
+        let currentServers = 0;
 
-            const messages = [];
+        for(let i = 0; i < servers.length; i++){
 
-            const servers = this.getAllServers();
-
-            let string = ``;
-            let currentServers = 0;
-
-            for(let i = 0; i < servers.length; i++){
-
-                if(currentServers % serversPerMessage === 0 && currentServers !== 0){
-                    messages.push(string);
-                    currentServers = 0;
-                    string = '';
-                }
-
-                if(bOnlyActive){
-
-                    if(servers[i].players > 0){
-                        currentServers++;
-                        string += this.createServerString(i + 1, servers[i]);
-                    }
-
-                }else{
-                    string += this.createServerString(i + 1, servers[i]);
-                    currentServers++;
-                }
-            }
-
-            if(messages.length === 0){
-
-                if(string == ''){
-
-                    if(!bOnlyActive){
-                        string = `:zzz: There are currently no servers added.`;
-                    }else{
-                        string = `:zzz: There are currently no servers with active players.`;
-                    }
-                }
-            }
-
-            if(string !== ''){
+            if(currentServers % serversPerMessage === 0 && currentServers !== 0){
                 messages.push(string);
+                currentServers = 0;
+                string = '';
             }
 
-            const title = (!bOnlyActive) ? `Unreal Tournament 2004 Servers` : `Active Unreal Tournament 2004 Servers` ;
+            if(bOnlyActive){
 
-            let response = null;
-
-            for(let i = 0; i < messages.length; i++){
-
-                if(i === 0){
-                    response = new EmbedBuilder()
-                    .setColor(embedColor)
-                    .setTitle(title)
-                    .setDescription(`Type **${commandPrefix}qID** to get more information about a server.`)
-                    .addFields({"name": this.createServerString(), "value": messages[i]});
-                }else{
-                    response = new EmbedBuilder()
-                    .setColor(embedColor)
-                    .setDescription(messages[i])
+                if(servers[i].players > 0){
+                    currentServers++;
+                    string += this.createServerString(i + 1, servers[i]);
                 }
 
-                await channel.send({"embeds": [response]});
+            }else{
+                string += this.createServerString(i + 1, servers[i]);
+                currentServers++;
+            }
+        }
+
+        if(messages.length === 0){
+
+            if(string == ''){
+
+                if(!bOnlyActive){
+                    string = `:zzz: There are currently no servers added.`;
+                }else{
+                    string = `:zzz: There are currently no servers with active players.`;
+                }
+            }
+        }
+
+        if(string !== ''){
+            messages.push(string);
+        }
+
+        const title = (!bOnlyActive) ? `Unreal Tournament 2004 Servers` : `Active Unreal Tournament 2004 Servers` ;
+
+        let response = null;
+
+        for(let i = 0; i < messages.length; i++){
+
+            if(i === 0){
+                response = new EmbedBuilder()
+                .setColor(embedColor)
+                .setTitle(title)
+                .setDescription(`Type **${commandPrefix}qID** to get more information about a server.`)
+                .addFields({"name": this.createServerString(), "value": messages[i]});
+            }else{
+                response = new EmbedBuilder()
+                .setColor(embedColor)
+                .setDescription(messages[i])
             }
 
-        }catch(err){
-            console.trace(err);
-        }   
+            await channel.send({"embeds": [response]});
+        }
     }
 
     updateServerInfo(ip, port, data){
