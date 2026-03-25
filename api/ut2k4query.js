@@ -223,8 +223,6 @@ export default class UT2k4Query{
 
     parsePacket(data, rinfo){
 
-        ////memory leak starts from here
-
         const byteOffset = 4;
 
         const packetType = data[4];
@@ -299,11 +297,8 @@ export default class UT2k4Query{
 
         const response = this.getMatchingResponse(rinfo.address, rinfo.port, true);
 
-        if(response === null){
-            
-            return;
-        }
-
+        if(response === null) return;
+        
         byteOffset += 6;
 
         let portByte1 = data[byteOffset].toString(16);
@@ -347,11 +342,7 @@ export default class UT2k4Query{
         response.setValue('maxPlayers', maxPlayers);
         byteOffset += 4;
 
-       // console.log(response);
-
-       //memory leak after
         response.finishedStep(EmbedBuilder, config.embedColor);
-
 
     }
 
@@ -365,12 +356,6 @@ export default class UT2k4Query{
 
     parseServerInfo(byteOffset, data, rinfo){
 
-        console.log(`parseServerInfo-------------------------------------------------------------------------------------------`);
-        console.log(data);
-        console.log(data.toString());
-
-        //console.log(this.parseString(byteOffset, data));
-
 
         const options = [];
 
@@ -378,8 +363,8 @@ export default class UT2k4Query{
 
         while(byteOffset <= data.length){
 
-           // options.push(this.getOptionValue(byteOffset, data));
            currentOption = this.getOptionValue(byteOffset, data);
+
            options.push({
                "option": currentOption.option,
                "value": currentOption.value,
@@ -388,10 +373,6 @@ export default class UT2k4Query{
            byteOffset += currentOption.removedBytes;
 
         }
-
-        console.log(options);
-        
-
     }
 
     getDWord(data, startOffset){
@@ -479,12 +460,11 @@ export default class UT2k4Query{
 
     getMatchingResponse(ip, port, bBasic){
 
-        let r = 0;
         port = port - 1;
         
         for(let i = 0; i < this.responses.length; i++){
 
-            r = this.responses[i];
+           const r = this.responses[i];
 
             if(r.ip == ip && r.port == port && !r.bGotAllData){
 
@@ -532,39 +512,5 @@ export default class UT2k4Query{
         }catch(err){
             console.trace(err);
         }
-
-
-
-        /*this.autoQueryLoop = setInterval(async () =>{
-
-            //console.log(`Autoquery loop`);
-
-            try{
-
-                const servers = await this.servers.getAllServers();
-
-                const autoChannelId = await this.channels.getAutoQueryChannel();
-
-                if(autoChannelId !== null){
-
-                    const dc = await this.discordClient.channels.fetch(autoChannelId);
-
-                    if(dc !== undefined){
-                        
-                        for(let i = 0; i < servers.length; i++){
-
-                            this.getFullServer(servers[i].ip, servers[i].port, dc, true);
-                        }
-                    }
-
-                }else{
-                    console.log(`autoChannelID is not set.`);
-                }
-
-            }catch(err){
-                console.trace(err);
-            }
-
-        }, config.autoQueryInterval * 1000);*/
     }
 }
