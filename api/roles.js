@@ -108,7 +108,7 @@ export default class Roles{
 
         try{
 
-            const roles = await this.getAllAddedRoles();
+            const roles = this.getAllAddedRoles();
 
             let string = `**Roles that have admin privileges:**\n`;
 

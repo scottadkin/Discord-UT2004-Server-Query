@@ -74,15 +74,18 @@ export default class Bot{
     }
 
 
-    bUserAdmin(message){
+    async bUserAdmin(message){
 
-        const user = message.member;
+        const userRoles = message.member.roles.cache;
 
-        const userRoles = user.roles.cache;
+        const userRoleIds = [...userRoles.keys()];
 
         const bDefaultAdmin = (elem) =>{
 
-            if(elem.name.toLowerCase() === defaultAdminRole.toLowerCase()) return true;
+            if(elem.name.toLowerCase() === defaultAdminRole.toLowerCase()){
+                return true;
+            }
+
             return false;
         }
 
@@ -96,19 +99,17 @@ export default class Bot{
             return elem.id;
         });
 
-        const bAddedRole = (elem) =>{
 
-            if(addedRoles.indexOf(elem.id) !== -1) return true;
+        for(let i = 0; i < userRoleIds.length; i++){
 
-            return false;
-        }
+            const id = userRoleIds[i];
 
-        if(userRoles.some(bAddedRole)){
-            return true;
+            if(addedRoles.indexOf(id) !== -1){
+                return true;
+            }
         }
 
         return false;
-
     }
 
 
@@ -196,7 +197,7 @@ export default class Bot{
         return false;
     }
 
-    parseCommand(message){
+    async parseCommand(message){
 
         const text = message.content;
 
@@ -212,7 +213,7 @@ export default class Bot{
         const ipQueryReg = /^.ip\d+$/i;
         const helpReg = /^.help$/i;
 
-        const bAdmin = this.bUserAdmin(message);
+        const bAdmin = await this.bUserAdmin(message);
         const bAdminOnlyCommand = this.bTryingToUseAdminCommand(text);
 
         if(!bAdmin && bAdminOnlyCommand){
@@ -256,7 +257,7 @@ export default class Bot{
 
         }else if(helpReg.test(text)){
 
-            this.helpCommand(message.channel);
+            this.helpCommand(message.channel, bAdmin);
         }
      
     }
@@ -485,7 +486,7 @@ export default class Bot{
         }
     }
 
-    async helpCommand(channel){
+    async helpCommand(channel, bAdmin){
 
         const adminCommands = [
             {"command": "addserver alias ip:port", "text": "Add a server to the database with the specified alias ip and port, if port is not specified 7777 is used."},
@@ -510,17 +511,20 @@ export default class Bot{
             {"command": "ipID", "text": "Displays the name and ip:port of the server added to the database."}
         ];
 
-        let adminString = `:robot:** UT2004 Server Query Discord Bot :robot:**\n:cop:**Admin Commands**\n`;
 
-        for(let i = 0; i < adminCommands.length; i++){
+        if(bAdmin){
 
-            adminString += `**${commandPrefix}${adminCommands[i].command}** ${adminCommands[i].text}\n`;
+            let adminString = `:cop:**Admin Commands**\n`;
+
+            for(let i = 0; i < adminCommands.length; i++){
+
+                adminString += `**${commandPrefix}${adminCommands[i].command}** ${adminCommands[i].text}\n`;
+            }
+
+            await channel.send(adminString);
         }
 
-
-        await channel.send(adminString);
-
-        let normalString = `\n:adult:**User Commands**\n`;
+        let normalString = `:adult:**User Commands**\n`;
 
         for(let i = 0; i < normalCommands.length; i++){
 
