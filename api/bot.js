@@ -1,12 +1,10 @@
 import config from "./config.json" with {"type": "json"};
 import UT2k4Query from "./ut2k4query.js";
-import {Client, Events, GatewayIntentBits, EmbedBuilder, Options} from "discord.js";
+import {Client, Events, GatewayIntentBits, Options} from "discord.js";
 import Servers from "./servers.js";
 import dns from "dns";
 import Roles from "./roles.js";
 import Channels from "./channels.js";
-
-
 
 export default class Bot{
 
@@ -57,7 +55,7 @@ export default class Bot{
     }
 
 
-    async bUserAdmin(message){
+    bUserAdmin(message){
 
         try{
 
@@ -76,7 +74,7 @@ export default class Bot{
                 return true;
             }
 
-            const addedRolesFull = await this.roles.getAllAddedRoles();
+            const addedRolesFull = this.roles.getAllAddedRoles();
 
             const addedRoles = addedRolesFull.map((elem) =>{
                 return elem.id;
@@ -106,9 +104,7 @@ export default class Bot{
 
         try{
 
-            const channels = await this.channels.getAllChannels(true);
-
-            //console.table(channels);
+            const channels = this.channels.getAllChannels(true);
 
             if(channels.indexOf(channelId) !== -1){
                 return true;
@@ -122,7 +118,7 @@ export default class Bot{
     }
 
 
-    async parseCommand(message){
+    parseCommand(message){
 
         try{
 
@@ -154,7 +150,7 @@ export default class Bot{
 
                 ];
 
-                const bAdmin = await this.bUserAdmin(message);
+                const bAdmin = this.bUserAdmin(message);
 
                 if(!bAdmin){
 
@@ -217,18 +213,18 @@ export default class Bot{
 
                     }else if(adminRegs[9].test(text)){
 
-                        this.channels.setAutoChannel(message.channel, Discord);
+                        this.channels.setAutoChannel(message.channel);
                         return;
 
                     }else if(adminRegs[10].test(text)){
 
-                        await this.channels.disableAutoChannel();
+                        this.channels.disableAutoChannel();
                         message.channel.send(`${config.passIcon} Auto query is now disabled.`);
                         return;
                     }
                 }
 
-                if(!await this.bBotEnabledInChannel(message.channel.id)){
+                if(!this.bBotEnabledInChannel(message.channel.id)){
 
                     if(config.bDisplayNotEnabled){
                         message.channel.send(`${config.failIcon} The bot is not enabled in this channel.`);
@@ -261,18 +257,7 @@ export default class Bot{
 
                     this.helpCommand(message.channel);
 
-                }/*else if(text === '.test'){
-                    console.log('test');
-
-                    //	80.4.151.145:7777
-                    this.query.getServerBasic('80.4.151.145', 7777, message.channel);
-                    //this.query.getFullServer('208.79.234.80', 9000, message.channel);
-                }else if(text == ".db"){
-
-                    const test = await this.servers.getAllServers();
-
-                    console.table(test);
-                }*/
+                }
             }
         }catch(err){
             console.trace(err);
@@ -455,9 +440,9 @@ export default class Bot{
 
                     if(editType === 'ip' || editType === 'port'){
 
-                        if(!await this.servers.bServerAlreadyAdded(ip, port)){
+                        if(!this.servers.bServerAlreadyAdded(ip, port)){
 
-                            await this.servers.edit(server, editType, result[3]);
+                            this.servers.edit(server, editType, result[3]);
 
                             message.channel.send(`${config.passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
                         
@@ -468,7 +453,7 @@ export default class Bot{
 
                     }else{
 
-                        await this.servers.edit(server, editType, result[3]);
+                        this.servers.edit(server, editType, result[3]);
 
                         message.channel.send(`${config.passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
                         
@@ -588,11 +573,8 @@ export default class Bot{
 
                     if(roleId !== null){
 
-                        await this.roles.addRole(roleId, result[1], message.channel);
+                        this.roles.addRole(roleId, result[1], message.channel);
                         
-                    }else{
-
-                        console.log('Fart noise');
                     }
 
                 }else{

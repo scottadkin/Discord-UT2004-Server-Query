@@ -284,7 +284,7 @@ export default class ServerResponse{
 
             }else{
 
-                const editMessageId = await this.servers.getServerAutoMessageId(address, this.port);
+                const editMessageId = this.servers.getServerAutoMessageId(address, this.port);
 
                 //console.log(editMessageId);
                 

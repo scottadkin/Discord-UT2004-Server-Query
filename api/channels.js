@@ -46,39 +46,23 @@ export default class Channels{
 
     insertChannel(id){
 
-        return new Promise((resolve, reject) =>{
+        const query = "INSERT INTO channels VALUES(?,?,0)";
 
-            const query = "INSERT INTO channels VALUES(?,?,0)";
+        const now = Math.floor(Date.now() * 0.001);
 
-            const now = Math.floor(Date.now() * 0.001);
-
-            this.db.run(query, [id, now], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-        });
+        return simpleQuery(query, [id, now]);
     }
 
     deleteChannel(id){
+        
+        const query = "DELETE FROM channels WHERE id=?";
 
-        return new Promise((resolve, reject) =>{
-
-            const query = "DELETE FROM channels WHERE id=?";
-
-            this.db.run(query, [id], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-        });
+        return simpleQuery(query, [id]);
     }
 
 
 
-    async addChannel(channel){
+    addChannel(channel){
 
         try{
 
@@ -88,7 +72,7 @@ export default class Channels{
                 return;
             }
 
-            await this.insertChannel(channel.id);
+            this.insertChannel(channel.id);
 
             channel.send(`${config.passIcon} The bot is now enabled in this channel.`);
 
@@ -104,7 +88,7 @@ export default class Channels{
 
             if(this.bAlreadyAdded(channel.id)){
 
-                await this.deleteChannel(channel.id);
+                this.deleteChannel(channel.id);
                 channel.send(`${config.passIcon} The bot is now disabled in this channel.`);
                 return;
             }
@@ -194,33 +178,12 @@ export default class Channels{
 
     disableAutoChannel(){
 
-        return new Promise((resolve, reject) =>{
-
-            const query = "UPDATE channels SET auto_channel=0";
-
-            this.db.run(query, (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-        });
+        return simpleQuery("UPDATE channels SET auto_channel=0");
     }
 
     enableAutoChannel(channelId){
 
-        return new Promise((resolve, reject) =>{
-
-            const query = "UPDATE channels SET auto_channel=1 WHERE id=?"
-            
-            this.db.run(query, [channelId], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-
-        });
+        return simpleQuery("UPDATE channels SET auto_channel=1 WHERE id=?", [channelId]);
     }
 
     async deleteNonBotMessages(channel){
@@ -238,54 +201,64 @@ export default class Channels{
         }
     }
 
+    async setTopicTitle(channel){
+
+        try{
+            await channel.setTopic(`**Welcome to the auto server query channel, the posts here will be updated with the latest UT2004 server information for each server added to the database.**`);
+
+        }catch(err){
+
+            if(err.rawError.code === 50013){
+                await channel.send(`${config.failIcon} The bot does not have the needed permissions to set the topic title.`);
+            }
+        }
+    }
+
     async setAutoChannel(channel){
 
         try{
 
             if(this.bAlreadyAdded(channel.id)){
 
-                await this.disableAutoChannel();
+                this.disableAutoChannel();
 
-                await this.servers.resetAllAutoMessageIds();
+                this.servers.resetAllAutoMessageIds();
 
                 let string = `**Welcome to the auto server query channel, the posts here will be updated with the latest UT2004 server information for each server added to the database.**`;
 
                 await channel.send(`${string}`);
+                
+                await this.setTopicTitle(channel);
 
-                const addedServers = await this.servers.getAllServers();
-              //  console.log(await this.servers.getAllServers());
+                const addedServers = this.servers.getAllServers();
 
-                //console.log(addedServers);
+                console.log(addedServers);
 
                 let currentEmbed = 0;
 
                 for(let i = 0; i < addedServers.length; i++){
 
-                    currentEmbed = new EmbedBuilder().setDescription(`Waiting for data for **${addedServers[i].name}** id ${i + 1}`);
+                    currentEmbed = new EmbedBuilder();
+                    
+                    currentEmbed.setDescription(`Waiting for data for **${addedServers[i].name}** id ${i + 1}`);
 
-                    await channel.send(currentEmbed).then(async (message) =>{
-                        
-                       // console.log(`${message.id} server id =${i + 1}`);
-                        await this.servers.setAutoMessageId(addedServers[i].ip, addedServers[i].port, message.id)
-                    });
-                    
-                    
+                    const message = await channel.send({"embeds": [currentEmbed]});
+                    this.servers.setAutoMessageId(addedServers[i].ip, addedServers[i].port, message.id);
                 }
 
-                await this.enableAutoChannel(channel.id);
+                this.enableAutoChannel(channel.id);
 
-                await channel.setTopic(`**Welcome to the auto server query channel, the posts here will be updated with the latest UT2004 server information for each server added to the database.**`);
-
-               // await this.deleteNonBotMessages(channel);
+                
 
             }else{
 
-                channel.send(`${config.failIcon} You must enable this channel first with the **${config.commandPrefix}allowchannel**, before being able to enable auto query.`);
+                await channel.send(`${config.failIcon} You must enable this channel first with the **${config.commandPrefix}allowchannel**, before being able to enable auto query.`);
 
             }
 
         }catch(err){
-            channel.send(`${config.failIcon} There was an error setting up the auto query channel, please make sure the bot has the right permissions to manage a text channel.`);
+            await channel.send(`${config.failIcon} There was an error setting up the auto query channel, please make sure the bot has the right permissions to manage a text channel.`);
+
             console.trace(err);
         }
     }

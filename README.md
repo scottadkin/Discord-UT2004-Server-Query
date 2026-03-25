@@ -4,6 +4,13 @@
 # Requirements
 - Node.js Version 22.12.0 or later.
 
+# Privileged Gateway Intents 
+- Message Content Intent
+
+# Required Permissions For Auto Query Use
+- Manage Channels
+The bot will still work without this permission you will just get an error message saying the bot doesn't have permission to set the topic title.
+
 # Installing
 - Extract the contents of the archive into a directory.
 - Open command prompt in the same directory.
@@ -11,12 +18,19 @@
 - Now run the command **node install** to create the database tables.
 - Now open the config file /api/config.js.
 - Add your Discord bot token, if this is not done correctly the bot can't join your server. <https://discordpy.readthedocs.io/en/latest/discord.html>
-- Make sure adminRole is a role in your discord server that you have access to, otherwise admin commands will needed to setup the bot will be unavailable to you.
+- Make sure adminRole is a role in your discord server that you have access to, otherwise admin commands needed to setup the bot will be unavailable to you.
 - The config file is also where you can set the command prefix, by default it's dot(.)
+
+
 
 # Running the bot
 - Open command prompt in the directory you installed the files.
 - Run the command **node app**
+
+
+
+
+
 
 # First time use
 When the bot has joined the server only people with the role "adminRole" can use the bot, to change this:

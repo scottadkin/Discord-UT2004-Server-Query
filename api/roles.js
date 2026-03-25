@@ -11,89 +11,38 @@ export default class Roles{
 
     getAllAddedRoles(){
 
-        return new Promise((resolve, reject) =>{
-
-            const roles = [];
-
-            const query = "SELECT * FROM roles";
-
-            this.db.each(query, (err, result) =>{
-
-                if(err) reject(err);
-
-                roles.push(result);
-
-            }, (err) =>{
-
-                if(err) reject(err);
-
-                resolve(roles);
-            });
-        });
+        return simpleQuery("SELECT * FROM roles");
     }
 
 
     deleteRole(id){
-
-        return new Promise((resolve, reject) =>{
-
-            const query = 'DELETE FROM roles WHERE id=?';
-
-            this.db.run(query, [id], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-        });
+        return simpleQuery("DELETE FROM roles WHERE id=?", [id]);
     }
 
     bRoleAlreadyAdded(id){
 
-        return new Promise((resolve, reject) =>{
+        const query = "SELECT COUNT(*) as total_roles FROM roles WHERE id=?";
+        const result = simpleQuery(query, [id]);
 
-            const query = "SELECT COUNT(*) as total_roles FROM roles WHERE id=?";
+        return result[0].total_roles > 0;
 
-            this.db.get(query, [id], (err, result) =>{
-
-                if(err) reject(err);
-
-                if(result !== undefined){
-
-                    if(result.total_roles > 0){
-                        resolve(true);
-                    }
-                }
-
-                resolve(false);
-            });
-        });
     }
 
     insertRow(id){
 
-        return new Promise((resolve, reject) =>{
+        const now = Math.floor(Date.now() * 0.001);
+        const query = "INSERT INTO roles  VALUES(?,?)";
 
-            const now = Math.floor(Date.now() * 0.001);
-
-            const query = "INSERT INTO roles  VALUES(?,?)";
-
-            this.db.run(query, [id, now], (err) =>{
-
-                if(err) reject(err)
-
-                resolve();
-            });
-        });
+        return simpleQuery(query, [id, now]);
     }
 
-    async addRole(id, name, channel){
+    addRole(id, name, channel){
 
         try{
 
-            if(!await this.bRoleAlreadyAdded(id)){
+            if(!this.bRoleAlreadyAdded(id)){
 
-                await this.insertRow(id);
+                this.insertRow(id);
 
                 channel.send(`${config.passIcon} Users with the role **${name}** can now use admin commands.`);
 

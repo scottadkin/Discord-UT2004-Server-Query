@@ -32,7 +32,7 @@ export default class Servers{
                         port = parseInt(result[5].replace(':',''));
                     }
 
-                    await this.insertServer(message, alias, ip, port);
+                    this.insertServer(message, alias, ip, port);
 
                 }else{
        
@@ -52,7 +52,7 @@ export default class Servers{
                                 port = parseInt(result[8].replace(':',''));
                             }
 
-                            await this.insertServer(message, alias, ip, port);
+                            this.insertServer(message, alias, ip, port);
                             
                         }catch(err){
                             console.trace(err);
@@ -70,13 +70,13 @@ export default class Servers{
         }
     }
 
-    async insertServer(message, alias, ip, port){
+    insertServer(message, alias, ip, port){
 
         try{
 
-            if(!await this.bServerAlreadyAdded(ip, port)){
+            if(!this.bServerAlreadyAdded(ip, port)){
 
-                await this.insertServerQuery(alias, ip, port);
+                this.insertServerQuery(alias, ip, port);
 
                 message.channel.send(`${config.passIcon} Server **${alias} (${ip}:${port})** added successfully.`);
 
@@ -92,71 +92,33 @@ export default class Servers{
 
     insertServerQuery(alias, ip, port){
 
-        return new Promise((resolve, reject) =>{
+        const query = "INSERT INTO servers VALUES('Another UT2004 Server',?,?,?,0,0,'N/A','N/A','xx',?,?, -1)";
 
-            const query = "INSERT INTO servers VALUES('Another UT2004 Server',?,?,?,0,0,'N/A','N/A','xx',?,?, -1)";
+        const now = Math.floor(Date.now() * 0.001);
 
-            const now = Math.floor(Date.now() * 0.001);
+        const vars = [alias, ip, port, now, now];
 
-            const vars = [alias, ip, port, now, now];
-
-            /*
-            this.db.run(query, vars, (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });*/
-
-            simpleQuery(query, [alias, ip, port, now, now]);
-            resolve();
-        });
+        return simpleQuery(query, vars);
     }
 
     bServerAlreadyAdded(ip, port){
 
-        return new Promise((resolve, reject) =>{
+        const query = "SELECT COUNT(*) as total_servers FROM servers WHERE ip=? AND port=?";
+        const result = simpleQuery(query, [ip, port]);
+        console.log(result);
 
-            const query = "SELECT COUNT(*) as total_servers FROM servers WHERE ip=? AND port=?";
+        return result[0].total_servers > 0;
 
-            this.db.get(query, [ip, port], (err, result) =>{
 
-                if(err) reject(err);
-
-                if(result !== undefined){
-                    if(result.total_servers > 0) resolve(true);           
-                }
-
-                resolve(false);
-
-            });
-        });
     }
 
     getAllServers(){
 
-        return new Promise((resolve, reject) =>{
-
-            const query = "SELECT * FROM servers ORDER BY added ASC";
-
-            const servers = [];
-
-            this.db.each(query, (err, row) =>{
-
-                if(err) reject(err);
-                
-                servers.push(row);
-
-            }, (err) =>{
-
-                if(err) reject(err);
-
-                resolve(servers);
-            });
-        });
+        const query = "SELECT * FROM servers ORDER BY added ASC";
+        return simpleQuery(query);
     }
 
-    async getServerById(id){
+    getServerById(id){
 
         try{
 
@@ -164,7 +126,7 @@ export default class Servers{
 
             if(id !== id) return;
 
-            const servers = await this.getAllServers();
+            const servers = this.getAllServers();
 
             id = id - 1;
 
@@ -183,17 +145,8 @@ export default class Servers{
 
     deleteServerQuery(ip, port){
 
-        return new Promise((resolve, reject) =>{
-
-            const query = "DELETE FROM servers WHERE ip=? AND port=?";
-
-            this.db.run(query, [ip, port], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-        });
+        const query = "DELETE FROM servers WHERE ip=? AND port=?";
+        return simpleQuery(query, [ip, port]);
     }
 
     async deleteServer(message){
@@ -210,7 +163,7 @@ export default class Servers{
 
                 if(id !== id) throw new Error("Sever id must be a valid integer.");
 
-                const server = await this.getServerById(id);
+                const server = this.getServerById(id);
                 
                 if(server !== null){
 
@@ -384,77 +337,39 @@ export default class Servers{
 
     edit(server, type, value){
 
-        return new Promise((resolve, reject) =>{
+        const query = `UPDATE servers SET ${type}=? WHERE ip=? AND port=?`;
 
-            const query = `UPDATE servers SET ${type}=? WHERE ip=? AND port=?`;
+        const vars = [value, server.ip, server.port];
 
-            const vars = [value, server.ip, server.port];
+        return simpleQuery(query, vars);
 
-            this.db.run(query, vars, (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-        });
     }
 
     getServerAutoMessageId(ip, port){
 
-        //console.log(`${ip}:${port}`);
+        const query = "SELECT last_message FROM servers WHERE ip=? AND port=?";
+        const vars = [ip, port];
 
-        return new Promise((resolve, reject) =>{
+        const result = simpleQuery(query, vars);
 
-            const query = "SELECT last_message FROM servers WHERE ip=? AND port=?";
+        if(result.length === 0) return null;
 
-            this.db.get(query, [ip, port], (err, result) =>{
+        if(result[0].last_message !== "-1") return result[0].last_message;
 
-                if(err) reject(err);
-                
-                if(result !== undefined){
-                    
-                    if(result.last_message !== '-1'){
-
-                        resolve(result.last_message);
-
-                    }else{
-                        resolve(null);
-                    }
-                }
-                resolve(null);
-            });
-        });
+        return null;
     }
 
     setAutoMessageId(ip, port, messageId){
 
-        return new Promise((resolve, reject) =>{
+        const query = `UPDATE servers SET last_message=? WHERE ip=? AND PORT=?`;
+        const vars = [messageId, ip, port];
 
-            const query = `UPDATE servers SET last_message=? WHERE ip=? AND PORT=?`;
-
-            this.db.get(query, [messageId, ip, port], (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-            });
-        });
+        return simpleQuery(query, vars);
     }
 
     resetAllAutoMessageIds(){
 
-        return new Promise((resolve, reject) =>{
-
-            const query = "UPDATE servers SET last_message='-1'";
-
-            this.db.run(query, (err) =>{
-
-                if(err) reject(err);
-
-                resolve();
-
-            });
-        });
+        return simpleQuery("UPDATE servers SET last_message='-1'");
     }
 
 
@@ -468,21 +383,11 @@ export default class Servers{
 
     getServerFlag(ip, port){
 
-        return new Promise((resolve, reject) =>{
+        const query = "SELECT country FROM servers WHERE ip=? AND port=?";
+        const vars = [ip, port];
+        const result = simpleQuery(query, vars);
 
-            const query = "SELECT country FROM servers WHERE ip=? AND port=?";
-
-            this.db.get(query, [ip, port], (err, result) =>{
-
-                if(err) reject(err);
-
-                if(result !== undefined){
-
-                    resolve(result.country);
-                }
-
-                resolve('xx');
-            });
-        });
+        if(result.length === 0) return "xx";
+        return result[0].country;
     }
 }
