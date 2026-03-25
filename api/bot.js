@@ -74,7 +74,7 @@ export default class Bot{
     }
 
 
-    async bUserAdmin(message){
+    bUserAdmin(message){
 
         const userRoles = message.member.roles.cache;
 
@@ -113,15 +113,15 @@ export default class Bot{
     }
 
 
-    async bBotEnabledInChannel(channelId){
+    bBotEnabledInChannel(channelId){
+
 
         const channels = this.channels.getAllChannels(true);
 
-        if(channels.indexOf(channelId) !== -1){
-            return true;
-        }
+        const index = channels.indexOf(channelId);
 
-        return false;  
+        return index !== -1;
+
     }
 
     parseAdminCommand(message){
@@ -213,7 +213,7 @@ export default class Bot{
         const ipQueryReg = /^.ip\d+$/i;
         const helpReg = /^.help$/i;
 
-        const bAdmin = await this.bUserAdmin(message);
+        const bAdmin = this.bUserAdmin(message);
         const bAdminOnlyCommand = this.bTryingToUseAdminCommand(text);
 
         if(!bAdmin && bAdminOnlyCommand){
