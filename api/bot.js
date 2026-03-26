@@ -335,93 +335,104 @@ export default class Bot{
         this.query.getFullServer(server.ip, server.port, channel);
     }
 
+    createUpdateString(serverId, editType, newValue, oldValue){
+
+        let string = `${passIcon} Server **${serverId}** **${editType.toUpperCase()}** `;
+        string += `has been changed to **${newValue}**, previously was **${oldValue}**.`
+
+        return string
+    }
+
     async editServer(message){    
 
-        try{
+        const reg = /.editserver (\d+) (.+?) (.+)/i;
 
-            const reg = /.editserver (\d+) (.+?) (.+)/i;
+        const result = reg.exec(message.content);
 
-            const result = reg.exec(message.content);
+        if(result === null){
+            return await message.channel.send(`${failIcon} Incorrect edit server syntax.`);   
+        }
 
-            if(result === null){
-                await message.channel.send(`${failIcon} Incorrect edit server syntax.`);
-                return;
-            }
+        const editType = result[2].toLowerCase();
 
-            const editType = result[2].toLowerCase();
+        if(validServerEditTypes.indexOf(editType) === -1){
+            return await message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);    
+        }
 
-            if(validServerEditTypes.indexOf(editType) === -1){
-                await message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);
-                return;
-            }
+        let ip = -1;
+        let port = -1;
+        let country = "";
 
-            let ip = -1;
-            let port = -1;
+        if(editType === 'ip'){
 
-            if(editType === 'ip'){
+            if(await bValidAddress(result[3])){
 
-                if(await bValidAddress(result[3])){
-
-                    ip = result[3];
-
-                }else{
-                    await message.channel.send(`${failIcon} Not a valid IP/Domain.`);
-                    return;
-                }
-
-            }else if(editType === 'port'){
-
-                port = result[3];
-
-            }else if(editType === 'country'){
-
-
-            }
-
-
-            const server = this.servers.getServerById(result[1]);
-
-            if(server !== null){
-
-                if(ip === -1){
-                    ip = server.ip;
-                }
-
-                if(port === -1){
-                    port = server.port;
-                }
-
-
-                if(editType === 'ip' || editType === 'port'){
-
-                    if(!this.servers.bServerAlreadyAdded(ip, port)){
-
-                        this.servers.edit(server, editType, result[3]);
-
-                        await message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
-                    
-                    }else{
-
-                        await message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
-                    }
-
-                }else{
-
-                    this.servers.edit(server, editType, result[3]);
-
-                    await message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
-                    
-                }
+                ip = result[3];
 
             }else{
-                await message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);
+                return await message.channel.send(`${failIcon} Not a valid IP/Domain.`);        
             }
 
-            
+        }else if(editType === 'port'){
 
-        }catch(err){
-            console.trace(err);
+            port = result[3];
+
+            if(!bValidPort(port)){
+                return await message.channel.send(`${failIcon} Not a valid Port.`);  
+            }
+
+        }else if(editType === 'country'){
+
+            country = result[3].toLowerCase();
+
+            if(country.length !== 2){
+
+                let text = `${failIcon} The country code must be in ISO 3166-1 alpha-2 format.\n`;
+                text +=  `You can find the flag codes in the flags emote category,`;
+                text += ` or you can use this wiki article: <https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2>.`;
+
+                return await message.channel.send(text);  
+            }
         }
+
+        const server = this.servers.getServerById(result[1]);
+
+        if(server === null){
+
+            return await message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);  
+        }
+
+        if(ip === -1){
+            ip = server.ip;
+        }
+
+        if(port === -1){
+            port = server.port;
+        }
+
+        if(country === "") country = server.country;
+
+        let passString = this.createUpdateString(result[1], editType, result[3], server[editType]);
+
+
+        if(editType === 'ip' || editType === 'port'){
+
+
+            if(!this.servers.bServerAlreadyAdded(ip, port)){
+
+                this.servers.edit(server, editType, result[3]);
+                
+                await message.channel.send(passString);
+                return;
+            }
+
+            return await message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
+            
+        }
+
+        this.servers.edit(server, editType, result[3]);
+
+        await message.channel.send(passString);     
     }
 
     async ipQueryReg(text, channel){

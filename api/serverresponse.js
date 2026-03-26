@@ -222,7 +222,7 @@ export default class ServerResponse{
         }
     }
 
-    async sendFullResponse(MessageEmbed,embedColor){
+    async sendFullResponse(MessageEmbed, embedColor){
 
         try{
 
