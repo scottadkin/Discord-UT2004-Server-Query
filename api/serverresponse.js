@@ -6,15 +6,9 @@ export default class ServerResponse{
         this.port = port;
         this.type = type;
 
-        this.domain = null;
+        this.domain = (domain !== ip) ? domain : null ;
 
         this.bAuto = bAuto;
-
-        if(domain !== undefined){
-            if(domain !== null){
-                this.domain = domain;
-            }
-        }
 
         this.channel = channel;
 

@@ -1,92 +1,63 @@
-import dns from "dns";
 import { failIcon, passIcon, commandPrefix, serverInfoInterval, serversPerMessage, embedColor } from "../config.js";
 import { EmbedBuilder } from "discord.js";
 import {simpleQuery} from "./database.js";
+import { bValidAddress } from "./generic.js";
 
 
 export default class Servers{
 
-    constructor(){    
-
-    }
+    constructor(){}
 
     async addServer(message){
 
-        try{
+        const reg = /^.addserver (.+) (((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+|))|((.+?)(:\d+|)))$/i;
 
-            const reg = /^.addserver (.+) (((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+|))|((.+?)(:\d+|)))$/i;
+        const result = reg.exec(message.content);
 
-            const result = reg.exec(message.content);
+        if(result === null){     
+            return await message.channel.send(`${failIcon} Incorrect syntax for ${commandPrefix}addserver.`);
+        }
 
-            if(result != null){
+        let ip = 0;
+        let port = 7777;
+        let alias = result[1];
 
-                let ip = 0;
-                let port = 7777;
-                let alias = result[1];
+        if(result[3] !== undefined){
 
-                if(result[3] !== undefined){
+            ip = result[4];
 
-                    ip = result[4];
-
-                    if(result[5] !== ''){
-                        port = parseInt(result[5].replace(':',''));
-                    }
-
-                    this.insertServer(message, alias, ip, port);
-
-                }else{
-       
-                    dns.lookup(result[7], async (err) =>{
-
-                        try{
-
-                            if(err){
-                                message.channel.send(`${failIcon} Ip address for that domain does not exist!`);
-                                throw new Error(err);
-                            }
-
-                            ip = result[7];
-
-                            if(result[8] !== ''){
-                                
-                                port = parseInt(result[8].replace(':',''));
-                            }
-
-                            this.insertServer(message, alias, ip, port);
-                            
-                        }catch(err){
-                            console.trace(err);
-                        }
-                    });
-                    
-                }        
-
-            }else{
-                message.channel.send(`${failIcon} Incorrect syntax for ${commandPrefix}addserver.`);
+            if(result[5] !== ''){
+                port = parseInt(result[5].replace(':',''));
             }
 
-        }catch(err){
-            console.trace(err);
+            this.insertServer(message, alias, ip, port);
+
+        }else{
+
+            if(await bValidAddress(result[7])){
+                ip = result[7];
+            }else{
+                throw new Error(`Failed to lookup ${result[7]}`);
+            }
+
+            if(result[8] !== ""){
+                port = parseInt(result[8].replace(":",""));
+            }
+
+            this.insertServer(message, alias, ip, port);
         }
     }
 
     insertServer(message, alias, ip, port){
 
-        try{
+        if(!this.bServerAlreadyAdded(ip, port)){
 
-            if(!this.bServerAlreadyAdded(ip, port)){
+            this.insertServerQuery(alias, ip, port);
 
-                this.insertServerQuery(alias, ip, port);
+            message.channel.send(`${passIcon} Server **${alias} (${ip}:${port})** added successfully.`);
 
-                message.channel.send(`${passIcon} Server **${alias} (${ip}:${port})** added successfully.`);
-
-            }else{
-                message.channel.send(`${failIcon} A server with that IP and Port has already been added.`);
-            }
-
-        }catch(err){
-
-            console.trace(err);
+        }else{
+            message.channel.send(`${failIcon} A server with that IP and Port has already been added.`);
         }
     }
 
@@ -119,27 +90,23 @@ export default class Servers{
 
     getServerById(id){
 
-        try{
 
-            id = parseInt(id);
+        id = parseInt(id);
 
-            if(id !== id) return;
+        if(id !== id) return null;
 
-            const servers = this.getAllServers();
+        const servers = this.getAllServers();
 
-            id = id - 1;
+        id = id - 1;
 
-            if(id < 0 || id > servers.length - 1){
+        if(id < 0 || id > servers.length - 1){
 
-                return null;
+            return null;
 
-            }
-
-            return servers[id];
-
-        }catch(err){
-            console.trace(err);
         }
+
+        return servers[id];
+
     }
 
     deleteServerQuery(ip, port){
@@ -168,7 +135,7 @@ export default class Servers{
 
                     //console.log(server);
 
-                    await this.deleteServerQuery(server.ip, server.port);
+                    this.deleteServerQuery(server.ip, server.port);
                     message.channel.send(`${passIcon} Server deleted.`);
 
                 }else{

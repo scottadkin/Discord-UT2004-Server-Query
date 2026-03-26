@@ -2,9 +2,9 @@ import { discordToken, defaultAdminRole, commandPrefix, failIcon, passIcon, bDis
 import UT2k4Query from "./ut2k4query.js";
 import {Client, Events, GatewayIntentBits, Options} from "discord.js";
 import Servers from "./servers.js";
-import dns from "dns";
 import Roles from "./roles.js";
 import Channels from "./channels.js";
+import { bValidAddress, bValidPort } from "./generic.js";
 
 export default class Bot{
 
@@ -124,7 +124,7 @@ export default class Bot{
 
     }
 
-    parseAdminCommand(message){
+    async parseAdminCommand(message){
 
         const regs = this.adminRegs;
         const text = message.content;
@@ -182,7 +182,7 @@ export default class Bot{
         }else if(regs.disableAuto.test(text)){
 
             this.channels.disableAutoChannel();
-            message.channel.send(`${passIcon} Auto query is now disabled.`);
+            await message.channel.send(`${passIcon} Auto query is now disabled.`);
             return;
         }    
     }
@@ -223,7 +223,7 @@ export default class Bot{
         }
 
         if(bAdmin && bAdminOnlyCommand){
-            return this.parseAdminCommand(message);
+            return await this.parseAdminCommand(message);
         }
 
         if(!this.bBotEnabledInChannel(message.channel.id)){
@@ -262,17 +262,6 @@ export default class Bot{
      
     }
 
-    bValidPort(input){
-
-        input = parseInt(input);
-
-        if(input !== input) return false;
-
-        if(input > 0 && input <= 65535) return true;
-            
-        return false;
-    }
-
     queryServer(message, channel){
 
         const reg = /^.q ((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(:\d+|)|((.+?)(:\d+|)))$/i;
@@ -294,7 +283,7 @@ export default class Bot{
 
                 port = parseInt(result[3].replace(':',''));
 
-                if(!this.bValidPort(port)){
+                if(!bValidPort(port)){
 
                     channel.send(`${failIcon} Port must be between 1 and 65535`);
                     return;
@@ -311,7 +300,7 @@ export default class Bot{
                 port = parseInt(result[6].replace(':',''));
             }
 
-            if(this.bValidPort(port)){
+            if(bValidPort(port)){
 
                 this.query.getFullServer(ip, port, channel);
 
@@ -343,33 +332,6 @@ export default class Bot{
         this.query.getFullServer(server.ip, server.port, channel);
     }
 
-
-    bValidIp(input){
-
-        return new Promise((resolve, reject) =>{
-
-            const reg = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i;
-
-            if(reg.test(input)){
-
-                resolve(true);
-
-            }else{
-
-                dns.lookup(input, (err) =>{
-
-                    if(err){
-                        console.trace(err);
-                        resolve(false);
-                    }
-
-                    resolve(true);
-                });
-            }
-        });
-    }
-    
-
     async editServer(message){    
 
         try{
@@ -379,14 +341,14 @@ export default class Bot{
             const result = reg.exec(message.content);
 
             if(result === null){
-                message.channel.send(`${failIcon} Incorrect edit server syntax.`);
+                await message.channel.send(`${failIcon} Incorrect edit server syntax.`);
                 return;
             }
 
             const editType = result[2].toLowerCase();
 
             if(validServerEditTypes.indexOf(editType) === -1){
-                message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);
+                await message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);
                 return;
             }
 
@@ -395,12 +357,12 @@ export default class Bot{
 
             if(editType === 'ip'){
 
-                if(await this.bValidIp(result[3])){
+                if(await bValidAddress(result[3])){
 
                     ip = result[3];
 
                 }else{
-                    message.channel.send(`${failIcon} Not a valid IP/Domain.`);
+                    await message.channel.send(`${failIcon} Not a valid IP/Domain.`);
                     return;
                 }
 
@@ -433,23 +395,23 @@ export default class Bot{
 
                         this.servers.edit(server, editType, result[3]);
 
-                        message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
+                        await message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
                     
                     }else{
 
-                        message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
+                        await message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
                     }
 
                 }else{
 
                     this.servers.edit(server, editType, result[3]);
 
-                    message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
+                    await message.channel.send(`${passIcon} Server **${result[1]}** **${editType.toUpperCase()}** has been changed to **${result[3]}**, previously was **${server[editType]}**.`);
                     
                 }
 
             }else{
-                message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);
+                await message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);
             }
 
             
@@ -554,7 +516,7 @@ export default class Bot{
 
             if(this.roles.bRoleExists(result[1], message)){
 
-                const roleId = await this.roles.getRoleId(result[1], message.guild);
+                const roleId = this.roles.getRoleId(result[1], message.guild);
 
                 if(roleId !== null){
                     this.roles.addRole(roleId, result[1], message.channel);     
@@ -571,28 +533,24 @@ export default class Bot{
 
     async deleteRole(message){
 
-        try{
 
-            const reg = /^.removerole (.+)$/i;
+        const reg = /^.removerole (.+)$/i;
 
-            const result = reg.exec(message.content);
+        const result = reg.exec(message.content);
 
-            if(result === null){
-                message.channel.send(`${failIcon} Incorrect delete role syntax.`);
-            }
-
-            const roleId = this.roles.getRoleId(result[1], message.guild);
-
-            if(roleId === null){
-                return message.channel.send(`${failIcon} There are no roles called **${result[1]}** on this Discord server.`);
-            }
-
-            this.roles.deleteRole(roleId);
-
-            message.channel.send(`${passIcon} Users with role **${result[1]}** can no longer use admin commands.`);
-
-        }catch(err){
-            console.trace(err);
+        if(result === null){
+            return await message.channel.send(`${failIcon} Incorrect delete role syntax.`);
         }
+
+        const roleId = this.roles.getRoleId(result[1], message.guild);
+
+        if(roleId === null){
+            return await message.channel.send(`${failIcon} There are no roles called **${result[1]}** on this Discord server.`);
+        }
+
+        this.roles.deleteRole(roleId);
+
+        return await message.channel.send(`${passIcon} Users with role **${result[1]}** can no longer use admin commands.`);
+
     }
 }

@@ -1,7 +1,7 @@
 import dgram from "dgram";
 import { failIcon, embedColor, responseTimeout, serverInfoInterval, autoQueryInterval, udpPort, bLabelAsTAM } from "../config.js";
 import ServerResponse  from "./serverresponse.js";
-import dns from "dns";
+import { getIpFromAddress } from "./generic.js";
 import { EmbedBuilder } from "discord.js";
 
 export default class UT2k4Query{
@@ -88,65 +88,42 @@ export default class UT2k4Query{
 
     pingInterval(){
 
+      
+        if(this.getBasicCount() <= 0){
+
+            const servers = this.servers.getAllIpPorts();
+
+            for(let i = 0; i < servers.length; i++){
+
+                this.getServerBasic(servers[i].ip, servers[i].port);
+            }
+
+            this.lastPingInterval = Math.floor(Date.now() * 0.001);
+        }
+
+    }
+
+    async getServerBasic(ip, port){
+
         try{
 
-            if(this.getBasicCount() <= 0){
+        
+            const address = await getIpFromAddress(ip);
 
-                const servers = this.servers.getAllIpPorts();
+            if(address === null) throw new Error(`Could not lookup address`);
 
-                for(let i = 0; i < servers.length; i++){
+            this.responses.push(new ServerResponse(ip, port, "basic", null, address, false, this.servers));
+            this.sendPacket(0, address, port);
 
-                    this.getServerBasic(servers[i].ip, servers[i].port);
-                }
-
-                this.lastPingInterval = Math.floor(Date.now() * 0.001);
-            }
 
         }catch(err){
             console.trace(err);
         }
+
+       
     }
 
-    bIp(input){
-
-        const reg = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/i;
-
-        return reg.test(input);
-
-    }
-
-    getServerBasic(ip, port){
-
-        try{
-
-            if(!this.bIp(ip)){
-
-                dns.lookup(ip,(err, address) =>{
-    
-                    if(err){
-                        channel.message.send(`${failIcon} Not a valid domain!`);
-                        
-                    }else{
-    
-                        this.responses.push(new ServerResponse(address, port, "basic", null, ip, false, this.servers));
-                        this.sendPacket(0, address, port);
-                        
-                    }
-                });
-    
-            }else{
-    
-                this.responses.push(new ServerResponse(ip, port, "basic", null, null, false, this.servers));
-                this.sendPacket(0, ip, port);
-                
-            }
-
-        }catch(err){
-            console.trace(err);
-        }
-    }
-
-    getFullServer(ip, port, channel, bAuto){
+    async getFullServer(ip, port, channel, bAuto){
 
         try{
 
@@ -154,29 +131,14 @@ export default class UT2k4Query{
                 bAuto = false;
             }
 
-            if(!this.bIp(ip)){
+            const address = await getIpFromAddress(ip);
 
-                dns.lookup(ip, (err, address) =>{
+            if(address === null) throw new Error(`Could not lookup address`);
 
-                    if(err){
-                        console.log(err);
-                        channel.send(`${failIcon} Not a valid domain!`);
-                    }else{
-
-                        this.responses.push(new ServerResponse(address, port, "full", channel, ip, bAuto, this.servers));
-                        this.sendPacket(0, address, port);
-                        //this.sendPacket(1, address, port);
-                        this.sendPacket(2, address, port);
-                    }
-                });
-
-            }else{
-
-                this.responses.push(new ServerResponse(ip, port, "full", channel, null, bAuto, this.servers));
-                this.sendPacket(0, ip, port);
-               // this.sendPacket(1, ip, port);
-                this.sendPacket(2, ip, port);
-            }
+            this.responses.push(new ServerResponse(address, port, "full", channel, ip, bAuto, this.servers));
+            this.sendPacket(0, address, port);
+            this.sendPacket(2, address, port);
+   
 
         }catch(err){
             console.trace(err);
