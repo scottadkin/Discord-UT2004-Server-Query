@@ -1,6 +1,8 @@
 # Discord-UT2004-Server-Query
  A discord bot that communicates with Unreal Tournament 2004 servers and displays their responses.
 
+<img width="467" height="493" alt="image" src="https://github.com/user-attachments/assets/5edb0994-1c74-49f8-9dfb-07e09606fe66" />
+
 # Requirements
 - Node.js Version 22.12.0 or later.
 
@@ -54,5 +56,12 @@ When the bot has joined the server only people with the role "adminRole" can use
 - Every time the command is used the bot will post fresh messages for each server added to the database, after each query interval the bot will edit the previous message with the latest response from the respected server.
 - If a new server is added after this command is used it will post any new servers in the auto query channel.
 - If a server is deleted from the database list the bot will remove it's respected message from the auto query channel.
+
+
+# Screenshots
+<img width="469" height="189" alt="image" src="https://github.com/user-attachments/assets/8c293d44-449e-4b3a-b5f4-9dd5cf3fe9c3" />
+<img width="577" height="531" alt="image" src="https://github.com/user-attachments/assets/615615fd-aba2-4535-8fb1-82fce9737cc0" />
+<img width="618" height="617" alt="image" src="https://github.com/user-attachments/assets/3f54d40a-d5f8-4e41-9d9b-03b4f5c59dea" />
+<img width="630" height="713" alt="image" src="https://github.com/user-attachments/assets/d99dd7a1-a9c4-4833-a8da-3a670d17801f" />
 
         
