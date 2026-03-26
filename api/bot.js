@@ -7,7 +7,7 @@ import {Client, Events, GatewayIntentBits, hyperlink, Options} from "discord.js"
 import Servers from "./servers.js";
 import Roles from "./roles.js";
 import Channels from "./channels.js";
-import { bValidAddress, bValidPort } from "./generic.js";
+import { bValidAddress, bValidPort, getFlagString } from "./generic.js";
 
 export default class Bot{
 
@@ -450,9 +450,11 @@ export default class Bot{
                 return channel.send(`${failIcon} There is no server with the id **${result[1]}**.`);
             }
 
+            const flagString = getFlagString(server.country);
+
             const normalEmbed = {
                 "color": embedColor,
-                "title": `${server.name}`,
+                "title": `${flagString}${server.name}`,
                 "description": `${server.ip}:${server.port}`
             
             };
@@ -470,7 +472,7 @@ export default class Bot{
         const adminCommands = [
             {"command": "addserver alias ip:port", "text": "Add a server to the database with the specified alias ip and port, if port is not specified 7777 is used."},
             {"command": "deleteserver serverID", "text": "Deletes the specified server matching the IP:PORT of the ID."},
-            {"command": "editserver serverID type value", "text": "Edits the specified server's type with the new value, valid types are **IP, Port, Alias**."},
+            {"command": "editserver serverID type value", "text": "Edits the specified server's type with the new value, valid types are **IP, Port, Alias, Country**."},
             {"command": "roles", "text": "Displays all user roles that can use admin commands."},
             {"command": "allowrole Name", "text": "Allows users with said role to use admin commands."},
             {"command": "removerole Name", "text": "Disables users with said role from using admin commands."},

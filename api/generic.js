@@ -53,3 +53,7 @@ export function bValidPort(input){
         
     return false;
 }
+
+export function getFlagString(input){
+    return (input.length === 2 && input !== "xx") ? `:flag_${input}: ` : "";
+}

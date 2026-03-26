@@ -1,3 +1,5 @@
+import { getFlagString } from "./generic.js";
+
 export default class ServerResponse{
 
     constructor(ip, port, type, channel, domain, bAuto, servers){
@@ -232,9 +234,10 @@ export default class ServerResponse{
                 this.setTeamScores();
             }
 
-            
 
+            const flag = this.servers.getServerFlag(this.ip, this.port);
 
+            const flagString = getFlagString(flag);
             const teamFields = this.createTeamFields(totalTeams);
 
             let address = this.ip;
@@ -249,7 +252,7 @@ export default class ServerResponse{
 
             const response = new MessageEmbed()
             .setColor(embedColor)
-            .setTitle(this.data.name)
+            .setTitle(`${flagString}${this.data.name}`)
             .setDescription(description)
             .addFields(teamFields)
             .setFooter({"text": `IP: ${address}:${this.port}\n`})
