@@ -3,7 +3,7 @@ import {
     passIcon, bDisplayNotEnabled, validServerEditTypes, 
     embedColor, bDisplayBotGithubLink, bDisplayOldUnrealLinks } from "../config.js";
 import UT2k4Query from "./ut2k4query.js";
-import {Client, Events, GatewayIntentBits, Options} from "discord.js";
+import {Client, Events, GatewayIntentBits, hyperlink, Options} from "discord.js";
 import Servers from "./servers.js";
 import Roles from "./roles.js";
 import Channels from "./channels.js";
@@ -436,11 +436,16 @@ export default class Bot{
 
             if(server !== null){
 
-                let string = `:desktop: **${server.name}**\n`;
-                string += `:wrestling: Join as Player **<ut2004://${server.ip}:${server.port}>**\n`;
-                string += `:eyes: Join as Spectator **<ut2004://${server.ip}:${server.port}?spectatorOnly=1>**\n`;
-
-                channel.send(string);
+                const normalEmbed = {
+                    "color": embedColor,
+                    "title": `${server.name}`,
+                    "fields": [
+                        {"name": "Join Server As Player", "value": `ut2004://${server.ip}:${server.port}`, "inline": false},
+                        {"name": "Join Server As Spectator", "value": `ut2004://${server.ip}:${server.port}?spectatorOnly=1`, "inline": false},
+                    ]
+                };
+                
+                channel.send({"embeds": [normalEmbed]});
                 
             }else{
                 channel.send(`${failIcon} There is no server with the id **${result[1]}**.`);
@@ -496,8 +501,7 @@ export default class Bot{
                 "title": 'Admin Commands',
                 "fields": [
                     ...adminFields
-                ],
-                "timestamp": new Date().toISOString()
+                ]
             };
             await channel.send({ "embeds": [adminEmbed] });
         }
@@ -520,7 +524,7 @@ export default class Bot{
             normalFields.push({"name": `:free: OldUnreal UT2004 Full Game Installer`, "value": `<https://www.oldunreal.com/downloads/ut2004/full-game-installers/>`});
             normalFields.push({"name": `:large_blue_diamond: OldUnreal UT2004 Patches`, "value": `<https://github.com/OldUnreal/UT2004Patches/releases>`});
         }
-        
+
         if(bDisplayBotGithubLink){
             normalFields.push({"name": `:keyboard: Bot Github Repo`, "value": `<https://github.com/scottadkin/Discord-UT2004-Server-Query>`});
         }
@@ -530,8 +534,7 @@ export default class Bot{
             "title": 'User Commands',
             "fields": [
                 ...normalFields
-            ],
-            "timestamp": new Date().toISOString()
+            ]
         };
 
         await channel.send({ "embeds": [normalEmbed] });

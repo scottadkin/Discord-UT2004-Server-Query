@@ -249,8 +249,8 @@ export default class ServerResponse{
             .setTitle(this.data.name)
             .setDescription(description)
             .addFields(teamFields)
-            .addFields({"name":`Join Server`, "value": `**<ut2004://${address}:${this.port}>**`})
-            .addFields({"name": `Join Server as Spectator`, "value": `**<ut2004://${address}:${this.port}?spectatorOnly=1>**`})
+            .addFields({"name":`Join Server`, "value": `ut2004://${address}:${this.port}`})
+            .addFields({"name": `Join Server as Spectator`, "value": `ut2004://${address}:${this.port}?spectatorOnly=1`})
             .setTimestamp();
 
             const replyContent = {"embeds": [response]};
