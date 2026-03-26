@@ -434,22 +434,20 @@ export default class Bot{
 
             const server = this.servers.getServerById(result[1]);
 
-            if(server !== null){
+            if(server === null){
 
-                const normalEmbed = {
-                    "color": embedColor,
-                    "title": `${server.name}`,
-                    "fields": [
-                        {"name": "Join Server As Player", "value": `ut2004://${server.ip}:${server.port}`, "inline": false},
-                        {"name": "Join Server As Spectator", "value": `ut2004://${server.ip}:${server.port}?spectatorOnly=1`, "inline": false},
-                    ]
-                };
-                
-                channel.send({"embeds": [normalEmbed]});
-                
-            }else{
-                channel.send(`${failIcon} There is no server with the id **${result[1]}**.`);
+                return channel.send(`${failIcon} There is no server with the id **${result[1]}**.`);
             }
+
+            const normalEmbed = {
+                "color": embedColor,
+                "title": `${server.name}`,
+                "description": `${server.ip}:${server.port}`
+            
+            };
+            
+            channel.send({"embeds": [normalEmbed]});
+          
 
         }else{
             channel.send(`${failIcon} Incorrect ${commandPrefix}ip command syntax.`);
