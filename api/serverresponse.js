@@ -19,7 +19,8 @@ export default class ServerResponse{
         this.data = {
             "players": [],
             "totalTeams": 0,
-            "teamScores": []
+            "teamScores": [],
+            "maxPlayers": 0
         };
 
         this.playerPacketsReceived = 0;
@@ -231,9 +232,7 @@ export default class ServerResponse{
                 this.setTeamScores();
             }
 
-            let description = `:wrestling: Users Online **${this.getTotalPlayers(totalTeams)}/${this.data.maxPlayers}**
-            :pushpin: Gametype **${this.data.gametype}**
-            :map: Map **${this.data.map}**`;
+            
 
 
             const teamFields = this.createTeamFields(totalTeams);
@@ -244,13 +243,16 @@ export default class ServerResponse{
                 address = this.domain;
             }
 
+            let description = `:wrestling: Users Online: **${this.getTotalPlayers(totalTeams)}/${this.data.maxPlayers}**
+            :pushpin: Gametype: **${this.data.gametype}**
+            :map: Map: **${this.data.map}**\n`;
+
             const response = new MessageEmbed()
             .setColor(embedColor)
             .setTitle(this.data.name)
             .setDescription(description)
             .addFields(teamFields)
-            .addFields({"name":`Join Server`, "value": `ut2004://${address}:${this.port}`})
-            .addFields({"name": `Join Server as Spectator`, "value": `ut2004://${address}:${this.port}?spectatorOnly=1`})
+            .setFooter({"text": `IP: ${address}:${this.port}\n`})
             .setTimestamp();
 
             const replyContent = {"embeds": [response]};

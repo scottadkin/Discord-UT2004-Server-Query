@@ -223,7 +223,7 @@ export default class Channels{
 
                     currentEmbed = new EmbedBuilder();
                     
-                    currentEmbed.setDescription(`Waiting for data for **${addedServers[i].name}** id ${i + 1}`);
+                    currentEmbed.setDescription(`Waiting for data from **${addedServers[i].name}** id ${i + 1}`);
 
                     const message = await channel.send({"embeds": [currentEmbed]});
                     this.servers.setAutoMessageId(addedServers[i].ip, addedServers[i].port, message.id);
