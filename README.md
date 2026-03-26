@@ -42,6 +42,8 @@ The bot will still work without this permission you will just get an error messa
 - Rename **exampleConfig.js** to **config.js**, alternatively you can make a copy of the file and name it **config.js**
 - Now open the config file **/config.js**.
 - Add your Discord bot token, if this is not done correctly the bot can't join your server. <https://discordpy.readthedocs.io/en/latest/discord.html>
+- The bot requires **Privileged Gateway Intents: Message Content Intent**.
+- If you want to use the auto query channel feature the bot will also need the **Manage Channels** permission to set the current channel topic(it will still work without it, you will get an error message).
 - Make sure adminRole is a role in your discord server that you have access to, otherwise admin commands needed to setup the bot will be unavailable to you.
 - The config file is also where you can set the command prefix, by default it's dot(.)
 

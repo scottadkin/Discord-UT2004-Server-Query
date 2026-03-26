@@ -1,4 +1,7 @@
-import { discordToken, defaultAdminRole, commandPrefix, failIcon, passIcon, bDisplayNotEnabled, validServerEditTypes } from "../config.js";
+import { 
+    discordToken, defaultAdminRole, commandPrefix, failIcon, 
+    passIcon, bDisplayNotEnabled, validServerEditTypes, 
+    embedColor, bDisplayBotGithubLink, bDisplayOldUnrealLinks } from "../config.js";
 import UT2k4Query from "./ut2k4query.js";
 import {Client, Events, GatewayIntentBits, Options} from "discord.js";
 import Servers from "./servers.js";
@@ -473,32 +476,66 @@ export default class Bot{
             {"command": "ipID", "text": "Displays the name and ip:port of the server added to the database."}
         ];
 
+        const adminFields = [];
 
         if(bAdmin){
 
-            let adminString = `:cop:**Admin Commands**\n`;
-
             for(let i = 0; i < adminCommands.length; i++){
 
-                adminString += `**${commandPrefix}${adminCommands[i].command}** ${adminCommands[i].text}\n`;
+                const {command, text} = adminCommands[i];
+                
+                adminFields.push({
+                    "name": `__${commandPrefix}${command}__`,
+                    "value": text,
+                    "inline": false,
+                });
             }
 
-            await channel.send(adminString);
+            const adminEmbed = {
+                "color": embedColor,
+                "title": 'Admin Commands',
+                "fields": [
+                    ...adminFields
+                ],
+                "timestamp": new Date().toISOString()
+            };
+            await channel.send({ "embeds": [adminEmbed] });
         }
 
-        let normalString = `:adult:**User Commands**\n`;
+
+        const normalFields = [];
 
         for(let i = 0; i < normalCommands.length; i++){
 
-            normalString += `**${commandPrefix}${normalCommands[i].command}** ${normalCommands[i].text}\n`;
+            const {command, text} = normalCommands[i];
+                
+            normalFields.push({
+                "name": `__${commandPrefix}${command}__`,
+                "value": text,
+                "inline": false,
+            });
         }
 
+        if(bDisplayOldUnrealLinks){
+            normalFields.push({"name": `:free: OldUnreal UT2004 Full Game Installer`, "value": `<https://www.oldunreal.com/downloads/ut2004/full-game-installers/>`});
+            normalFields.push({"name": `:large_blue_diamond: OldUnreal UT2004 Patches`, "value": `<https://github.com/OldUnreal/UT2004Patches/releases>`});
+        }
+        
+        if(bDisplayBotGithubLink){
+            normalFields.push({"name": `:keyboard: Bot Github Repo`, "value": `<https://github.com/scottadkin/Discord-UT2004-Server-Query>`});
+        }
 
-        normalString += `:keyboard: **Github Repo** <https://github.com/scottadkin/Discord-UT2004-Server-Query>\n`;
-        normalString += `**OldUnreal UT2004 Full Game Installer** <https://www.oldunreal.com/downloads/ut2004/full-game-installers/>\n`;
-        normalString += `**OldUnreal UT2004 Patches** <https://github.com/OldUnreal/UT2004Patches/releases>`;
+        const normalEmbed = {
+            "color": embedColor,
+            "title": 'User Commands',
+            "fields": [
+                ...normalFields
+            ],
+            "timestamp": new Date().toISOString()
+        };
 
-        await channel.send(normalString);
+        await channel.send({ "embeds": [normalEmbed] });
+
     }
 
 

@@ -9,7 +9,7 @@ export const udpPort = 1333;
 //if server doesn't respond in x seconds display timedout
 export const responseTimeout = 2;
 export const bDisplayNotEnabled = true;
-export const embedColor = "ffffff";
+export const embedColor = 0x0099ff;
 export const failIcon = ":no_entry:";
 export const passIcon = ":white_check_mark:";
 
@@ -28,3 +28,7 @@ export const validServerEditTypes = [
 export const serversPerMessage = 10;
 //label tam servers as tam instead of deathmatch
 export const bLabelAsTAM = true;
+//a link to the bot's github repo will be displayed in the .help command.
+export const bDisplayBotGithubLink = true;
+//a link to the oldUnreal UT2004 full game installer and another for the new patch will be displayed in the help command.
+export const bDisplayOldUnrealLinks = true;
