@@ -9,7 +9,7 @@
 ## adminCommands
 - **.addserver alias ip:port** Add a server to the database with the specified alias ip and port, if port is not specified 7777 is used.
 - **.deleteserver serverID** Deletes the specified server matching the IP:PORT of the ID.
-- **.editserver serverID type value** Edits the specified server's type with the new value, valid types are **IP, Port, Alias**.
+- **.editserver serverID type value** Edits the specified server's type with the new value, valid types are **IP, Port, Alias, Country**.
 - **.roles** Displays all user roles that can use admin commands.
 - **.allowrole Name** Allows users with said role to use admin commands.
 - **.removerole Name** Disables users with said role from using admin commands.
@@ -26,13 +26,6 @@
 - **.qID** Queries the specified server ip:port matching that server ID in the database.
 - **.q ip:port** Queries a UT2004 server with the specified ip:port, if port is not provided 7777 is used.
 - **.ipID** Displays the name and ip:port of the server added to the database.
-
-## Privileged Gateway Intents 
-- Message Content Intent
-
-## Required Permissions For Auto Query Use
-- Manage Channels
-The bot will still work without this permission you will just get an error message saying the bot doesn't have permission to set the topic title.
 
 # Installing
 - Extract the contents of the archive into a directory.
@@ -58,7 +51,6 @@ When the bot has joined the server only people with the role "adminRole" can use
 - `.setauto` Sets the current channel to be the auto query channel, it is recommended the auto query channel is a new channel where users can't post as the bot will delete previous messages when this command is used in a text channel.
 
 # Auto Query Information
-- When an auto query channel is set the bot will delete previous messages posted in the channel(Up to the last 50 posts)
 - Every time the command is used the bot will post fresh messages for each server added to the database, after each query interval the bot will edit the previous message with the latest response from the respected server.
 - If a new server is added after this command is used it will post any new servers in the auto query channel.
 - If a server is deleted from the database list the bot will remove it's respected message from the auto query channel.
