@@ -1,4 +1,6 @@
 # Discord-UT2004-Server-Query
+
+[![Hypercommit](https://img.shields.io/badge/Hypercommit-DB2475)](https://hypercommit.com/discord-ut2004-server-query)
  A discord bot that communicates with Unreal Tournament 2004 servers and displays their responses.
 
 <img width="467" height="493" alt="image" src="https://github.com/user-attachments/assets/5edb0994-1c74-49f8-9dfb-07e09606fe66" />
