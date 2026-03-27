@@ -273,26 +273,14 @@ export default class ServerResponse{
 
                 const message = await this.channel.messages.fetch(editMessageId);
 
-                await message.edit(replyContent)
-                .then(() =>{
-                    // console.log('edit message');
-                })
-                .catch(err =>{
-                    console.log(err);
-                });
+                return message.edit(replyContent);
                 
             }else{
 
                 this.channel.send(replyContent).then((msg) =>{
 
-                    try{
-                        //console.log(msg);
-                        this.servers.setAutoMessageId(address, this.port, msg.id);
-                        this.servers = null;
-                    }catch(err){
-                        console.trace(err);
-                    }   
-
+                    this.servers.setAutoMessageId(address, this.port, msg.id);
+                    this.servers = null;
                 });
             }
         }
@@ -316,8 +304,9 @@ export default class ServerResponse{
             }
 
             if(this.data.name !== undefined){
-                await this.servers.updateServerInfo(ip, this.port, this.data);
+                this.servers.updateServerInfo(ip, this.port, this.data);
             }
+            return;
 
         }else if(this.type == 'full'){
 

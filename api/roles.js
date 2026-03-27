@@ -108,7 +108,7 @@ export default class Roles{
             return null;
         }
 
-        const roles = await guild.roles.fetch(null);
+        const roles = await guild.roles.fetch();
 
         const found = {};
 

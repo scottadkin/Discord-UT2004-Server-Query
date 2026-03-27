@@ -59,6 +59,8 @@ export default class Bot{
         
         this.client.on('messageCreate', (message) =>{
 
+            if(message.author.bot) return;
+
             try{
                 this.parseCommand(message);
             }catch(err){
