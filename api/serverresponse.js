@@ -226,135 +226,122 @@ export default class ServerResponse{
 
     async sendFullResponse(MessageEmbed, embedColor){
 
-        try{
+        const totalTeams = this.getTotalTeams();
 
-            const totalTeams = this.getTotalTeams();
-
-            if(totalTeams > 1){
-                this.setTeamScores();
-            }
+        if(totalTeams > 1){
+            this.setTeamScores();
+        }
 
 
-            const flag = this.servers.getServerFlag(this.ip, this.port);
+        const flag = this.servers.getServerFlag(this.ip, this.port);
 
-            const flagString = getFlagString(flag);
-            const teamFields = this.createTeamFields(totalTeams);
+        const flagString = getFlagString(flag);
+        const teamFields = this.createTeamFields(totalTeams);
 
-            let address = this.ip;
+        let address = this.ip;
 
-            if(this.domain !== null){
-                address = this.domain;
-            }
+        if(this.domain !== null){
+            address = this.domain;
+        }
 
-            let description = `:wrestling: Users Online: **${this.getTotalPlayers(totalTeams)}/${this.data.maxPlayers}**
-            :pushpin: Gametype: **${this.data.gametype}**
-            :map: Map: **${this.data.map}**\n`;
+        let description = `:wrestling: Users Online: **${this.getTotalPlayers(totalTeams)}/${this.data.maxPlayers}**
+        :pushpin: Gametype: **${this.data.gametype}**
+        :map: Map: **${this.data.map}**\n`;
 
-            const response = new MessageEmbed()
-            .setColor(embedColor)
-            .setTitle(`${flagString}${this.data.name}`)
-            .setDescription(description)
-            .addFields(teamFields)
-            .setFooter({"text": `IP: ${address}:${this.port}\n`})
-            .setTimestamp();
+        const response = new MessageEmbed()
+        .setColor(embedColor)
+        .setTitle(`${flagString}${this.data.name}`)
+        .setDescription(description)
+        .addFields(teamFields)
+        .setFooter({"text": `IP: ${address}:${this.port}\n`})
+        .setTimestamp();
 
-            const replyContent = {"embeds": [response]};
-            this.address = address;
+        const replyContent = {"embeds": [response]};
+        this.address = address;
 
-            if(!this.bAuto){
+        if(!this.bAuto){
 
-               // console.log(`Not auto message id`);
-                await this.channel.send(replyContent);
-                this.channel = null;
+            // console.log(`Not auto message id`);
+            await this.channel.send(replyContent);
+            this.channel = null;
 
+        }else{
+
+            const editMessageId = this.servers.getServerAutoMessageId(address, this.port);
+            
+            if(editMessageId !== null){
+
+                const message = await this.channel.messages.fetch(editMessageId);
+
+                await message.edit(replyContent)
+                .then(() =>{
+                    // console.log('edit message');
+                })
+                .catch(err =>{
+                    console.log(err);
+                });
+                
             }else{
 
-                const editMessageId = this.servers.getServerAutoMessageId(address, this.port);
-                
-                if(editMessageId !== null){
+                this.channel.send(replyContent).then((msg) =>{
 
-                    const message = await this.channel.messages.fetch(editMessageId);
+                    try{
+                        //console.log(msg);
+                        this.servers.setAutoMessageId(address, this.port, msg.id);
+                        this.servers = null;
+                    }catch(err){
+                        console.trace(err);
+                    }   
 
-                    await message.edit(replyContent)
-                    .then(() =>{
-                       // console.log('edit message');
-                    })
-                    .catch(err =>{
-                        console.log(err);
-                    });
-                    
-                }else{
-
-                    this.channel.send(replyContent).then((msg) =>{
-
-                        try{
-                            //console.log(msg);
-                            this.servers.setAutoMessageId(address, this.port, msg.id);
-                            this.servers = null;
-                        }catch(err){
-                            console.trace(err);
-                        }   
-
-                    });
-                }
+                });
             }
-
-        }catch(err){
-
-            console.trace(err);   
         }
+
+     
     }
 
 
-     async finishedStep(MessageEmbed, embedColor){
+    async finishedStep(MessageEmbed, embedColor){
 
-        
-        try{
+        if(this.type == 'basic'){
+            
+            this.bGotAllData = true;
+            this.bGotBasic = true;
 
-            if(this.type == 'basic'){
-                
-                this.bGotAllData = true;
+            let ip = this.ip;
+
+            if(this.domain !== null){
+
+                ip = this.domain;
+            }
+
+            if(this.data.name !== undefined){
+                await this.servers.updateServerInfo(ip, this.port, this.data);
+            }
+
+        }else if(this.type == 'full'){
+
+            if(!this.bGotBasic){
+
                 this.bGotBasic = true;
 
-                let ip = this.ip;
-
-                if(this.domain !== null){
-
-                    ip = this.domain;
-                }
-
-                if(this.data.name !== undefined){
-                    await this.servers.updateServerInfo(ip, this.port, this.data);
-                }
-
-            }else if(this.type == 'full'){
-
-                if(!this.bGotBasic){
-
-                    this.bGotBasic = true;
-
-                    if(this.data.currentPlayers == 0){
-
-                        this.bGotAllData = true;
-                        this.sendFullResponse(MessageEmbed, embedColor);
-                        
-                    }
-                    return;
-                }
-
-                this.playerPacketsReceived++;
-
-                if(this.data.players.length >= this.data.currentPlayers - 1 || this.playerPacketsReceived >= 2){
+                if(this.data.currentPlayers == 0){
 
                     this.bGotAllData = true;
                     this.sendFullResponse(MessageEmbed, embedColor);
-
-                }        
+                    
+                }
+                return;
             }
-            
-        }catch(err){
-           console.trace(err);
-       }
-        
+
+            this.playerPacketsReceived++;
+
+            if(this.data.players.length >= this.data.currentPlayers - 1 || this.playerPacketsReceived >= 2){
+
+                this.bGotAllData = true;
+                this.sendFullResponse(MessageEmbed, embedColor);
+
+            }        
+        } 
     }
 }

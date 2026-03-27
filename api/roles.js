@@ -35,21 +35,17 @@ export default class Roles{
 
     addRole(id, name, channel){
 
-        try{
+    
+        if(!this.bRoleAlreadyAdded(id)){
 
-            if(!this.bRoleAlreadyAdded(id)){
+            this.insertRow(id);
 
-                this.insertRow(id);
+            return channel.send(`${passIcon} Users with the role **${name}** can now use admin commands.`);
 
-                channel.send(`${passIcon} Users with the role **${name}** can now use admin commands.`);
-
-            }else{
-                channel.send(`${failIcon} That role already has admin privileges.`);
-            }
-
-        }catch(err){
-            console.trace(err);
+        }else{
+            return channel.send(`${failIcon} That role already has admin privileges.`);
         }
+
     }
 
 
@@ -90,9 +86,10 @@ export default class Roles{
 
     }
 
+
     async getRoleName(id, guild){
 
-        const roles = await guild.roles.fetch(id);
+        const roles  = await guild.roles.fetch(id);
 
         for(let i = 0; i < roles.length; i++){
 
@@ -102,35 +99,54 @@ export default class Roles{
         }
 
         return null;
+
+    }
+
+    async getRoleNames(roleIds, guild){
+
+        if(roleIds.length === 0){
+            return null;
+        }
+
+        const roles = await guild.roles.fetch(null);
+
+        const found = {};
+
+        for(let i = 0; i < roleIds.length; i++){
+
+            const id = roleIds[i];
+            const role = roles.get(id);
+
+            if(role !== undefined){
+                found[id] = role.name;
+            }else{
+                found[id] = `:warning: Deleted Role(${id})`;
+            }
+        }
+
+        return found;
     }
 
     async displayAddedRoles(channel){
 
-        try{
+   
+        const roles = this.getAllAddedRoles();
 
-            const roles = this.getAllAddedRoles();
+        let string = `**Roles that have admin privileges:**\n`;
 
-            let string = `**Roles that have admin privileges:**\n`;
+        string += `${defaultAdminRole}(config.js)`;
 
-            string += `${defaultAdminRole}`;
+        const names = await this.getRoleNames(roles.map((r) => r.id), channel.guild);
 
-            let currentRoleName = '';
-
-            for(let i = 0; i < roles.length; i++){
-
-                currentRoleName = await this.getRoleName(roles[i].id, channel.guild);
-
-                if(currentRoleName === null){
-                    currentRoleName = `:warning: Deleted Role (${roles[i].id})`;
-                }
-
-                string += `**,** ${currentRoleName}`;
-            }
-
-            channel.send(`${string}.`);
-
-        }catch(err){
-            console.trace(err);
+        if(names === null){
+            return channel.send(`${failIcon} No roles found`);
         }
+
+        for(const name of Object.values(names)){
+            string += `, ${name}`;
+        }
+
+        return channel.send(string);
+    
     }
 }

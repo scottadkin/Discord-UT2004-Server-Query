@@ -134,60 +134,53 @@ export default class Bot{
 
         if(regs.addServer.test(text)){
 
-            this.servers.addServer(message);
-            return;
+            return this.servers.addServer(message);
 
         }else if(regs.deleteServer.test(text)){
 
-            this.servers.deleteServer(message);
-            return;
+            return this.servers.deleteServer(message);
+            
 
         }else if(regs.editServer.test(text)){
             
-            this.editServer(message);
-            return;
+            return this.editServer(message);
 
         }else if(regs.allowRole.test(text)){
             
-            this.addRole(message);
-            return;
-
+            return this.addRole(message);
+            
         }else if(regs.removeRole.test(text)){
 
-            this.deleteRole(message);
-            return;
+            return this.deleteRole(message);
 
         }else if(regs.roles.test(text)){
 
-            this.roles.displayAddedRoles(message.channel);
-            return;
+            return this.roles.displayAddedRoles(message.channel);
 
         }else if(regs.allowChannel.test(text)){
 
-            this.channels.addChannel(message.channel);
-            return;
+            return this.channels.addChannel(message.channel);
 
         }else if(regs.removeChannel.test(text)){
 
-            this.channels.removeChannel(message.channel);
-            return;
+            return this.channels.removeChannel(message.channel);      
 
         }else if(regs.channels.test(text)){
 
-            this.channels.displayAllChannels(this.client, message.channel, message.guild);
-            return;
+            return this.channels.displayAllChannels(this.client, message.channel, message.guild);
+            
 
         }else if(regs.setAuto.test(text)){
 
-            this.channels.setAutoChannel(message.channel);
-            return;
+            return this.channels.setAutoChannel(message.channel);
+            
 
         }else if(regs.disableAuto.test(text)){
 
             this.channels.disableAutoChannel();
-            await message.channel.send(`${passIcon} Auto query is now disabled.`);
-            return;
-        }    
+            return message.channel.send(`${passIcon} Auto query is now disabled.`);
+            
+        }
     }
 
     bTryingToUseAdminCommand(text){
@@ -202,66 +195,71 @@ export default class Bot{
 
     async parseCommand(message){
 
-        const text = message.content;
+        try{
+            const text = message.content;
 
-        if(text.length <= 1) return;
-        if(!text.startsWith(commandPrefix)) return;
+            if(text.length <= 1) return;
+            if(!text.startsWith(commandPrefix)) return;
 
-        if(text[1] === commandPrefix) return; //ignore to prevent false positives
+            if(text[1] === commandPrefix) return; //ignore to prevent false positives
 
-        const serversReg = /^.servers$/i;
-        const activeReg = /^.active$/i;
-        const queryReg = /^.q .+$/i;
-        const shortQueryReg = /^.q\d+$/i;
-        const ipQueryReg = /^.ip\d+$/i;
-        const helpReg = /^.help$/i;
+            const serversReg = /^.servers$/i;
+            const activeReg = /^.active$/i;
+            const queryReg = /^.q .+$/i;
+            const shortQueryReg = /^.q\d+$/i;
+            const ipQueryReg = /^.ip\d+$/i;
+            const helpReg = /^.help$/i;
 
-        const bAdmin = this.bUserAdmin(message);
-        const bAdminOnlyCommand = this.bTryingToUseAdminCommand(text);
+            const bAdmin = this.bUserAdmin(message);
+            const bAdminOnlyCommand = this.bTryingToUseAdminCommand(text);
 
-        if(!bAdmin && bAdminOnlyCommand){
+            if(!bAdmin && bAdminOnlyCommand){
 
-            message.channel.send(`${failIcon} You do not have permission to use this command.`);
-            return;
-        }
-
-        if(bAdmin && bAdminOnlyCommand){
-            return await this.parseAdminCommand(message);
-        }
-
-        if(!this.bBotEnabledInChannel(message.channel.id)){
-
-            if(bDisplayNotEnabled){
-                message.channel.send(`${failIcon} The bot is not enabled in this channel.`);
+                return message.channel.send(`${failIcon} You do not have permission to use this command.`);
             }
-            return;
 
+            if(bAdmin && bAdminOnlyCommand){
+                return this.parseAdminCommand(message);
+            }
+
+            if(!this.bBotEnabledInChannel(message.channel.id)){
+
+                if(bDisplayNotEnabled){
+                    return message.channel.send(`${failIcon} The bot is not enabled in this channel.`);
+                }
+                
+                return
+            }   
+
+            if(serversReg.test(text)){
+
+                return this.servers.displayAllServers(message.channel, false);
+
+            }else if(activeReg.test(text)){
+            
+                return this.servers.displayAllServers(message.channel, true);
+
+            }else if(shortQueryReg.test(text)){
+                
+                return this.queryServerShort(text, message.channel);
+
+            }else if(queryReg.test(text)){
+                
+                return this.queryServer(text, message.channel);
+                
+            }else if(ipQueryReg.test(text)){
+                
+                return this.ipQueryReg(text, message.channel);
+
+            }else if(helpReg.test(text)){
+
+                return this.helpCommand(message.channel, bAdmin);
+            }
+
+        }catch(err){
+            console.log(err);
         }
-
-        if(serversReg.test(text)){
-
-            this.servers.displayAllServers(message.channel, false);
-
-        }else if(activeReg.test(text)){
-        
-            this.servers.displayAllServers(message.channel, true);
-
-        }else if(shortQueryReg.test(text)){
-            
-            this.queryServerShort(text, message.channel);
-
-        }else if(queryReg.test(text)){
-            
-            this.queryServer(text, message.channel);
-            
-        }else if(ipQueryReg.test(text)){
-            
-            this.ipQueryReg(text, message.channel);
-
-        }else if(helpReg.test(text)){
-
-            this.helpCommand(message.channel, bAdmin);
-        }
+       
      
     }
 
@@ -288,8 +286,8 @@ export default class Bot{
 
                 if(!bValidPort(port)){
 
-                    channel.send(`${failIcon} Port must be between 1 and 65535`);
-                    return;
+                    return channel.send(`${failIcon} Port must be between 1 and 65535`);
+                    
                 }
             }
 
@@ -308,8 +306,8 @@ export default class Bot{
                 this.query.getFullServer(ip, port, channel);
 
             }else{
-                channel.send(`${failIcon} Port must be between 1 and 65535`);
-                return;
+                return channel.send(`${failIcon} Port must be between 1 and 65535`);
+                
             }
         }
 
@@ -350,13 +348,13 @@ export default class Bot{
         const result = reg.exec(message.content);
 
         if(result === null){
-            return await message.channel.send(`${failIcon} Incorrect edit server syntax.`);   
+            return message.channel.send(`${failIcon} Incorrect edit server syntax.`);   
         }
 
         const editType = result[2].toLowerCase();
 
         if(validServerEditTypes.indexOf(editType) === -1){
-            return await message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);    
+            return message.channel.send(`${failIcon} **${result[2]}** is not a valid edit server type.`);    
         }
 
         let ip = -1;
@@ -370,7 +368,7 @@ export default class Bot{
                 ip = result[3];
 
             }else{
-                return await message.channel.send(`${failIcon} Not a valid IP/Domain.`);        
+                return message.channel.send(`${failIcon} Not a valid IP/Domain.`);        
             }
 
         }else if(editType === 'port'){
@@ -378,7 +376,7 @@ export default class Bot{
             port = result[3];
 
             if(!bValidPort(port)){
-                return await message.channel.send(`${failIcon} Not a valid Port.`);  
+                return message.channel.send(`${failIcon} Not a valid Port.`);  
             }
 
         }else if(editType === 'country'){
@@ -391,7 +389,7 @@ export default class Bot{
                 text +=  `You can find the flag codes in the flags emote category,`;
                 text += ` or you can use this wiki article: <https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2>.`;
 
-                return await message.channel.send(text);  
+                return message.channel.send(text);  
             }
         }
 
@@ -399,7 +397,7 @@ export default class Bot{
 
         if(server === null){
 
-            return await message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);  
+            return message.channel.send(`${failIcon} A server with the id **${result[1]}** does not exist.`);  
         }
 
         if(ip === -1){
@@ -422,17 +420,17 @@ export default class Bot{
 
                 this.servers.edit(server, editType, result[3]);
                 
-                await message.channel.send(passString);
-                return;
+                return message.channel.send(passString);
+       
             }
 
-            return await message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
+            return message.channel.send(`${failIcon} Failed to update Server **${result[1]}** IP:PORT combination already exists.`);
             
         }
 
         this.servers.edit(server, editType, result[3]);
 
-        await message.channel.send(passString);     
+        return message.channel.send(passString);     
     }
 
     async ipQueryReg(text, channel){
@@ -553,36 +551,30 @@ export default class Bot{
     }
 
 
-    async addRole(message){
+    addRole(message){
 
-        try{
+        const reg = /^.allowrole (.+)$/i;
 
-            const reg = /^.allowrole (.+)$/i;
+        const result = reg.exec(message.content);
 
-            const result = reg.exec(message.content);
+        if(result === null){
+            return message.channel.send(`${failIcon} Incorrect syntax for add role.`);
+        }
 
-            if(result === null){
-                return message.channel.send(`${failIcon} Incorrect syntax for add role.`);
+        if(this.roles.bRoleExists(result[1], message)){
+
+            const roleId = this.roles.getRoleId(result[1], message.guild);
+
+            if(roleId !== null){
+                this.roles.addRole(roleId, result[1], message.channel);     
             }
 
-            if(this.roles.bRoleExists(result[1], message)){
-
-                const roleId = this.roles.getRoleId(result[1], message.guild);
-
-                if(roleId !== null){
-                    this.roles.addRole(roleId, result[1], message.channel);     
-                }
-
-            }else{
-                message.channel.send(`${failIcon} There are no roles called **${result[1]}** on this Discord server.`);
-            }    
-
-        }catch(err){
-            console.trace(err);
-        }
+        }else{
+            return message.channel.send(`${failIcon} There are no roles called **${result[1]}** on this Discord server.`);
+        }     
     }
 
-    async deleteRole(message){
+    deleteRole(message){
 
 
         const reg = /^.removerole (.+)$/i;
@@ -590,18 +582,18 @@ export default class Bot{
         const result = reg.exec(message.content);
 
         if(result === null){
-            return await message.channel.send(`${failIcon} Incorrect delete role syntax.`);
+            return message.channel.send(`${failIcon} Incorrect delete role syntax.`);
         }
 
         const roleId = this.roles.getRoleId(result[1], message.guild);
 
         if(roleId === null){
-            return await message.channel.send(`${failIcon} There are no roles called **${result[1]}** on this Discord server.`);
+            return message.channel.send(`${failIcon} There are no roles called **${result[1]}** on this Discord server.`);
         }
 
         this.roles.deleteRole(roleId);
 
-        return await message.channel.send(`${passIcon} Users with role **${result[1]}** can no longer use admin commands.`);
+        return message.channel.send(`${passIcon} Users with role **${result[1]}** can no longer use admin commands.`);
 
     }
 }

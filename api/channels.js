@@ -27,19 +27,14 @@ export default class Channels{
 
     bAlreadyAdded(id){
 
-        try{
+        const channels = this.getAllChannels(id);
 
-            const channels = this.getAllChannels(id);
-
-            if(channels.indexOf(id) !== -1){
-                return true;
-            }
-
-            return false;
-
-        }catch(err){
-            console.trace(err);
+        if(channels.indexOf(id) !== -1){
+            return true;
         }
+
+        return false;
+
     }
 
 
@@ -64,40 +59,28 @@ export default class Channels{
 
     addChannel(channel){
 
-        try{
+        if(this.bAlreadyAdded(channel.id)){
 
-            if(this.bAlreadyAdded(channel.id)){
-
-                channel.send(`${failIcon} The channel **${channel.name}** is already enabled for bot usage.`);
-                return;
-            }
-
-            this.insertChannel(channel.id);
-
-            channel.send(`${passIcon} The bot is now enabled in this channel.`);
-
-        }catch(err){
-            console.trace(err);
+            return channel.send(`${failIcon} The channel **${channel.name}** is already enabled for bot usage.`);
+            
         }
+
+        this.insertChannel(channel.id);
+
+        return channel.send(`${passIcon} The bot is now enabled in this channel.`);
+
     }
 
 
-    async removeChannel(channel){
+    removeChannel(channel){
 
-        try{
+        if(this.bAlreadyAdded(channel.id)){
 
-            if(this.bAlreadyAdded(channel.id)){
-
-                this.deleteChannel(channel.id);
-                channel.send(`${passIcon} The bot is now disabled in this channel.`);
-                return;
-            }
-
-            channel.send(`${failIcon} The bot was already not enabled in this channel.`);
-
-        }catch(err){
-            console.trace(err);
-        }   
+            this.deleteChannel(channel.id);
+            return channel.send(`${passIcon} The bot is now disabled in this channel.`);
+        
+        }
+        return channel.send(`${failIcon} The bot was already disabled in this channel.`);
     }
 
     getChannelName(channels, id){
@@ -143,37 +126,36 @@ export default class Channels{
 
     async displayAllChannels(client, messageChannel, guild){
 
-        try{
 
-            const activeChannels = this.getAllChannels();
+            return Promise.reject("goldhgfhgfhgffish");
+     
 
-            let string = `**:floppy_disk: Channels enabled for bot use.**\n`;
+        const activeChannels = this.getAllChannels();
 
-            let channelsString = '';
+        let string = `**:floppy_disk: Channels enabled for bot use.**\n`;
 
-            const aCIds = activeChannels.map((c) => c.id);
+        let channelsString = '';
 
-            const {channels, missing} = await this.fetchChannels(guild, aCIds);
+        const aCIds = activeChannels.map((c) => c.id);
 
-            for(let i = 0; i < activeChannels.length; i++){
+        const {channels, missing} = await this.fetchChannels(guild, aCIds);
 
-                channelsString += `**${this.getChannelName(channels, activeChannels[i].id)}** enabled ${new Date(activeChannels[i].added * 1000).toString()}\n`;
-            }
+        for(let i = 0; i < activeChannels.length; i++){
 
-            for(let i = 0; i < missing.length; i++){
+            channelsString += `**${this.getChannelName(channels, activeChannels[i].id)}** enabled ${new Date(activeChannels[i].added * 1000).toString()}\n`;
+        }
 
-                channelsString += `**Error:** Unable to find text channel with the ID of ${missing[i]}`;
-            }
+        for(let i = 0; i < missing.length; i++){
 
-            if(channelsString == ''){
-                channelsString = `There are currently no channels enabled for bot use.`;
-            }
+            channelsString += `**Error:** Unable to find text channel with the ID of ${missing[i]}`;
+        }
 
-            messageChannel.send(string + channelsString);
+        if(channelsString == ''){
+            channelsString = `There are currently no channels enabled for bot use.`;
+        }
 
-        }catch(err){
-            console.trace(err);
-        }   
+        return messageChannel.send(string + channelsString);
+
     }
 
     disableAutoChannel(){

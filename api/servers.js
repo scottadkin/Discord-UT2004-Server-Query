@@ -30,7 +30,7 @@ export default class Servers{
                 port = parseInt(result[5].replace(':',''));
             }
 
-            this.insertServer(message, alias, ip, port);
+            return this.insertServer(message, alias, ip, port);
 
         }else{
 
@@ -44,7 +44,7 @@ export default class Servers{
                 port = parseInt(result[8].replace(":",""));
             }
 
-            this.insertServer(message, alias, ip, port);
+            return this.insertServer(message, alias, ip, port);
         }
     }
 
@@ -54,10 +54,10 @@ export default class Servers{
 
             this.insertServerQuery(alias, ip, port);
 
-            message.channel.send(`${passIcon} Server **${alias} (${ip}:${port})** added successfully.`);
+            return message.channel.send(`${passIcon} Server **${alias} (${ip}:${port})** added successfully.`);
 
         }else{
-            message.channel.send(`${failIcon} A server with that IP and Port has already been added.`);
+            return message.channel.send(`${failIcon} A server with that IP and Port has already been added.`);
         }
     }
 
@@ -115,42 +115,32 @@ export default class Servers{
         return simpleQuery(query, [ip, port]);
     }
 
-    async deleteServer(message){
+    deleteServer(message){
 
-        try{
+        const reg = /^.deleteserver (\d+)$/i;
 
-            const reg = /^.deleteserver (\d+)$/i;
+        const result = reg.exec(message.content);
 
-            const result = reg.exec(message.content);
-
-            if(result !== null){
-
-                let id = parseInt(result[1]);
-
-                if(id !== id) throw new Error("Sever id must be a valid integer.");
-
-                const server = this.getServerById(id);
-                
-                if(server !== null){
-
-                    //console.log(server);
-
-                    this.deleteServerQuery(server.ip, server.port);
-                    message.channel.send(`${passIcon} Server deleted.`);
-
-                }else{
-
-                    message.channel.send(`${failIcon} There is no server with the id ${id}`);
-                }
-
-            }else{
-
-                message.channel.send(`${failIcon} Incorrect syntax for ${commandPrefix}deleteserver.`);
-            }
-
-        }catch(err){
-            console.trace(err);
+        if(result === null){
+            return message.channel.send(`${failIcon} Incorrect syntax for ${commandPrefix}deleteserver.`);
         }
+
+        const id = parseInt(result[1]);
+
+        if(id !== id) throw new Error("Sever id must be a valid integer.");
+
+        const server = this.getServerById(id);
+        
+        if(server !== null){
+
+            this.deleteServerQuery(server.ip, server.port);
+            return message.channel.send(`${passIcon} Server deleted.`);
+
+        }else{
+
+            return message.channel.send(`${failIcon} There is no server with the id ${id}`);
+        }
+  
     }
 
     forceStringLength(value, target, bAlt){
@@ -294,7 +284,6 @@ export default class Servers{
     }
 
     edit(server, type, value){
-
         const query = `UPDATE servers SET ${type}=? WHERE ip=? AND port=?`;
 
         const vars = [value, server.ip, server.port];

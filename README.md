@@ -63,5 +63,3 @@ When the bot has joined the server only people with the role "adminRole" can use
 <img width="577" height="531" alt="image" src="https://github.com/user-attachments/assets/615615fd-aba2-4535-8fb1-82fce9737cc0" />
 <img width="618" height="617" alt="image" src="https://github.com/user-attachments/assets/3f54d40a-d5f8-4e41-9d9b-03b4f5c59dea" />
 <img width="630" height="713" alt="image" src="https://github.com/user-attachments/assets/d99dd7a1-a9c4-4833-a8da-3a670d17801f" />
-
-        
